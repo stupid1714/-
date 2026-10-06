@@ -1,0 +1,27 @@
+{
+  "name": "academy-manager",
+  "version": "1.0.0",
+  "description": "학생·학부모·선생님 학습 관리 웹사이트",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --no-warnings server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stupid1714/-.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/stupid1714/-/issues"
+  },
+  "homepage": "https://github.com/stupid1714/-#readme",
+  "dependencies": {
+    "express": "^4.22.3",
+    "multer": "^2.4.0"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "private": true
+}
