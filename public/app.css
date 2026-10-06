@@ -286,6 +286,7 @@ input[type=file] { width: 100%; padding: 10px; border: 1px dashed var(--border);
   .container { padding: 14px; }
   .topbar { padding: 10px 14px; }
   .topbar .who .role-label { display: none; }
+  .app-version { display: none; }
   .cards, .grid2 { grid-template-columns: 1fr; }
   .overview { grid-template-columns: 1fr 1fr; gap: 8px; }
   .card { padding: 14px; border-radius: 12px; }
