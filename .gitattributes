@@ -1,0 +1,2 @@
+# 한국어 Windows 기본 인코딩(CP949) + CRLF 그대로 보관
+*.bat -text
