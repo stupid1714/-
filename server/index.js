@@ -665,4 +665,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: '서버 오류가 발생했습니다.' });
 });
 
-app.listen(PORT, () => console.log(`서버 실행 중: http://localhost:${PORT}`));
+// 같은 와이파이의 휴대폰에서 접속할 주소(PC의 내부 IP)를 함께 보여 줌
+function lanAddresses() {
+  return Object.values(require('node:os').networkInterfaces()).flat()
+    .filter((n) => n && n.family === 'IPv4' && !n.internal)
+    .map((n) => n.address);
+}
+
+app.listen(PORT, () => {
+  console.log(`서버 실행 중: http://localhost:${PORT}`);
+  const ips = lanAddresses();
+  if (ips.length) {
+    console.log('');
+    console.log('[휴대폰에서 보기] PC와 같은 와이파이에 연결한 뒤 휴대폰 브라우저 주소창에 입력하세요:');
+    ips.forEach((ip) => console.log(`  http://${ip}:${PORT}`));
+  }
+});
