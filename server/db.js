@@ -126,11 +126,9 @@ function seed() {
     '성적표 시트에 평균 구하기', '');
 
   const insertSchedule = db.prepare('INSERT INTO schedules (student_id, weekday, start_time, end_time) VALUES (?, ?, ?, ?)');
-  insertSchedule.run(s1, 1, '16:00', '18:00');
-  insertSchedule.run(s1, 3, '16:00', '18:00');
-  insertSchedule.run(s2, 2, '15:00', '16:30');
-  insertSchedule.run(s2, 4, '15:00', '16:30');
-  insertSchedule.run(s2, 6, '10:00', '12:00');
+  insertSchedule.run(s1, 1, '16:00', '17:30'); // 평일반: 주 2회, 1시간 30분씩
+  insertSchedule.run(s1, 3, '16:00', '17:30');
+  insertSchedule.run(s2, 6, '09:00', '12:00'); // 토요일반: 2회분을 한 번에
 
   const today = new Date().toISOString().slice(0, 10);
   db.prepare('INSERT INTO comments (student_id, author_id, content) VALUES (?, 1, ?)')

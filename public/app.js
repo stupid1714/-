@@ -8,6 +8,13 @@ const ATT_LABEL = { present: '출석', late: '지각', absent: '결석', excused
 const DAY_LABEL = ['일', '월', '화', '수', '목', '금', '토'];
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // 월요일부터 표시
 
+// 학원 수업 규칙: 주 2회, 회당 1시간 30분. 토요일은 09:00~12:00에 2회분을 한 번에 진행
+const CLASS_MINUTES = 90;
+const WEEKLY_SESSIONS = 2;
+const SATURDAY = 6;
+const SATURDAY_SLOT = { start_time: '09:00', end_time: '12:00' };
+const DEFAULT_WEEKDAY_START = '16:00';
+
 // ---------- 유틸 ----------
 
 function esc(v) {
@@ -135,6 +142,21 @@ function progressCard(s, title = '현재 진도') {
     </section>`;
 }
 
+function toMin(t) { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; }
+function toTime(min) { return `${String(Math.floor(min / 60) % 24).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`; }
+function addClass(start, count = 1) { return toTime(toMin(start) + CLASS_MINUTES * count); }
+
+// 수업 시간 길이로 몇 회분인지 계산 (1시간 30분 = 1회, 3시간 = 2회분)
+function sessionsOf(slot) { return Math.max(1, Math.round((toMin(slot.end_time) - toMin(slot.start_time)) / CLASS_MINUTES)); }
+function weeklySessions(schedule) { return (schedule || []).reduce((n, x) => n + sessionsOf(x), 0); }
+function sessionsLabel(slot) { const n = sessionsOf(slot); return n > 1 ? `${n}회분` : ''; }
+
+function weeklyBadge(schedule) {
+  if (!schedule || !schedule.length) return '<span class="badge">미등록</span>';
+  const n = weeklySessions(schedule);
+  return n === WEEKLY_SESSIONS ? `<span class="badge present">주 ${n}회</span>` : `<span class="badge late">주 ${n}회 · 확인 필요</span>`;
+}
+
 // 같은 시간대 요일끼리 묶어서 "월·수 16:00~18:00 / 토 10:00~12:00" 형태로
 function scheduleText(schedule) {
   if (!schedule || !schedule.length) return '';
@@ -157,7 +179,7 @@ function scheduleWeek(schedule) {
   return `<div class="week">${DAY_ORDER.map((d) => {
     const slot = (schedule || []).find((x) => x.weekday === d);
     return `<div class="day ${slot ? 'on' : ''} ${d === wd ? 'today' : ''}">
-      <b>${DAY_LABEL[d]}</b>${slot ? `<span>${esc(slot.start_time)}</span><span>~${esc(slot.end_time)}</span>` : '<span>-</span>'}
+      <b>${DAY_LABEL[d]}</b>${slot ? `<span>${esc(slot.start_time)}</span><span>~${esc(slot.end_time)}</span>${sessionsLabel(slot) ? `<em>${sessionsLabel(slot)}</em>` : ''}` : '<span>-</span>'}
     </div>`;
   }).join('')}</div>`;
 }
@@ -167,8 +189,10 @@ function scheduleCard(schedule) {
   return `
     <section class="card">
       <div class="card-head"><h2>수업 시간</h2>
-        ${slot ? `<span class="badge present">오늘 ${esc(slot.start_time)} 수업</span>` : '<span class="badge">오늘 수업 없음</span>'}</div>
-      ${schedule && schedule.length ? scheduleWeek(schedule) : '<div class="empty">등록된 수업 시간이 없습니다.</div>'}
+        ${slot ? `<span class="badge present">오늘 ${esc(slot.start_time)}~${esc(slot.end_time)} 수업</span>` : '<span class="badge">오늘 수업 없음</span>'}</div>
+      ${schedule && schedule.length ? `${scheduleWeek(schedule)}
+        <p class="muted small" style="margin:10px 0 0">주 ${weeklySessions(schedule)}회 · 1회 수업 1시간 30분${schedule.some((x) => sessionsOf(x) > 1) ? ' · 토요일은 2회분 수업을 한 번에 진행' : ''}</p>`
+        : '<div class="empty">등록된 수업 시간이 없습니다.</div>'}
     </section>`;
 }
 
@@ -438,7 +462,8 @@ function renderStudentList() {
           ${s.today_status ? `<span class="badge ${s.today_status}">${ATT_LABEL[s.today_status]}</span>` : '<span class="badge">미체크</span>'}
           <span class="spacer"></span><span class="small muted">${Number(s.progress_percent) || 0}%</span></span>
         <span class="sub" style="display:block">${esc(s.course || '-')} · ${esc(s.current_lesson || '진도 미입력')}</span>
-        <span class="sub" style="display:block">🕒 ${esc(scheduleText(s.schedule) || '수업 시간 미등록')}</span>
+        <span class="sub" style="display:block">🕒 ${esc(scheduleText(s.schedule) || '수업 시간 미등록')}
+          ${s.schedule && s.schedule.length && weeklySessions(s.schedule) !== WEEKLY_SESSIONS ? `<span class="badge late">주 ${weeklySessions(s.schedule)}회</span>` : ''}</span>
         ${progressBar(s.progress_percent)}
       </span>
     </button>`).join('');
@@ -513,7 +538,7 @@ async function renderAdminDetail() {
       <a class="btn small back-btn" href="#/">← 목록</a>
       <div class="avatar">${initial(s.name)}</div>
       <div><h1 style="font-size:20px">${esc(s.name)}</h1>
-        <div class="muted small">🕒 ${esc(scheduleText(d.schedule) || '수업 시간 미등록')}</div>
+        <div class="muted small">🕒 ${esc(scheduleText(d.schedule) || '수업 시간 미등록')} ${weeklyBadge(d.schedule)}</div>
         <div class="muted small">${esc(s.username)}${listItem.parent_name ? ` · 학부모: ${esc(listItem.parent_name)}` : ' · 학부모 계정 없음'}</div></div>
     </div>
     <div class="overview">
@@ -616,7 +641,13 @@ async function renderAdminDetail() {
   if (state.tab === 'schedule') {
     body.innerHTML = `
       <section class="card">
-        <div class="card-head"><h2>수업 요일 · 시간</h2><span class="muted small">학원에 오는 요일을 체크하고 시간을 입력하세요</span></div>
+        <div class="card-head"><h2>수업 요일 · 시간</h2><span id="weekly-count"></span></div>
+        <p class="muted small" style="margin-top:0">주 ${WEEKLY_SESSIONS}회 · 1회 1시간 30분 수업입니다. 평일은 시작 시간만 고르면 끝나는 시간이 자동으로 채워지고,
+          토요일은 ${SATURDAY_SLOT.start_time}~${SATURDAY_SLOT.end_time}에 2회분을 한 번에 진행합니다.</p>
+        <div class="row" style="margin-bottom:12px">
+          <button type="button" class="btn small" id="preset-sat">토요일반으로 설정 (토 ${SATURDAY_SLOT.start_time}~${SATURDAY_SLOT.end_time})</button>
+          <button type="button" class="btn small ghost" id="preset-clear">모두 해제</button>
+        </div>
         <form id="schedule">
           <div class="sched-rows">
             ${DAY_ORDER.map((wd) => {
@@ -624,40 +655,93 @@ async function renderAdminDetail() {
               return `
               <div class="sched-row ${slot ? 'on' : ''}" data-wd="${wd}">
                 <label class="sched-day"><input type="checkbox" ${slot ? 'checked' : ''}><span>${DAY_LABEL[wd]}</span></label>
-                <input type="time" class="start" value="${slot ? esc(slot.start_time) : ''}" step="300" ${slot ? '' : 'disabled'}>
+                <input type="time" class="start" value="${slot ? esc(slot.start_time) : ''}" step="600" ${slot ? '' : 'disabled'}>
                 <span class="muted">~</span>
-                <input type="time" class="end" value="${slot ? esc(slot.end_time) : ''}" step="300" ${slot ? '' : 'disabled'}>
+                <input type="time" class="end" value="${slot ? esc(slot.end_time) : ''}" step="600" ${slot ? '' : 'disabled'}>
+                <span class="sched-count"></span>
               </div>`;
             }).join('')}
           </div>
-          <p class="muted small">요일을 체크하면 바로 위에 입력한 시간이 자동으로 채워집니다.</p>
           <div class="row end"><button class="btn primary" type="submit">저장</button></div>
         </form>
       </section>
       <section class="card"><div class="card-head"><h2>미리보기</h2></div>${scheduleWeek(d.schedule)}</section>`;
     const form = body.querySelector('#schedule');
-    let lastTimes = d.schedule[0] ? [d.schedule[0].start_time, d.schedule[0].end_time] : ['16:00', '18:00'];
-    form.querySelectorAll('.sched-row').forEach((row) => {
+    const rows = [...form.querySelectorAll('.sched-row')];
+    const firstWeekday = d.schedule.find((x) => x.weekday !== SATURDAY);
+    let lastStart = firstWeekday ? firstWeekday.start_time : DEFAULT_WEEKDAY_START;
+
+    const readSlots = () => rows
+      .filter((row) => row.querySelector('[type=checkbox]').checked)
+      .map((row) => {
+        const [st, en] = row.querySelectorAll('[type=time]');
+        return { weekday: Number(row.dataset.wd), start_time: st.value, end_time: en.value };
+      });
+
+    // 각 요일 옆 "1회 / 2회분"과 위쪽 주간 횟수 갱신
+    const refresh = () => {
+      rows.forEach((row) => {
+        const [st, en] = row.querySelectorAll('[type=time]');
+        const on = row.querySelector('[type=checkbox]').checked;
+        row.querySelector('.sched-count').textContent = on && st.value && en.value && st.value < en.value
+          ? `${sessionsOf({ start_time: st.value, end_time: en.value })}회${sessionsOf({ start_time: st.value, end_time: en.value }) > 1 ? '분' : ''}` : '';
+      });
+      const valid = readSlots().filter((x) => x.start_time && x.end_time && x.start_time < x.end_time);
+      const n = weeklySessions(valid);
+      body.querySelector('#weekly-count').innerHTML = !valid.length ? '<span class="badge">선택 안 됨</span>'
+        : n === WEEKLY_SESSIONS ? `<span class="badge present">주 ${n}회 ✓</span>`
+        : `<span class="badge late">주 ${n}회 (기준 ${WEEKLY_SESSIONS}회)</span>`;
+    };
+
+    const setRow = (row, on, start, endTime) => {
       const cb = row.querySelector('[type=checkbox]');
       const [st, en] = row.querySelectorAll('[type=time]');
-      const remember = () => { if (st.value && en.value) lastTimes = [st.value, en.value]; };
-      st.onchange = remember; en.onchange = remember;
+      cb.checked = on;
+      row.classList.toggle('on', on);
+      st.disabled = en.disabled = !on;
+      if (on) { st.value = start; en.value = endTime; }
+    };
+
+    rows.forEach((row) => {
+      const wd = Number(row.dataset.wd);
+      const cb = row.querySelector('[type=checkbox]');
+      const [st, en] = row.querySelectorAll('[type=time]');
       cb.onchange = () => {
-        row.classList.toggle('on', cb.checked);
-        st.disabled = en.disabled = !cb.checked;
-        if (cb.checked && !st.value) { [st.value, en.value] = lastTimes; }
+        if (!cb.checked) setRow(row, false);
+        else if (st.value) setRow(row, true, st.value, en.value);
+        else if (wd === SATURDAY) setRow(row, true, SATURDAY_SLOT.start_time, SATURDAY_SLOT.end_time);
+        else setRow(row, true, lastStart, addClass(lastStart));
+        refresh();
       };
+      // 시작 시간을 바꾸면 끝나는 시간을 규칙에 맞게 자동 계산 (토요일은 2회분)
+      st.onchange = () => {
+        if (!st.value) return refresh();
+        en.value = addClass(st.value, wd === SATURDAY ? 2 : 1);
+        if (wd !== SATURDAY) lastStart = st.value;
+        refresh();
+      };
+      en.onchange = refresh;
     });
+
+    body.querySelector('#preset-sat').onclick = () => {
+      rows.forEach((row) => {
+        if (Number(row.dataset.wd) === SATURDAY) setRow(row, true, SATURDAY_SLOT.start_time, SATURDAY_SLOT.end_time);
+        else setRow(row, false);
+      });
+      refresh();
+    };
+    body.querySelector('#preset-clear').onclick = () => { rows.forEach((row) => setRow(row, false)); refresh(); };
+    refresh();
+
     onSubmit(form, async () => {
-      const slots = [];
-      for (const row of form.querySelectorAll('.sched-row')) {
-        if (!row.querySelector('[type=checkbox]').checked) continue;
-        const [st, en] = row.querySelectorAll('[type=time]');
-        const label = DAY_LABEL[row.dataset.wd];
-        if (!st.value || !en.value) throw new Error(`${label}요일 시간을 입력하세요.`);
-        if (st.value >= en.value) throw new Error(`${label}요일 끝나는 시간이 시작 시간보다 늦어야 합니다.`);
-        slots.push({ weekday: Number(row.dataset.wd), start_time: st.value, end_time: en.value });
+      const slots = readSlots();
+      for (const x of slots) {
+        const label = DAY_LABEL[x.weekday];
+        if (!x.start_time || !x.end_time) throw new Error(`${label}요일 시간을 입력하세요.`);
+        if (x.start_time >= x.end_time) throw new Error(`${label}요일 끝나는 시간이 시작 시간보다 늦어야 합니다.`);
       }
+      const n = weeklySessions(slots);
+      if (slots.length && n !== WEEKLY_SESSIONS && !confirm(`현재 주 ${n}회입니다. (기준: 주 ${WEEKLY_SESSIONS}회)\n그래도 저장할까요?`)) return;
       await api(`/api/admin/students/${id}/schedule`, { method: 'PUT', body: { slots } });
       toast('수업 시간이 저장되었습니다.');
       reload();
@@ -737,7 +821,7 @@ async function renderTimetable() {
           <h3>${DAY_LABEL[d]}요일 <span class="muted small">${items.length}명</span></h3>
           ${items.length ? items.map((r) => `
             <a class="tt-item" href="#/student/${r.student_id}">
-              <span class="tt-time">${esc(r.start_time)}~${esc(r.end_time)}</span>
+              <span class="tt-time">${esc(r.start_time)}~${esc(r.end_time)}${sessionsLabel(r) ? ` · ${sessionsLabel(r)}` : ''}</span>
               <span class="tt-name">${esc(r.name)}</span>
               ${r.course ? `<span class="muted small">${esc(r.course)}</span>` : ''}
             </a>`).join('') : '<div class="empty small">수업 없음</div>'}
