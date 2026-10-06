@@ -225,6 +225,56 @@ function assignmentCard(s) {
     </section>`;
 }
 
+// ---------- 메시지 (학부모 ↔ 선생님) ----------
+
+function messageThread(rows, viewerIsStaff) {
+  if (!rows.length) {
+    return `<div class="empty">${viewerIsStaff ? '아직 주고받은 메시지가 없습니다.' : '궁금한 점이나 전달할 내용을 선생님께 남겨 주세요.'}</div>`;
+  }
+  return rows.map((m) => {
+    const mine = viewerIsStaff ? Boolean(m.from_staff) : !m.from_staff;
+    const who = m.sender_name || (m.from_staff ? '선생님' : '학부모');
+    // 상대방이 읽었는지 (내가 보낸 메시지에만 표시)
+    const read = m.from_staff ? m.read_by_parent : m.read_by_staff;
+    return `
+      <div class="msg ${mine ? 'mine' : ''}">
+        <div class="msg-who">${esc(who)}</div>
+        <div class="msg-bubble">${esc(m.content)}</div>
+        <div class="msg-meta">${fmtDate(m.created_at)}${mine ? ` · ${read ? '읽음' : '안 읽음'}` : ''}</div>
+      </div>`;
+  }).join('');
+}
+
+// 대화 내용 + 입력창을 container 안에 그림. onSent는 보낸 뒤 다시 그릴 때 호출
+async function renderMessageBox(container, studentId, viewerIsStaff, onSent) {
+  const rows = await api(`/api/students/${studentId}/messages`);
+  container.innerHTML = `
+    <div class="msg-thread">${messageThread(rows, viewerIsStaff)}</div>
+    <form class="msg-form">
+      <textarea name="content" required maxlength="2000" rows="2"
+        placeholder="${viewerIsStaff ? '학부모님께 답장 쓰기' : '예: 다음 주 수요일에 30분 늦을 것 같습니다.'}"></textarea>
+      <button class="btn primary" type="submit">보내기</button>
+    </form>`;
+  const thread = container.querySelector('.msg-thread');
+  thread.scrollTop = thread.scrollHeight;
+  const form = container.querySelector('.msg-form');
+  const textarea = form.querySelector('textarea');
+  // PC에서는 Enter로 보내기, Shift+Enter는 줄바꿈
+  textarea.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && window.matchMedia('(pointer: fine)').matches) {
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+  onSubmit(form, async (fd) => {
+    await api(`/api/students/${studentId}/messages`, { method: 'POST', body: { content: fd.get('content') } });
+    toast('메시지를 보냈습니다.');
+    await renderMessageBox(container, studentId, viewerIsStaff, onSent);
+    if (onSent) onSent();
+  });
+  return rows;
+}
+
 function commentsList(comments, deletable = false) {
   if (!comments.length) return '<div class="empty">아직 코멘트가 없습니다.</div>';
   return comments.map((c) => `
@@ -479,6 +529,11 @@ async function renderParent() {
         <div class="avatar">${initial(s.name)}</div>
         <div><div class="muted small">우리 아이</div><h1>${esc(s.name)}</h1><div class="muted">${esc(s.course) || ''}</div></div>
       </div>
+      <section class="card" id="msg-card">
+        <div class="card-head"><h2>💬 선생님께 메시지</h2>
+          ${state.me.unread_messages ? `<span class="badge late">새 답장 ${state.me.unread_messages}</span>` : `<span class="muted small">${esc(s.teacher_name ? `담당 ${s.teacher_name}` : '')}</span>`}</div>
+        <div id="msg-box"><div class="empty">불러오는 중...</div></div>
+      </section>
       <div class="cards">${progressCard(s, '학습 진도')}${assignmentCard(s)}</div>
       <div style="height:16px"></div>
       ${scheduleCard(d.schedule)}
@@ -493,6 +548,8 @@ async function renderParent() {
         ${fileList(d.submissions, { empty: '제출한 파일이 없습니다.' })}</section>
     </main>`;
   bindTopbar();
+  await renderMessageBox($app.querySelector('#msg-box'), state.me.child_id, false);
+  state.me.unread_messages = 0;
 }
 
 // ---------- 계정 안내 (임시 비밀번호) ----------
@@ -556,7 +613,8 @@ function teacherOptions(selectedId, emptyLabel = '담당 없음') {
 
 async function renderAdmin() {
   [state.students, state.staff] = await Promise.all([api('/api/admin/students'), api('/api/staff')]);
-  if (isAdmin(state.me)) state.me = await api('/api/me'); // 가입 승인 대기 수 갱신
+  state.me = await api('/api/me'); // 가입 승인 대기 수·안 읽은 메시지 수 갱신
+  const unread = state.me.unread_messages || 0;
   const pending = state.me.pending_signups || 0;
 
   $app.innerHTML = `
@@ -573,7 +631,12 @@ async function renderAdmin() {
             <input type="checkbox" id="mine-only" ${state.mineOnly ? 'checked' : ''}> 내 담당 학생만 보기</label>
         </div>
         <div class="side-list" id="stu-list"></div>
-        <div class="side-nav"><a class="btn small" href="#/timetable">🗓 시간표</a><a class="btn small" href="#/accounts">👥 계정 목록</a><a class="btn small" href="#/common">📁 공통 자료</a></div>
+        <div class="side-nav">
+          <a class="btn small" href="#/inbox">💬 메시지함<span class="count" id="inbox-count" ${unread ? '' : 'hidden'}>${unread}</span></a>
+          <a class="btn small" href="#/timetable">🗓 시간표</a>
+          <a class="btn small" href="#/accounts">👥 계정 목록</a>
+          <a class="btn small" href="#/common">📁 공통 자료</a>
+        </div>
         ${isAdmin(state.me) ? `
         <div class="side-nav admin-nav">
           <span class="admin-nav-label">관리자 메뉴</span>
@@ -595,13 +658,14 @@ async function renderAdmin() {
 // 주소(#/...)에 따라 오른쪽 영역을 그림
 async function showAdminMain() {
   const m = /^#\/student\/(\d+)/.exec(location.hash);
-  const page = m ? 'student' : (/^#\/(common|timetable|accounts|signups|teachers)/.exec(location.hash) || [])[1] || '';
+  const page = m ? 'student' : (/^#\/(common|timetable|accounts|signups|teachers|inbox)/.exec(location.hash) || [])[1] || '';
   state.selectedId = m ? Number(m[1]) : null;
   $app.querySelector('.admin').classList.toggle('detail-open', Boolean(page));
   renderStudentList();
   if (page === 'common') await renderCommonMaterials();
   else if (page === 'timetable') await renderTimetable();
   else if (page === 'accounts') await renderAccounts();
+  else if (page === 'inbox') await renderInbox();
   else if (page === 'signups' && isAdmin(state.me)) await renderSignups();
   else if (page === 'teachers' && isAdmin(state.me)) await renderTeachers();
   else if (page === 'student') await renderAdminDetail();
@@ -627,6 +691,7 @@ function renderStudentList() {
       <span class="grow">
         <span class="row"><span class="name">${esc(s.name)}</span>
           ${s.today_status ? `<span class="badge ${s.today_status}">${ATT_LABEL[s.today_status]}</span>` : '<span class="badge">미체크</span>'}
+          ${s.unread_messages ? `<span class="badge late" title="안 읽은 학부모 메시지">💬 ${s.unread_messages}</span>` : ''}
           <span class="spacer"></span><span class="small muted">${Number(s.progress_percent) || 0}%</span></span>
         <span class="sub" style="display:block">${esc(s.course || '-')} · ${esc(s.current_lesson || '진도 미입력')}${s.teacher_name ? ` · 담당 ${esc(s.teacher_name)}` : ''}</span>
         <span class="sub" style="display:block">🕒 ${esc(scheduleText(s.schedule) || '수업 시간 미등록')}
@@ -702,7 +767,7 @@ async function renderAdminDetail() {
   const s = d.student;
   const listItem = state.students.find((x) => x.id === id) || {};
   const todayAtt = d.attendance.find((a) => a.date === today());
-  const tabs = [['progress', '진도·과제'], ['files', `자료·제출물 (${d.submissions.length})`], ['comments', `코멘트 (${d.comments.length})`], ['schedule', '수업 시간'], ['attendance', '출석'], ['account', '계정']];
+  const tabs = [['progress', '진도·과제'], ['files', `자료·제출물 (${d.submissions.length})`], ['comments', `코멘트 (${d.comments.length})`], ['messages', `메시지${listItem.unread_messages ? ` 🔴${listItem.unread_messages}` : ''}`], ['schedule', '수업 시간'], ['attendance', '출석'], ['account', '계정']];
   const reload = () => renderAdminDetail().then(refreshList);
 
   main.innerHTML = `
@@ -810,6 +875,24 @@ async function renderAdminDetail() {
       toast('코멘트가 등록되었습니다.');
       reload();
     });
+  }
+
+  if (state.tab === 'messages') {
+    body.innerHTML = `
+      <section class="card">
+        <div class="card-head"><h2>학부모 메시지</h2><span class="muted small">이 학생의 학부모님과 선생님들만 볼 수 있습니다 (학생에게는 보이지 않음)</span></div>
+        ${d.parents && d.parents.length ? '' : '<p class="small" style="margin-top:0">⚠️ 이 학생은 아직 학부모 계정이 없어 학부모님이 메시지를 볼 수 없습니다.</p>'}
+        <div id="msg-box"><div class="empty">불러오는 중...</div></div>
+      </section>`;
+    await renderMessageBox(body.querySelector('#msg-box'), id, true);
+    // 읽음 처리됐으니 목록·탭의 빨간 숫자 갱신
+    if (listItem.unread_messages) {
+      listItem.unread_messages = 0;
+      const tabBtn = main.querySelector('[data-tab=messages]');
+      if (tabBtn) tabBtn.textContent = '메시지';
+      refreshList();
+      refreshInboxCount();
+    }
   }
 
   if (state.tab === 'schedule') {
@@ -1030,6 +1113,39 @@ async function renderAdminDetail() {
   }
 
   bindDeletes(body, reload);
+}
+
+async function refreshInboxCount() {
+  const me = await api('/api/me');
+  state.me.unread_messages = me.unread_messages;
+  const el = $app.querySelector('#inbox-count');
+  if (el) { el.textContent = me.unread_messages; el.hidden = !me.unread_messages; }
+}
+
+async function renderInbox() {
+  const main = $app.querySelector('#main');
+  const rows = (await api('/api/admin/inbox')).filter((r) => !state.mineOnly || r.teacher_id === state.me.id);
+  main.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a class="btn small back-btn" href="#/">← 목록</a><h2>메시지함</h2></div>
+    <p class="muted small" style="margin-top:0">학부모님이 보낸 메시지입니다. 안 읽은 대화가 위에 표시됩니다.${state.mineOnly ? ' (내 담당 학생만 보는 중)' : ''}</p>
+    <section class="card" style="padding:6px 18px">
+      ${rows.length ? `<ul class="list">${rows.map((r) => `
+        <li class="inbox-item ${r.unread ? 'unread' : ''}" data-id="${r.student_id}">
+          <span class="avatar sm">${initial(r.student_name)}</span>
+          <span class="grow">
+            <div class="row"><span class="title">${esc(r.student_name)} 학부모</span>
+              ${r.unread ? `<span class="count">${r.unread}</span>` : ''}<span class="spacer"></span><span class="muted small">${fmtDate(r.last_at)}</span></div>
+            <div class="muted small inbox-preview">${r.last_from_staff ? `↪ ${esc(r.last_sender || '선생님')}: ` : ''}${esc(r.last_content)}</div>
+          </span>
+        </li>`).join('')}</ul>` : '<div class="empty">아직 받은 메시지가 없습니다.</div>'}
+    </section>`;
+  main.querySelectorAll('.inbox-item').forEach((li) => {
+    li.onclick = () => {
+      state.tab = 'messages';
+      lastStudent = li.dataset.id; // 학생을 바꿔도 메시지 탭이 열리도록
+      location.hash = `#/student/${li.dataset.id}`;
+    };
+  });
 }
 
 async function renderAccounts() {

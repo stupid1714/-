@@ -154,7 +154,9 @@ app.get('/api/me', requireAuth, (req, res) => {
   if (me.role === 'parent' && me.child_id) {
     const child = getStudent(me.child_id);
     me.child_name = child ? child.name : null;
+    me.unread_messages = db.prepare('SELECT COUNT(*) AS c FROM messages WHERE student_id = ? AND from_staff = 1 AND read_by_parent = 0').get(me.child_id).c;
   }
+  if (isStaff(me)) me.unread_messages = db.prepare('SELECT COUNT(*) AS c FROM messages WHERE from_staff = 0 AND read_by_staff = 0').get().c;
   res.json(me);
 });
 
@@ -221,6 +223,55 @@ app.get('/api/students/:id', requireAuth, (req, res) => {
   res.json(detail);
 });
 
+// ---------- 학부모 ↔ 선생님 메시지 ----------
+
+// 학부모(그 학생의 부모)와 선생님·관리자만. 학생 본인은 볼 수 없음
+function canMessage(user, studentId) {
+  return isStaff(user) || (user.role === 'parent' && user.child_id === studentId);
+}
+
+app.get('/api/students/:id/messages', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!canMessage(req.user, id) || !getStudent(id)) return res.status(403).json({ error: '권한이 없습니다.' });
+  const rows = db.prepare(
+    `SELECT m.id, m.content, m.from_staff, m.created_at, m.read_by_staff, m.read_by_parent, m.sender_id,
+            u.name AS sender_name, u.role AS sender_role
+     FROM messages m LEFT JOIN users u ON u.id = m.sender_id WHERE m.student_id = ? ORDER BY m.id`
+  ).all(id);
+  // 열어 본 쪽의 '읽음' 처리
+  if (isStaff(req.user)) db.prepare('UPDATE messages SET read_by_staff = 1 WHERE student_id = ? AND from_staff = 0 AND read_by_staff = 0').run(id);
+  else db.prepare('UPDATE messages SET read_by_parent = 1 WHERE student_id = ? AND from_staff = 1 AND read_by_parent = 0').run(id);
+  res.json(rows);
+});
+
+app.post('/api/students/:id/messages', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!canMessage(req.user, id) || !getStudent(id)) return res.status(403).json({ error: '권한이 없습니다.' });
+  const content = String((req.body || {}).content || '').trim();
+  if (!content) return res.status(400).json({ error: '메시지 내용을 입력하세요.' });
+  if (content.length > 2000) return res.status(400).json({ error: '메시지는 2000자 이하로 써 주세요.' });
+  const staff = isStaff(req.user) ? 1 : 0;
+  // 보낸 쪽은 자기 메시지를 이미 읽은 것으로 처리
+  db.prepare('INSERT INTO messages (student_id, sender_id, from_staff, content, read_by_staff, read_by_parent) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(id, req.user.id, staff, content, staff, staff ? 0 : 1);
+  res.json({ ok: true });
+});
+
+// 메시지함: 학생별 마지막 메시지와 안 읽은 수
+app.get('/api/admin/inbox', requireStaff, (req, res) => {
+  res.json(db.prepare(
+    `SELECT u.id AS student_id, u.name AS student_name, p.teacher_id,
+            m.content AS last_content, m.from_staff AS last_from_staff, m.created_at AS last_at,
+            (SELECT name FROM users s WHERE s.id = m.sender_id) AS last_sender,
+            (SELECT COUNT(*) FROM messages x WHERE x.student_id = u.id AND x.from_staff = 0 AND x.read_by_staff = 0) AS unread
+     FROM users u
+     LEFT JOIN student_profiles p ON p.user_id = u.id
+     JOIN messages m ON m.id = (SELECT MAX(id) FROM messages WHERE student_id = u.id)
+     WHERE u.role = 'student' AND u.status = 'active'
+     ORDER BY unread > 0 DESC, m.id DESC`
+  ).all());
+});
+
 // ---------- 관리자: 학생 목록 / 계정 관리 ----------
 
 app.get('/api/admin/students', requireStaff, (req, res) => {
@@ -229,6 +280,7 @@ app.get('/api/admin/students', requireStaff, (req, res) => {
     `SELECT u.id, u.username, u.name, p.course, p.current_lesson, p.progress_percent,
             (SELECT status FROM attendance a WHERE a.student_id = u.id AND a.date = ?) AS today_status,
             (SELECT COUNT(*) FROM files f WHERE f.kind = 'submission' AND f.student_id = u.id) AS submission_count,
+            (SELECT COUNT(*) FROM messages m WHERE m.student_id = u.id AND m.from_staff = 0 AND m.read_by_staff = 0) AS unread_messages,
             (SELECT name FROM users pr WHERE pr.role = 'parent' AND pr.child_id = u.id AND pr.status = 'active' LIMIT 1) AS parent_name,
             p.teacher_id, (SELECT name FROM users t WHERE t.id = p.teacher_id) AS teacher_name
      FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id

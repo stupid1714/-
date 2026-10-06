@@ -111,6 +111,19 @@ CREATE TABLE IF NOT EXISTS schedules (
   UNIQUE (student_id, weekday)
 );
 
+-- 학부모 ↔ 선생님 메시지 (학생별 대화방)
+CREATE TABLE IF NOT EXISTS messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  sender_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  from_staff INTEGER NOT NULL DEFAULT 0,
+  content TEXT NOT NULL,
+  read_by_staff INTEGER NOT NULL DEFAULT 0,
+  read_by_parent INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+);
+CREATE INDEX IF NOT EXISTS idx_messages_student ON messages(student_id, id);
+
 CREATE TABLE IF NOT EXISTS sessions (
   token TEXT PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -170,6 +183,9 @@ function seed() {
   db.prepare('INSERT INTO comments (student_id, author_id, content) VALUES (?, ?, ?)')
     .run(s1, t1, '반복문 개념을 빠르게 이해했어요. 다음 시간에는 리스트를 함께 다뤄볼게요!');
   db.prepare('INSERT INTO attendance (student_id, date, status) VALUES (?, ?, ?)').run(s1, today, 'present');
+  const p1 = db.prepare("SELECT id FROM users WHERE username = 'parent1'").get().id;
+  db.prepare('INSERT INTO messages (student_id, sender_id, from_staff, content, read_by_parent) VALUES (?, ?, 0, ?, 1)')
+    .run(s1, p1, '선생님, 민준이가 다음 주 수요일에 병원 때문에 30분 늦을 것 같습니다.');
   db.prepare('INSERT INTO progress_logs (student_id, date, content) VALUES (?, ?, ?)')
     .run(s1, today, '5강 반복문 실습 완료');
 
