@@ -1,9 +1,11 @@
 'use strict';
 
 const $app = document.getElementById('app');
-const state = { me: null, students: [], selectedId: null, tab: 'progress', search: '', todayOnly: false };
+const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
-const ROLE_LABEL = { admin: '선생님', student: '학생', parent: '학부모' };
+const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
+const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
+const isAdmin = (me) => Boolean(me) && me.role === 'admin';
 const ATT_LABEL = { present: '출석', late: '지각', absent: '결석', excused: '공결' };
 const DAY_LABEL = ['일', '월', '화', '수', '목', '금', '토'];
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // 월요일부터 표시
@@ -86,7 +88,7 @@ function topbar() {
       <span class="brand">학습 관리</span>
       <span class="spacer"></span>
       <span class="who"><span class="role-label">${ROLE_LABEL[me.role]} · </span><b>${esc(me.name)}</b>${me.name.endsWith('님') ? '' : '님'}</span>
-      <button class="btn small" data-act="password">비밀번호</button>
+      <button class="btn small" data-act="password">${isStaff(me) ? '내 정보' : '비밀번호'}</button>
       <button class="btn small" data-act="logout">로그아웃</button>
     </header>`;
 }
@@ -112,14 +114,33 @@ function modal(html, bind) {
 }
 
 function openPasswordModal() {
+  const staff = isStaff(state.me);
   modal(`
-    <h2>비밀번호 변경</h2>
-    <form>
+    ${staff ? `
+    <h2>내 정보</h2>
+    <form id="my-name" style="margin-bottom:18px">
+      <label class="field"><span>표시 이름 (학생·학부모 화면의 코멘트 작성자로 보입니다)</span>
+        <input type="text" name="name" value="${esc(state.me.name)}" required></label>
+      <div class="row end"><button class="btn" type="submit">이름 저장</button></div>
+    </form>
+    <p class="muted small" style="margin:0 0 12px">아이디: <b class="mono">${esc(state.me.username)}</b></p>` : ''}
+    <h2 style="font-size:15px">비밀번호 변경</h2>
+    <form id="my-pw">
       <label class="field"><span>현재 비밀번호</span><input type="password" name="current" required autocomplete="current-password"></label>
       <label class="field"><span>새 비밀번호 (4자 이상)</span><input type="password" name="next" required minlength="4" autocomplete="new-password"></label>
       <div class="row end"><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">변경</button></div>
     </form>`, (el, close) => {
-    onSubmit(el.querySelector('form'), async (fd) => {
+    const nameForm = el.querySelector('#my-name');
+    if (nameForm) {
+      onSubmit(nameForm, async (fd) => {
+        await api('/api/me/name', { method: 'POST', body: Object.fromEntries(fd) });
+        state.me.name = fd.get('name');
+        toast('이름이 저장되었습니다.');
+        close();
+        render();
+      });
+    }
+    onSubmit(el.querySelector('#my-pw'), async (fd) => {
       await api('/api/me/password', { method: 'POST', body: Object.fromEntries(fd) });
       toast('비밀번호가 변경되었습니다.');
       close();
@@ -286,7 +307,7 @@ function renderLogin() {
         <div class="role-tabs">
           <button type="button" data-role="student" class="on">학생</button>
           <button type="button" data-role="parent">학부모</button>
-          <button type="button" data-role="admin">선생님</button>
+          <button type="button" data-role="staff">선생님</button>
         </div>
         <form>
           <label class="field"><span>아이디</span><input type="text" name="username" required autocomplete="username" autocapitalize="off"></label>
@@ -294,9 +315,12 @@ function renderLogin() {
           <div class="error"></div>
           <button class="btn primary" type="submit" style="width:100%">로그인</button>
         </form>
-        <p class="muted small" style="text-align:center;margin:14px 0 0">아이디나 비밀번호를 잊으셨나요? 선생님께 문의해 주세요.</p>
+        <button type="button" class="btn" id="go-signup" style="width:100%;margin-top:10px">회원가입</button>
+        <p class="muted small" style="text-align:center;margin:14px 0 0">아이디나 비밀번호를 잊으셨나요? 학원에 문의해 주세요.<br>
+          선생님 계정은 관리자가 만들어 드립니다.</p>
       </div>
     </div>`;
+  $app.querySelector('#go-signup').onclick = () => renderSignup(role === 'parent' ? 'parent' : 'student');
   $app.querySelectorAll('[data-role]').forEach((b) => {
     b.onclick = () => {
       role = b.dataset.role;
@@ -310,13 +334,79 @@ function renderLogin() {
     errEl.textContent = '';
     try {
       const user = await api('/api/login', { method: 'POST', body: Object.fromEntries(new FormData(form)) });
-      if (user.role !== role) {
+      if ((role === 'staff') !== isStaff(user) || (role !== 'staff' && user.role !== role)) {
         // 선택한 탭과 계정 종류가 달라도 로그인은 진행하고 알려줌
         toast(`${ROLE_LABEL[user.role]} 계정으로 로그인했습니다.`);
       }
       state.me = await api('/api/me');
       history.replaceState(null, '', '#/'); // hashchange 없이 주소만 정리 (중복 렌더 방지)
       render();
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  });
+}
+
+// ---------- 회원가입 ----------
+
+function renderSignup(initialRole = 'student') {
+  let role = initialRole;
+  $app.innerHTML = `
+    <div class="login-wrap">
+      <div class="card login-card">
+        <h1>회원가입</h1>
+        <p class="sub">가입 후 학원에서 승인하면 로그인할 수 있습니다.</p>
+        <div class="role-tabs" style="grid-template-columns:1fr 1fr">
+          <button type="button" data-role="student">학생</button>
+          <button type="button" data-role="parent">학부모</button>
+        </div>
+        <form>
+          <label class="field"><span id="name-label">이름</span><input type="text" name="name" required></label>
+          <label class="field"><span>아이디 (영문·숫자 3~20자)</span>
+            <input type="text" name="username" required autocomplete="username" autocapitalize="off" pattern="[A-Za-z0-9_]{3,20}"></label>
+          <label class="field"><span>비밀번호 (4자 이상)</span><input type="password" name="password" required minlength="4" autocomplete="new-password"></label>
+          <label class="field"><span>비밀번호 확인</span><input type="password" name="password2" required minlength="4" autocomplete="new-password"></label>
+          <label class="field"><span>연락처 (선택)</span><input type="text" name="phone" inputmode="tel" placeholder="010-0000-0000"></label>
+          <div id="child-fields">
+            <p class="small" style="margin:4px 0 8px"><b>자녀 정보</b> — 자녀가 먼저 <b>학생으로 가입</b>해야 합니다.</p>
+            <div class="grid2">
+              <label class="field"><span>자녀 이름</span><input type="text" name="child_name"></label>
+              <label class="field"><span>자녀 학생 아이디</span><input type="text" name="child_username" autocapitalize="off"></label>
+            </div>
+          </div>
+          <div class="error"></div>
+          <button class="btn primary" type="submit" style="width:100%">가입 신청</button>
+        </form>
+        <button type="button" class="btn ghost" id="go-login" style="width:100%;margin-top:8px">← 로그인으로 돌아가기</button>
+      </div>
+    </div>`;
+  const form = $app.querySelector('form');
+  const setRole = (r) => {
+    role = r;
+    $app.querySelectorAll('[data-role]').forEach((x) => x.classList.toggle('on', x.dataset.role === r));
+    const parent = r === 'parent';
+    $app.querySelector('#child-fields').style.display = parent ? '' : 'none';
+    $app.querySelector('#name-label').textContent = parent ? '학부모 이름' : '학생 이름';
+    form.child_name.required = form.child_username.required = parent;
+  };
+  $app.querySelectorAll('[data-role]').forEach((b) => { b.onclick = () => setRole(b.dataset.role); });
+  setRole(role);
+  $app.querySelector('#go-login').onclick = renderLogin;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errEl = form.querySelector('.error');
+    errEl.textContent = '';
+    const data = Object.fromEntries(new FormData(form));
+    if (data.password !== data.password2) { errEl.textContent = '비밀번호 확인이 일치하지 않습니다.'; return; }
+    try {
+      await api('/api/signup', { method: 'POST', body: { ...data, role } });
+      $app.querySelector('.login-card').innerHTML = `
+        <div style="text-align:center;font-size:44px">✅</div>
+        <h1>가입 신청 완료</h1>
+        <p class="sub">학원에서 승인하면 <b>${esc(data.username)}</b> 아이디로 로그인할 수 있습니다.<br>
+          ${role === 'student' ? '학부모님은 이 아이디로 자녀 연결 가입을 하실 수 있습니다.' : ''}</p>
+        <button class="btn primary" id="go-login2" style="width:100%">로그인 화면으로</button>`;
+      $app.querySelector('#go-login2').onclick = renderLogin;
     } catch (err) {
       errEl.textContent = err.message;
     }
@@ -447,20 +537,27 @@ function loginInfoText(who, username, password) {
 주소: ${location.origin}
 아이디: ${username}
 비밀번호: ${password}
-로그인 후 오른쪽 위 '비밀번호' 버튼에서 원하는 비밀번호로 바꿔 주세요.`;
+로그인 후 오른쪽 위 '비밀번호'(선생님은 '내 정보') 버튼에서 원하는 비밀번호로 바꿔 주세요.`;
 }
 
-async function issueTempPassword(studentId, target, username, who) {
+async function issueTempPassword(studentId, target, username, who, parentId) {
   if (!confirm(`${who}의 비밀번호를 새 임시 비밀번호로 바꿀까요?\n기존 비밀번호로는 더 이상 로그인할 수 없습니다.`)) return;
   const password = randomPassword();
-  await api(`/api/admin/students/${studentId}/password`, { method: 'POST', body: { target, password } });
+  await api(`/api/admin/students/${studentId}/password`, { method: 'POST', body: { target, password, parent_id: parentId } });
   showLoginInfo('임시 비밀번호 발급 완료', loginInfoText(who, username, password));
 }
 
 // ---------- 관리자 화면 ----------
 
+function teacherOptions(selectedId, emptyLabel = '담당 없음') {
+  return `<option value="">${emptyLabel}</option>${state.staff.map((t) =>
+    `<option value="${t.id}" ${Number(selectedId) === t.id ? 'selected' : ''}>${esc(t.name)}${t.role === 'admin' ? ' (관리자)' : ''}</option>`).join('')}`;
+}
+
 async function renderAdmin() {
-  state.students = await api('/api/admin/students');
+  [state.students, state.staff] = await Promise.all([api('/api/admin/students'), api('/api/staff')]);
+  if (isAdmin(state.me)) state.me = await api('/api/me'); // 가입 승인 대기 수 갱신
+  const pending = state.me.pending_signups || 0;
 
   $app.innerHTML = `
     ${topbar()}
@@ -472,9 +569,17 @@ async function renderAdmin() {
           <input type="search" placeholder="이름 검색" value="${esc(state.search)}" id="search">
           <label class="row small muted" style="margin-top:8px;cursor:pointer;gap:6px">
             <input type="checkbox" id="today-only" ${state.todayOnly ? 'checked' : ''}> 오늘(${DAY_LABEL[new Date().getDay()]}) 오는 학생만 보기</label>
+          <label class="row small muted" style="margin-top:4px;cursor:pointer;gap:6px">
+            <input type="checkbox" id="mine-only" ${state.mineOnly ? 'checked' : ''}> 내 담당 학생만 보기</label>
         </div>
         <div class="side-list" id="stu-list"></div>
         <div class="side-nav"><a class="btn small" href="#/timetable">🗓 시간표</a><a class="btn small" href="#/accounts">👥 계정 목록</a><a class="btn small" href="#/common">📁 공통 자료</a></div>
+        ${isAdmin(state.me) ? `
+        <div class="side-nav admin-nav">
+          <span class="admin-nav-label">관리자 메뉴</span>
+          <a class="btn small" href="#/signups">✅ 가입 승인${pending ? ` <span class="count">${pending}</span>` : ''}</a>
+          <a class="btn small" href="#/teachers">🧑‍🏫 선생님 관리</a>
+        </div>` : ''}
       </aside>
       <section class="main" id="main"></section>
     </div>`;
@@ -483,21 +588,28 @@ async function renderAdmin() {
   $app.querySelector('#search').oninput = (e) => { state.search = e.target.value; renderStudentList(); };
   $app.querySelector('[data-act=add]').onclick = openAddStudentModal;
   $app.querySelector('#today-only').onchange = (e) => { state.todayOnly = e.target.checked; renderStudentList(); };
+  $app.querySelector('#mine-only').onchange = (e) => { state.mineOnly = e.target.checked; renderStudentList(); };
   await showAdminMain();
 }
 
 // 주소(#/...)에 따라 오른쪽 영역을 그림
 async function showAdminMain() {
   const m = /^#\/student\/(\d+)/.exec(location.hash);
-  const page = m ? 'student' : (/^#\/(common|timetable|accounts)/.exec(location.hash) || [])[1] || '';
+  const page = m ? 'student' : (/^#\/(common|timetable|accounts|signups|teachers)/.exec(location.hash) || [])[1] || '';
   state.selectedId = m ? Number(m[1]) : null;
   $app.querySelector('.admin').classList.toggle('detail-open', Boolean(page));
   renderStudentList();
   if (page === 'common') await renderCommonMaterials();
   else if (page === 'timetable') await renderTimetable();
   else if (page === 'accounts') await renderAccounts();
+  else if (page === 'signups' && isAdmin(state.me)) await renderSignups();
+  else if (page === 'teachers' && isAdmin(state.me)) await renderTeachers();
   else if (page === 'student') await renderAdminDetail();
-  else $app.querySelector('#main').innerHTML = '<div class="welcome"><div><div style="font-size:40px">👈</div>왼쪽 목록에서 학생을 선택하세요.</div></div>';
+  else {
+    const pending = state.me.pending_signups || 0;
+    $app.querySelector('#main').innerHTML = `<div class="welcome"><div><div style="font-size:40px">👈</div>왼쪽 목록에서 학생을 선택하세요.
+      ${isAdmin(state.me) && pending ? `<p><a class="btn primary" href="#/signups">승인 대기 중인 가입 신청 ${pending}건 보기</a></p>` : ''}</div></div>`;
+  }
 }
 
 function renderStudentList() {
@@ -505,9 +617,10 @@ function renderStudentList() {
   const list = state.students
     .filter((s) => !q || s.name.includes(q) || (s.course || '').includes(q))
     .filter((s) => !state.todayOnly || todaySlot(s.schedule))
+    .filter((s) => !state.mineOnly || s.teacher_id === state.me.id)
     .sort((a, b) => (state.todayOnly ? todaySlot(a.schedule).start_time.localeCompare(todaySlot(b.schedule).start_time) : 0));
   const el = $app.querySelector('#stu-list');
-  if (!list.length) { el.innerHTML = `<div class="empty">${state.todayOnly ? '오늘 수업이 있는 학생이 없습니다.' : '학생이 없습니다.'}</div>`; return; }
+  if (!list.length) { el.innerHTML = `<div class="empty">${state.todayOnly || state.mineOnly ? '조건에 맞는 학생이 없습니다.' : '학생이 없습니다.'}</div>`; return; }
   el.innerHTML = list.map((s) => `
     <button class="stu-item ${s.id === state.selectedId ? 'on' : ''}" data-id="${s.id}">
       <span class="avatar sm">${initial(s.name)}</span>
@@ -515,7 +628,7 @@ function renderStudentList() {
         <span class="row"><span class="name">${esc(s.name)}</span>
           ${s.today_status ? `<span class="badge ${s.today_status}">${ATT_LABEL[s.today_status]}</span>` : '<span class="badge">미체크</span>'}
           <span class="spacer"></span><span class="small muted">${Number(s.progress_percent) || 0}%</span></span>
-        <span class="sub" style="display:block">${esc(s.course || '-')} · ${esc(s.current_lesson || '진도 미입력')}</span>
+        <span class="sub" style="display:block">${esc(s.course || '-')} · ${esc(s.current_lesson || '진도 미입력')}${s.teacher_name ? ` · 담당 ${esc(s.teacher_name)}` : ''}</span>
         <span class="sub" style="display:block">🕒 ${esc(scheduleText(s.schedule) || '수업 시간 미등록')}
           ${s.schedule && s.schedule.length && weeklySessions(s.schedule) !== WEEKLY_SESSIONS ? `<span class="badge late">주 ${weeklySessions(s.schedule)}회</span>` : ''}</span>
         ${progressBar(s.progress_percent)}
@@ -531,7 +644,9 @@ function openAddStudentModal() {
       <div class="grid2">
         <label class="field"><span>학생 이름 *</span><input type="text" name="name" required></label>
         <label class="field"><span>수강 과정</span><input type="text" name="course"></label>
-        <label class="field"><span>학생 아이디 *</span><input type="text" name="username" required autocapitalize="off"></label>
+        <label class="field"><span>담당 선생님</span><select name="teacher_id">${teacherOptions(state.me.role === 'teacher' ? state.me.id : '')}</select></label>
+        <span></span>
+        <label class="field"><span>학생 아이디 * (영문·숫자)</span><input type="text" name="username" required autocapitalize="off"></label>
         <label class="field"><span>학생 비밀번호 *</span><input type="text" name="password" required minlength="4"></label>
       </div>
       <p class="muted small" style="margin:4px 0 10px">학부모 계정 (선택) — 입력하면 함께 생성되어 이 학생과 연결됩니다.</p>
@@ -596,7 +711,7 @@ async function renderAdminDetail() {
       <div class="avatar">${initial(s.name)}</div>
       <div><h1 style="font-size:20px">${esc(s.name)}</h1>
         <div class="muted small">🕒 ${esc(scheduleText(d.schedule) || '수업 시간 미등록')} ${weeklyBadge(d.schedule)}</div>
-        <div class="muted small">${esc(s.username)}${listItem.parent_name ? ` · 학부모: ${esc(listItem.parent_name)}` : ' · 학부모 계정 없음'}</div></div>
+        <div class="muted small">${esc(s.username)} · 담당 ${esc(s.teacher_name || '없음')}${listItem.parent_name ? ` · 학부모: ${esc(listItem.parent_name)}` : ' · 학부모 계정 없음'}</div></div>
     </div>
     <div class="overview">
       <div class="card"><div class="label">진도율</div><div class="value">${Number(s.progress_percent) || 0}%</div>${progressBar(s.progress_percent)}</div>
@@ -618,6 +733,8 @@ async function renderAdminDetail() {
           <div class="grid2">
             <label class="field"><span>이름</span><input type="text" name="name" value="${esc(s.name)}" required></label>
             <label class="field"><span>수강 과정</span><input type="text" name="course" value="${esc(s.course)}"></label>
+            <label class="field"><span>담당 선생님</span><select name="teacher_id">${teacherOptions(s.teacher_id)}</select></label>
+            <span></span>
             <label class="field"><span>현재 진도</span><input type="text" name="current_lesson" value="${esc(s.current_lesson)}"></label>
             <label class="field"><span>다음 진도</span><input type="text" name="next_lesson" value="${esc(s.next_lesson)}"></label>
           </div>
@@ -829,7 +946,12 @@ async function renderAdminDetail() {
   }
 
   if (state.tab === 'account') {
-    const parent = (d.parents || [])[0];
+    const parents = d.parents || [];
+    const whoOf = (target, pid) => {
+      if (target !== 'parent') return { name: `${s.name} 학생`, username: s.username };
+      const p = parents.find((x) => x.id === Number(pid));
+      return { name: p.name, username: p.username };
+    };
     body.innerHTML = `
       <section class="card">
         <div class="card-head"><h2>로그인 정보</h2></div>
@@ -838,72 +960,73 @@ async function renderAdminDetail() {
         <ul class="list">
           <li>
             <span class="badge common">학생</span>
-            <span class="grow"><div class="title">${esc(s.name)}</div><div class="small">아이디 <b class="mono">${esc(s.username)}</b></div></span>
+            <span class="grow"><div class="title">${esc(s.name)}</div><div class="small">아이디 <b class="mono">${esc(s.username)}</b>${s.phone ? ` · ${esc(s.phone)}` : ''}</div></span>
             <button class="btn small" data-temp="student">임시 비밀번호 발급</button>
           </li>
-          ${parent ? `
+          ${parents.map((p) => `
           <li>
             <span class="badge excused">학부모</span>
-            <span class="grow"><div class="title">${esc(parent.name)}</div><div class="small">아이디 <b class="mono">${esc(parent.username)}</b></div></span>
-            <button class="btn small" data-temp="parent">임시 비밀번호 발급</button>
-          </li>` : ''}
+            <span class="grow"><div class="title">${esc(p.name)}</div><div class="small">아이디 <b class="mono">${esc(p.username)}</b>${p.phone ? ` · ${esc(p.phone)}` : ''}</div></span>
+            <button class="btn small" data-temp="parent" data-pid="${p.id}">임시 비밀번호 발급</button>
+          </li>`).join('')}
         </ul>
-        ${parent ? '' : `
-          <form id="add-parent" style="margin-top:12px">
-            <p class="small" style="margin:0 0 8px"><b>학부모 계정이 없습니다.</b> 지금 만들 수 있습니다.</p>
-            <div class="grid2">
-              <label class="field"><span>학부모 아이디</span><input type="text" name="username" required autocapitalize="off"></label>
-              <label class="field"><span>비밀번호</span><input type="text" name="password" required minlength="4"></label>
-            </div>
-            <div class="row end"><button class="btn primary" type="submit">학부모 계정 만들기</button></div>
-          </form>`}
+        <form id="add-parent" style="margin-top:12px">
+          <p class="small" style="margin:0 0 8px"><b>${parents.length ? '학부모 계정 추가' : '학부모 계정이 없습니다.'}</b>
+            ${parents.length ? '(예: 아버지·어머니 각각)' : '지금 만들거나, 학부모님이 직접 회원가입하도록 안내하세요.'}</p>
+          <div class="grid2">
+            <label class="field"><span>학부모 아이디 (영문·숫자)</span><input type="text" name="username" required autocapitalize="off"></label>
+            <label class="field"><span>비밀번호</span><input type="text" name="password" required minlength="4"></label>
+          </div>
+          <div class="row end"><button class="btn${parents.length ? '' : ' primary'}" type="submit">학부모 계정 만들기</button></div>
+        </form>
       </section>
       <section class="card">
         <div class="card-head"><h2>비밀번호 직접 정하기</h2></div>
         <form id="pw">
           <div class="grid2">
-            <label class="field"><span>대상</span><select name="target"><option value="student">학생 (${esc(s.username)})</option>
-              ${parent ? `<option value="parent">학부모 (${esc(parent.username)})</option>` : ''}</select></label>
+            <label class="field"><span>대상</span><select name="who"><option value="student">학생 (${esc(s.username)})</option>
+              ${parents.map((p) => `<option value="parent:${p.id}">학부모 (${esc(p.username)})</option>`).join('')}</select></label>
             <label class="field"><span>새 비밀번호 (4자 이상)</span><input type="text" name="password" required minlength="4"></label>
           </div>
           <div class="row end"><button class="btn primary" type="submit">변경</button></div>
         </form>
       </section>
+      ${isAdmin(state.me) ? `
       <section class="card">
         <div class="card-head"><h2>학생 삭제</h2></div>
         <p class="muted small" style="margin-top:0">학생, 연결된 학부모 계정, 진도·출석·코멘트·파일이 모두 삭제되며 되돌릴 수 없습니다.</p>
         <button class="btn danger" id="del-student">학생 삭제</button>
-      </section>`;
+      </section>` : ''}`;
     body.querySelectorAll('[data-temp]').forEach((btn) => {
       btn.onclick = () => {
-        const isParent = btn.dataset.temp === 'parent';
-        issueTempPassword(id, btn.dataset.temp, isParent ? parent.username : s.username, isParent ? parent.name : `${s.name} 학생`)
-          .catch((e) => toast(e.message, true));
+        const w = whoOf(btn.dataset.temp, btn.dataset.pid);
+        issueTempPassword(id, btn.dataset.temp, w.username, w.name, btn.dataset.pid).catch((e) => toast(e.message, true));
       };
     });
-    const addParent = body.querySelector('#add-parent');
-    if (addParent) {
-      onSubmit(addParent, async (fd) => {
-        const data = Object.fromEntries(fd);
-        await api(`/api/admin/students/${id}/parent`, { method: 'POST', body: data });
-        showLoginInfo('학부모 계정 생성 완료', loginInfoText(`${s.name} 학부모`, data.username, data.password));
-        reload();
-      });
-    }
-    onSubmit(body.querySelector('#pw'), async (fd) => {
+    onSubmit(body.querySelector('#add-parent'), async (fd) => {
       const data = Object.fromEntries(fd);
-      await api(`/api/admin/students/${id}/password`, { method: 'POST', body: data });
-      const isParent = data.target === 'parent';
-      showLoginInfo('비밀번호 변경 완료', loginInfoText(isParent ? parent.name : `${s.name} 학생`, isParent ? parent.username : s.username, data.password));
+      await api(`/api/admin/students/${id}/parent`, { method: 'POST', body: data });
+      showLoginInfo('학부모 계정 생성 완료', loginInfoText(`${s.name} 학부모`, data.username, data.password));
+      reload();
+    });
+    onSubmit(body.querySelector('#pw'), async (fd) => {
+      const [target, pid] = String(fd.get('who')).split(':');
+      const password = fd.get('password');
+      await api(`/api/admin/students/${id}/password`, { method: 'POST', body: { target, password, parent_id: pid } });
+      const w = whoOf(target, pid);
+      showLoginInfo('비밀번호 변경 완료', loginInfoText(w.name, w.username, password));
       body.querySelector('#pw').reset();
     });
-    body.querySelector('#del-student').onclick = async () => {
-      if (!confirm(`${s.name} 학생을 삭제할까요? 되돌릴 수 없습니다.`)) return;
-      await api(`/api/admin/students/${id}`, { method: 'DELETE' });
-      toast('삭제되었습니다.');
-      location.hash = '#/';
-      refreshList();
-    };
+    const del = body.querySelector('#del-student');
+    if (del) {
+      del.onclick = async () => {
+        if (!confirm(`${s.name} 학생을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+        await api(`/api/admin/students/${id}`, { method: 'DELETE' });
+        toast('삭제되었습니다.');
+        location.hash = '#/';
+        refreshList();
+      };
+    }
   }
 
   bindDeletes(body, reload);
@@ -920,18 +1043,16 @@ async function renderAccounts() {
     <section class="card" style="padding:0;overflow:hidden">
       ${rows.length ? `<div class="acc-table">
         <div class="acc-row acc-head"><span>학생</span><span>학생 아이디</span><span>학부모 아이디</span></div>
-        ${rows.map((r) => {
-          const parent = r.parents[0];
-          return `
-          <div class="acc-row" data-search="${esc(`${r.name} ${r.username} ${parent ? parent.username : ''}`.toLowerCase())}">
+        ${rows.map((r) => `
+          <div class="acc-row" data-search="${esc(`${r.name} ${r.username} ${r.parents.map((p) => `${p.username} ${p.name}`).join(' ')}`.toLowerCase())}">
             <span><a href="#/student/${r.id}" class="title">${esc(r.name)}</a><span class="muted small acc-course">${esc(r.course || '')}</span></span>
             <span><span class="acc-label">학생</span><b class="mono">${esc(r.username)}</b>
               <button class="btn small" data-temp="student" data-id="${r.id}">임시 비밀번호</button></span>
-            <span><span class="acc-label">학부모</span>${parent ? `<b class="mono">${esc(parent.username)}</b>
-              <button class="btn small" data-temp="parent" data-id="${r.id}">임시 비밀번호</button>`
+            <span class="acc-parents"><span class="acc-label">학부모</span>${r.parents.length ? r.parents.map((p) => `
+              <span class="acc-parent"><b class="mono">${esc(p.username)}</b>
+              <button class="btn small" data-temp="parent" data-id="${r.id}" data-pid="${p.id}">임시 비밀번호</button></span>`).join('')
               : `<a class="small" href="#/student/${r.id}" data-goto-account>학부모 계정 만들기</a>`}</span>
-          </div>`;
-        }).join('')}
+          </div>`).join('')}
       </div>` : '<div class="empty">학생이 없습니다.</div>'}
     </section>`;
   main.querySelector('#acc-search').oninput = (e) => {
@@ -942,9 +1063,170 @@ async function renderAccounts() {
   main.querySelectorAll('[data-temp]').forEach((btn) => {
     btn.onclick = () => {
       const r = rows.find((x) => x.id === Number(btn.dataset.id));
-      const isParent = btn.dataset.temp === 'parent';
-      issueTempPassword(r.id, btn.dataset.temp, isParent ? r.parents[0].username : r.username, isParent ? r.parents[0].name : `${r.name} 학생`)
+      const p = r.parents.find((x) => x.id === Number(btn.dataset.pid));
+      issueTempPassword(r.id, btn.dataset.temp, p ? p.username : r.username, p ? p.name : `${r.name} 학생`, btn.dataset.pid)
         .catch((e) => toast(e.message, true));
+    };
+  });
+}
+
+async function renderSignups() {
+  const main = $app.querySelector('#main');
+  const rows = await api('/api/admin/signups');
+  const students = rows.filter((r) => r.role === 'student');
+  const parents = rows.filter((r) => r.role === 'parent');
+  const reload = async () => {
+    state.me = await api('/api/me');
+    renderAdmin(); // 왼쪽 목록과 승인 대기 수까지 새로 그림
+  };
+  main.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a class="btn small back-btn" href="#/">← 목록</a><h2>가입 승인</h2></div>
+    <p class="muted small" style="margin-top:0">학생·학부모가 회원가입하면 여기에 표시됩니다. 승인해야 로그인할 수 있습니다.
+      학부모는 자녀(학생)를 먼저 승인한 뒤 승인할 수 있습니다.</p>
+    <section class="card">
+      <div class="card-head"><h2>학생 가입 신청 <span class="muted small">${students.length}건</span></h2></div>
+      ${students.length ? `<ul class="list wrap-list">${students.map((r) => `
+        <li class="signup-item" data-id="${r.id}">
+          <span class="grow">
+            <div class="title">${esc(r.name)} <span class="muted small mono">${esc(r.username)}</span></div>
+            <div class="muted small">${r.phone ? `${esc(r.phone)} · ` : ''}신청 ${fmtDate(r.created_at)}</div>
+            <div class="row" style="margin-top:8px">
+              <input type="text" class="su-course" placeholder="수강 과정 (선택)" style="flex:1;min-width:140px;min-height:36px">
+              <select class="su-teacher" style="width:auto;min-height:36px">${teacherOptions('', '담당 선생님 (선택)')}</select>
+            </div>
+          </span>
+          <span class="signup-actions">
+            <button class="btn small primary" data-approve="${r.id}">승인</button>
+            <button class="btn small danger" data-reject="${r.id}">거절</button>
+          </span>
+        </li>`).join('')}</ul>` : '<div class="empty">대기 중인 학생 가입 신청이 없습니다.</div>'}
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>학부모 가입 신청 <span class="muted small">${parents.length}건</span></h2></div>
+      ${parents.length ? `<ul class="list wrap-list">${parents.map((r) => `
+        <li data-id="${r.id}">
+          <span class="grow">
+            <div class="title">${esc(r.name)} <span class="muted small mono">${esc(r.username)}</span></div>
+            <div class="small">자녀: <b>${esc(r.child_name || '알 수 없음')}</b> <span class="mono muted">(${esc(r.child_username || '-')})</span>
+              ${r.child_status === 'pending' ? '<span class="badge late">자녀 승인 대기</span>' : ''}</div>
+            <div class="muted small">${r.phone ? `${esc(r.phone)} · ` : ''}신청 ${fmtDate(r.created_at)}</div>
+          </span>
+          <span class="signup-actions">
+            <button class="btn small primary" data-approve="${r.id}" ${r.child_status === 'pending' ? 'disabled title="자녀를 먼저 승인하세요"' : ''}>승인</button>
+            <button class="btn small danger" data-reject="${r.id}">거절</button>
+          </span>
+        </li>`).join('')}</ul>` : '<div class="empty">대기 중인 학부모 가입 신청이 없습니다.</div>'}
+    </section>`;
+  main.querySelectorAll('[data-approve]').forEach((btn) => {
+    btn.onclick = async () => {
+      const li = btn.closest('li');
+      const course = li.querySelector('.su-course');
+      const teacher = li.querySelector('.su-teacher');
+      try {
+        await api(`/api/admin/signups/${btn.dataset.approve}/approve`, {
+          method: 'POST', body: { course: course ? course.value : '', teacher_id: teacher ? teacher.value : '' },
+        });
+        toast('승인되었습니다.');
+        reload();
+      } catch (e) { toast(e.message, true); }
+    };
+  });
+  main.querySelectorAll('[data-reject]').forEach((btn) => {
+    btn.onclick = async () => {
+      if (!confirm('이 가입 신청을 거절할까요? 신청 정보가 삭제됩니다.')) return;
+      try {
+        await api(`/api/admin/signups/${btn.dataset.reject}`, { method: 'DELETE' });
+        toast('거절되었습니다.');
+        reload();
+      } catch (e) { toast(e.message, true); }
+    };
+  });
+}
+
+async function renderTeachers() {
+  const main = $app.querySelector('#main');
+  const rows = await api('/api/admin/teachers');
+  main.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a class="btn small back-btn" href="#/">← 목록</a><h2>선생님 관리</h2></div>
+    <p class="muted small" style="margin-top:0">선생님마다 아이디를 만들어 드리세요. 선생님은 학생 관리(진도·과제·자료·코멘트·출석·수업 시간)를 할 수 있고,
+      <b>관리자</b>는 추가로 선생님 관리·가입 승인·학생 삭제를 할 수 있습니다.</p>
+    <section class="card">
+      <div class="card-head"><h2>선생님 계정 만들기</h2></div>
+      <form id="add-teacher">
+        <div class="grid2">
+          <label class="field"><span>이름 *</span><input type="text" name="name" required placeholder="예: 홍길동 선생님"></label>
+          <label class="field"><span>연락처</span><input type="text" name="phone" inputmode="tel"></label>
+          <label class="field"><span>아이디 * (영문·숫자 3~20자)</span><input type="text" name="username" required autocapitalize="off"></label>
+          <label class="field"><span>비밀번호 * (4자 이상)</span><input type="text" name="password" required minlength="4"></label>
+          <label class="field"><span>권한</span><select name="role"><option value="teacher">선생님</option><option value="admin">관리자</option></select></label>
+        </div>
+        <div class="row end"><button class="btn primary" type="submit">만들기</button></div>
+      </form>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>선생님 목록 <span class="muted small">${rows.length}명</span></h2></div>
+      <ul class="list wrap-list">${rows.map((t) => `
+        <li>
+          <span class="avatar sm">${initial(t.name)}</span>
+          <span class="grow">
+            <div class="title">${esc(t.name)} <span class="badge ${t.role === 'admin' ? 'common' : ''}">${ROLE_LABEL[t.role]}</span>
+              ${t.id === state.me.id ? '<span class="badge present">나</span>' : ''}</div>
+            <div class="small">아이디 <b class="mono">${esc(t.username)}</b>${t.phone ? ` · ${esc(t.phone)}` : ''} · 담당 학생 ${t.student_count}명</div>
+          </span>
+          <span class="signup-actions">
+            <button class="btn small" data-edit="${t.id}">수정</button>
+            <button class="btn small" data-tpw="${t.id}">임시 비밀번호</button>
+            ${t.id === state.me.id ? '' : `<button class="btn small danger" data-tdel="${t.id}">삭제</button>`}
+          </span>
+        </li>`).join('')}</ul>
+    </section>`;
+  const reload = async () => { state.staff = await api('/api/staff'); renderTeachers(); };
+  onSubmit(main.querySelector('#add-teacher'), async (fd) => {
+    const data = Object.fromEntries(fd);
+    await api('/api/admin/teachers', { method: 'POST', body: data });
+    showLoginInfo('선생님 계정 생성 완료', loginInfoText(data.name, data.username, data.password));
+    reload();
+  });
+  main.querySelectorAll('[data-edit]').forEach((btn) => {
+    btn.onclick = () => {
+      const t = rows.find((x) => x.id === Number(btn.dataset.edit));
+      modal(`
+        <h2>선생님 정보 수정</h2>
+        <form>
+          <label class="field"><span>이름</span><input type="text" name="name" value="${esc(t.name)}" required></label>
+          <label class="field"><span>연락처</span><input type="text" name="phone" value="${esc(t.phone || '')}"></label>
+          <p class="muted small">아이디: <b class="mono">${esc(t.username)}</b> (아이디는 바꿀 수 없습니다)</p>
+          <div class="row end"><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div>
+        </form>`, (el, close) => {
+        onSubmit(el.querySelector('form'), async (fd) => {
+          await api(`/api/admin/teachers/${t.id}`, { method: 'PUT', body: Object.fromEntries(fd) });
+          toast('저장되었습니다.');
+          close();
+          if (t.id === state.me.id) { state.me = await api('/api/me'); renderAdmin(); } else reload();
+        });
+      });
+    };
+  });
+  main.querySelectorAll('[data-tpw]').forEach((btn) => {
+    btn.onclick = async () => {
+      const t = rows.find((x) => x.id === Number(btn.dataset.tpw));
+      if (!confirm(`${t.name}의 비밀번호를 새 임시 비밀번호로 바꿀까요?`)) return;
+      const password = randomPassword();
+      try {
+        await api(`/api/admin/teachers/${t.id}/password`, { method: 'POST', body: { password } });
+        showLoginInfo('임시 비밀번호 발급 완료', loginInfoText(t.name, t.username, password));
+      } catch (e) { toast(e.message, true); }
+    };
+  });
+  main.querySelectorAll('[data-tdel]').forEach((btn) => {
+    btn.onclick = async () => {
+      const t = rows.find((x) => x.id === Number(btn.dataset.tdel));
+      if (!confirm(`${t.name} 계정을 삭제할까요?\n담당 학생 ${t.student_count}명은 '담당 없음'으로 바뀝니다.`)) return;
+      try {
+        await api(`/api/admin/teachers/${t.id}`, { method: 'DELETE' });
+        toast('삭제되었습니다.');
+        reload();
+      } catch (e) { toast(e.message, true); }
     };
   });
 }
@@ -986,7 +1268,7 @@ async function render() {
       state.me = await api('/api/me').catch(() => null);
       if (!state.me) return renderLogin();
     }
-    if (state.me.role === 'admin') return await renderAdmin();
+    if (isStaff(state.me)) return await renderAdmin();
     if (state.me.role === 'student') return await renderStudent();
     return await renderParent();
   } catch (e) {
@@ -1001,7 +1283,7 @@ window.addEventListener('hashchange', () => {
   const cur = m ? m[1] : null;
   if (cur !== lastStudent) state.tab = 'progress';
   lastStudent = cur;
-  if (state.me && state.me.role === 'admin' && document.querySelector('.admin')) {
+  if (isStaff(state.me) && document.querySelector('.admin')) {
     // 목록은 그대로 두고 오른쪽 영역만 다시 그림
     showAdminMain().catch((e) => toast(e.message, true));
     window.scrollTo(0, 0);
