@@ -65,7 +65,22 @@ function requireStaff(req, res, next) {
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 const USERNAME_MSG = '아이디는 영문·숫자·밑줄(_)로 3~20자여야 합니다.';
-const usernameTaken = (username) => Boolean(db.prepare('SELECT 1 FROM users WHERE username = ?').get(username));
+const usernameTaken = (username, exceptId = 0) => Boolean(db.prepare('SELECT 1 FROM users WHERE username = ? AND id != ?').get(username, exceptId));
+
+// 6자리 숫자 비밀번호 (비워 두면 자동으로 만들어 줌)
+const autoPassword = () => String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+
+// 선생님·관리자가 정해 준 비밀번호는 나중에 다시 확인할 수 있도록 함께 저장
+function setStaffPassword(userId, password) {
+  db.prepare('UPDATE users SET password_hash = ?, initial_password = ? WHERE id = ?').run(hashPassword(password), password, userId);
+}
+
+function checkNewLogin(username, password, exceptId = 0) {
+  if (!USERNAME_RE.test(username)) return USERNAME_MSG;
+  if (usernameTaken(username, exceptId)) return `'${username}'은(는) 이미 사용 중인 아이디입니다.`;
+  if (password && password.length < 4) return '비밀번호는 4자 이상이어야 합니다.';
+  return null;
+}
 
 // 요청한 사용자가 해당 학생의 정보를 볼 수 있는지 확인
 function canViewStudent(user, studentId) {
@@ -78,7 +93,7 @@ function canViewStudent(user, studentId) {
 
 function getStudent(id) {
   return db.prepare(
-    `SELECT u.id, u.username, u.name, u.phone, p.course, p.current_lesson, p.progress_percent,
+    `SELECT u.id, u.username, u.name, u.phone, u.initial_password, p.course, p.current_lesson, p.progress_percent,
             p.next_lesson, p.assignment, p.assignment_due, p.memo, p.teacher_id,
             (SELECT name FROM users t WHERE t.id = p.teacher_id) AS teacher_name
      FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id
@@ -89,7 +104,7 @@ function getStudent(id) {
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body || {};
   const user = db.prepare('SELECT * FROM users WHERE username = ?').get(String(username || '').trim());
-  if (!user || !verifyPassword(String(password || ''), user.password_hash)) {
+  if (!user || !user.password_hash || !verifyPassword(String(password || ''), user.password_hash)) {
     return res.status(401).json({ error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
   }
   if (user.status === 'pending') {
@@ -167,7 +182,7 @@ app.post('/api/me/password', requireAuth, (req, res) => {
     return res.status(400).json({ error: '현재 비밀번호가 올바르지 않습니다.' });
   }
   if (!next || String(next).length < 4) return res.status(400).json({ error: '새 비밀번호는 4자 이상이어야 합니다.' });
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(String(next)), req.user.id);
+  db.prepare('UPDATE users SET password_hash = ?, initial_password = NULL WHERE id = ?').run(hashPassword(String(next)), req.user.id);
   res.json({ ok: true });
 });
 
@@ -218,8 +233,11 @@ app.get('/api/students/:id', requireAuth, (req, res) => {
   if (!canViewStudent(req.user, id)) return res.status(403).json({ error: '권한이 없습니다.' });
   const detail = studentDetail(id);
   if (!detail) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
-  if (!isStaff(req.user)) delete detail.student.memo; // 선생님 전용 메모
-  else detail.parents = db.prepare("SELECT id, username, name, phone FROM users WHERE role = 'parent' AND child_id = ? AND status = 'active' ORDER BY id").all(id);
+  if (!isStaff(req.user)) {
+    delete detail.student.memo; // 선생님 전용 메모
+    delete detail.student.initial_password;
+  }
+  else detail.parents = db.prepare("SELECT id, username, name, phone, initial_password FROM users WHERE role = 'parent' AND child_id = ? AND status = 'active' ORDER BY id").all(id);
   res.json(detail);
 });
 
@@ -277,7 +295,7 @@ app.get('/api/admin/inbox', requireStaff, (req, res) => {
 app.get('/api/admin/students', requireStaff, (req, res) => {
   const today = todayStr();
   const rows = db.prepare(
-    `SELECT u.id, u.username, u.name, p.course, p.current_lesson, p.progress_percent,
+    `SELECT u.id, u.username, u.name, p.course, p.current_lesson, p.progress_percent, u.username IS NOT NULL AS has_account,
             (SELECT status FROM attendance a WHERE a.student_id = u.id AND a.date = ?) AS today_status,
             (SELECT COUNT(*) FROM files f WHERE f.kind = 'submission' AND f.student_id = u.id) AS submission_count,
             (SELECT COUNT(*) FROM messages m WHERE m.student_id = u.id AND m.from_staff = 0 AND m.read_by_staff = 0) AS unread_messages,
@@ -291,40 +309,52 @@ app.get('/api/admin/students', requireStaff, (req, res) => {
   res.json(rows);
 });
 
+// 학생 추가: 이름만 있으면 됨. 학생·학부모 아이디/비밀번호는 지금 넣어도, 나중에 넣어도 됨
+// 아이디만 넣고 비밀번호를 비우면 6자리 숫자로 자동 생성
 app.post('/api/admin/students', requireStaff, (req, res) => {
   const b = req.body || {};
-  const username = String(b.username || '').trim();
   const name = String(b.name || '').trim();
-  if (!username || !name || !b.password) return res.status(400).json({ error: '이름, 아이디, 비밀번호는 필수입니다.' });
-  if (!USERNAME_RE.test(username)) return res.status(400).json({ error: USERNAME_MSG });
-  if (usernameTaken(username)) {
-    return res.status(400).json({ error: '이미 사용 중인 학생 아이디입니다.' });
-  }
+  if (!name) return res.status(400).json({ error: '학생 이름을 입력하세요.' });
+  const username = String(b.username || '').trim();
   const parentUsername = String(b.parent_username || '').trim();
-  if (parentUsername) {
-    if (!b.parent_password) return res.status(400).json({ error: '학부모 비밀번호를 입력하세요.' });
-    if (!USERNAME_RE.test(parentUsername)) return res.status(400).json({ error: `학부모 ${USERNAME_MSG}` });
-    if (parentUsername === username || usernameTaken(parentUsername)) {
-      return res.status(400).json({ error: '이미 사용 중인 학부모 아이디입니다.' });
-    }
-  }
+  if (username && parentUsername && username === parentUsername) return res.status(400).json({ error: '학생과 학부모 아이디가 같습니다.' });
+  const password = username ? String(b.password || '') || autoPassword() : null;
+  const parentPassword = parentUsername ? String(b.parent_password || '') || autoPassword() : null;
+  const err = (username && checkNewLogin(username, password)) || (parentUsername && checkNewLogin(parentUsername, parentPassword));
+  if (err) return res.status(400).json({ error: err });
+
   db.exec('BEGIN');
   try {
     const id = db.prepare(
-      "INSERT INTO users (username, password_hash, name, role, phone) VALUES (?, ?, ?, 'student', ?)"
-    ).run(username, hashPassword(String(b.password)), name, String(b.phone || '')).lastInsertRowid;
+      "INSERT INTO users (username, password_hash, initial_password, name, role, phone) VALUES (?, ?, ?, ?, 'student', ?)"
+    ).run(username || null, password ? hashPassword(password) : null, password, name, String(b.phone || '')).lastInsertRowid;
     db.prepare('INSERT INTO student_profiles (user_id, course, teacher_id) VALUES (?, ?, ?)')
       .run(id, String(b.course || ''), validTeacherId(b.teacher_id) ?? (req.user.role === 'teacher' ? req.user.id : null));
     if (parentUsername) {
-      db.prepare("INSERT INTO users (username, password_hash, name, role, child_id) VALUES (?, ?, ?, 'parent', ?)")
-        .run(parentUsername, hashPassword(String(b.parent_password)), `${name} 학부모`, id);
+      db.prepare("INSERT INTO users (username, password_hash, initial_password, name, role, child_id) VALUES (?, ?, ?, ?, 'parent', ?)")
+        .run(parentUsername, hashPassword(parentPassword), parentPassword, `${name} 학부모`, id);
     }
     db.exec('COMMIT');
-    res.json({ id: Number(id) });
+    res.json({ id: Number(id), password, parent_password: parentPassword });
   } catch (e) {
     db.exec('ROLLBACK');
     throw e;
   }
+});
+
+// 학생 로그인 계정 만들기 / 아이디·비밀번호 변경 (비밀번호를 비우면: 처음이면 자동 생성, 이미 있으면 그대로)
+app.put('/api/admin/students/:id/account', requireStaff, (req, res) => {
+  const id = Number(req.params.id);
+  const st = db.prepare("SELECT id, password_hash FROM users WHERE id = ? AND role = 'student'").get(id);
+  if (!st) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
+  const username = String((req.body || {}).username || '').trim();
+  let password = String((req.body || {}).password || '');
+  if (!password && !st.password_hash) password = autoPassword();
+  const err = checkNewLogin(username, password, id);
+  if (err) return res.status(400).json({ error: err });
+  db.prepare('UPDATE users SET username = ? WHERE id = ?').run(username, id);
+  if (password) setStaffPassword(id, password);
+  res.json({ ok: true, username, password: password || null });
 });
 
 app.delete('/api/admin/students/:id', requireAdmin, (req, res) => {
@@ -354,13 +384,13 @@ app.put('/api/admin/students/:id/profile', requireStaff, (req, res) => {
   res.json({ ok: true });
 });
 
-// 계정 목록: 학생·학부모 아이디 한눈에 보기 (비밀번호는 암호화되어 있어 볼 수 없음)
+// 계정 목록: 학생·학부모 아이디와 선생님이 정해 준 비밀번호 확인
 app.get('/api/admin/accounts', requireStaff, (req, res) => {
   const students = db.prepare(
-    `SELECT u.id, u.name, u.username, u.phone, p.course FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id
+    `SELECT u.id, u.name, u.username, u.phone, u.initial_password, p.course FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id
      WHERE u.role = 'student' AND u.status = 'active' ORDER BY u.name`
   ).all();
-  const parents = db.prepare("SELECT id, child_id, username, name, phone FROM users WHERE role = 'parent' AND status = 'active' ORDER BY id").all();
+  const parents = db.prepare("SELECT id, child_id, username, name, phone, initial_password FROM users WHERE role = 'parent' AND status = 'active' ORDER BY id").all();
   students.forEach((st) => { st.parents = parents.filter((x) => x.child_id === st.id).map(({ child_id, ...rest }) => rest); });
   res.json(students);
 });
@@ -371,25 +401,27 @@ app.post('/api/admin/students/:id/parent', requireStaff, (req, res) => {
   const student = getStudent(id);
   if (!student) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
   const username = String((req.body || {}).username || '').trim();
-  const password = String((req.body || {}).password || '');
-  if (!username || password.length < 4) return res.status(400).json({ error: '학부모 아이디와 4자 이상 비밀번호를 입력하세요.' });
-  if (!USERNAME_RE.test(username)) return res.status(400).json({ error: USERNAME_MSG });
-  if (usernameTaken(username)) return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' });
-  db.prepare("INSERT INTO users (username, password_hash, name, role, child_id) VALUES (?, ?, ?, 'parent', ?)")
-    .run(username, hashPassword(password), `${student.name} 학부모`, id);
-  res.json({ ok: true });
+  const password = String((req.body || {}).password || '') || autoPassword();
+  const name = String((req.body || {}).name || '').trim() || `${student.name} 학부모`;
+  if (!username) return res.status(400).json({ error: '학부모 아이디를 입력하세요.' });
+  const err = checkNewLogin(username, password);
+  if (err) return res.status(400).json({ error: err });
+  db.prepare("INSERT INTO users (username, password_hash, initial_password, name, role, child_id) VALUES (?, ?, ?, ?, 'parent', ?)")
+    .run(username, hashPassword(password), password, name, id);
+  res.json({ ok: true, username, password, name });
 });
 
 app.post('/api/admin/students/:id/password', requireStaff, (req, res) => {
   const id = Number(req.params.id);
   const { target, password, parent_id: parentId } = req.body || {};
   if (!password || String(password).length < 4) return res.status(400).json({ error: '비밀번호는 4자 이상이어야 합니다.' });
-  const hash = hashPassword(String(password));
   // 학부모가 여러 명(엄마·아빠)일 수 있으므로 parent_id로 한 명만 바꿈
-  const r = target === 'parent'
-    ? db.prepare("UPDATE users SET password_hash = ? WHERE role = 'parent' AND child_id = ? AND id = ? AND status = 'active'").run(hash, id, Number(parentId))
-    : db.prepare("UPDATE users SET password_hash = ? WHERE role = 'student' AND id = ?").run(hash, id);
-  if (!r.changes) return res.status(404).json({ error: '계정을 찾을 수 없습니다.' });
+  const target_ = target === 'parent'
+    ? db.prepare("SELECT id FROM users WHERE role = 'parent' AND child_id = ? AND id = ? AND status = 'active'").get(id, Number(parentId))
+    : db.prepare("SELECT id, username FROM users WHERE role = 'student' AND id = ?").get(id);
+  if (!target_) return res.status(404).json({ error: '계정을 찾을 수 없습니다.' });
+  if (target !== 'parent' && !target_.username) return res.status(400).json({ error: '먼저 학생 아이디를 만들어 주세요.' });
+  setStaffPassword(target_.id, String(password));
   res.json({ ok: true });
 });
 
@@ -560,7 +592,7 @@ app.get('/api/staff', requireStaff, (req, res) => {
 
 app.get('/api/admin/teachers', requireAdmin, (req, res) => {
   res.json(db.prepare(
-    `SELECT u.id, u.username, u.name, u.role, u.phone, u.created_at,
+    `SELECT u.id, u.username, u.name, u.role, u.phone, u.created_at, u.initial_password,
             (SELECT COUNT(*) FROM student_profiles p JOIN users s ON s.id = p.user_id
              WHERE p.teacher_id = u.id AND s.status = 'active') AS student_count
      FROM users u WHERE u.role IN ('admin','teacher') ORDER BY u.role, u.name`
@@ -577,8 +609,8 @@ app.post('/api/admin/teachers', requireAdmin, (req, res) => {
   if (!USERNAME_RE.test(username)) return res.status(400).json({ error: USERNAME_MSG });
   if (password.length < 4) return res.status(400).json({ error: '비밀번호는 4자 이상이어야 합니다.' });
   if (usernameTaken(username)) return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' });
-  const id = db.prepare('INSERT INTO users (username, password_hash, name, role, phone) VALUES (?, ?, ?, ?, ?)')
-    .run(username, hashPassword(password), name, role, String(b.phone || '').trim()).lastInsertRowid;
+  const id = db.prepare('INSERT INTO users (username, password_hash, initial_password, name, role, phone) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(username, hashPassword(password), password, name, role, String(b.phone || '').trim()).lastInsertRowid;
   res.json({ id: Number(id) });
 });
 
@@ -600,7 +632,7 @@ app.post('/api/admin/teachers/:id/password', requireAdmin, (req, res) => {
   if (!target) return res.status(404).json({ error: '선생님 계정을 찾을 수 없습니다.' });
   const password = String((req.body || {}).password || '');
   if (password.length < 4) return res.status(400).json({ error: '비밀번호는 4자 이상이어야 합니다.' });
-  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(password), target.id);
+  setStaffPassword(target.id, password);
   db.prepare('DELETE FROM sessions WHERE user_id = ? AND user_id != ?').run(target.id, req.user.id);
   res.json({ ok: true });
 });

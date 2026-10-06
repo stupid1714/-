@@ -255,6 +255,13 @@ input[type=file] { width: 100%; padding: 10px; border: 1px dashed var(--border);
 .side-nav .count { margin-left: 4px; }
 .count[hidden] { display: none; }
 
+/* 계정 정보 */
+.acc-box { display: flex; gap: 24px; flex-wrap: wrap; padding: 12px 14px; background: #f8f9fc; border-radius: 12px; }
+.pw { background: #fff7e6; padding: 1px 6px; border-radius: 6px; }
+.acc-cred { display: inline-flex; flex-direction: column; line-height: 1.35; }
+.acc-details { border: 1px dashed var(--border); border-radius: 12px; padding: 10px 12px; }
+.acc-details summary { cursor: pointer; font-weight: 700; font-size: 14px; }
+
 /* ---------- 모바일 ---------- */
 @media (max-width: 820px) {
   .cards, .overview { grid-template-columns: 1fr 1fr; }

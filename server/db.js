@@ -12,11 +12,14 @@ db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
 
 // role: admin(관리자) / teacher(선생님) / student(학생) / parent(학부모)
 // status: active(사용 중) / pending(회원가입 후 승인 대기)
+// username/password_hash가 비어 있으면 아직 로그인 계정이 없는 학생(이름만 등록)
+// initial_password: 선생님이 정해 준 비밀번호(선생님이 다시 확인 가능). 본인이 바꾸면 지워짐
 const USERS_SQL = (table) => `
 CREATE TABLE IF NOT EXISTS ${table} (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
+  username TEXT UNIQUE,
+  password_hash TEXT,
+  initial_password TEXT,
   name TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('admin','teacher','student','parent')),
   status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','pending')),
@@ -25,16 +28,20 @@ CREATE TABLE IF NOT EXISTS ${table} (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );`;
 
-// 예전 버전 DB(선생님·승인 기능 없음)를 새 구조로 옮김. 기존 데이터는 그대로 유지
+// 예전 버전 DB를 새 구조로 옮김. 기존 데이터는 그대로 유지
 function migrateUsers() {
   const row = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'").get();
-  if (!row || row.sql.includes("'teacher'")) return;
+  if (!row) return;
+  const cols = db.prepare('PRAGMA table_info(users)').all();
+  const has = (name) => cols.some((c) => c.name === name);
+  const upToDate = row.sql.includes("'teacher'") && has('initial_password') && cols.find((c) => c.name === 'username').notnull === 0;
+  if (upToDate) return;
+  const copy = ['id', 'username', 'password_hash', 'name', 'role', 'status', 'child_id', 'phone', 'created_at'].filter(has).join(', ');
   db.exec('PRAGMA foreign_keys = OFF');
   db.exec('BEGIN');
   try {
     db.exec(USERS_SQL('users_new'));
-    db.exec(`INSERT INTO users_new (id, username, password_hash, name, role, status, child_id, phone, created_at)
-             SELECT id, username, password_hash, name, role, 'active', child_id, phone, created_at FROM users`);
+    db.exec(`INSERT INTO users_new (${copy}) SELECT ${copy} FROM users`);
     db.exec('DROP TABLE users');
     db.exec('ALTER TABLE users_new RENAME TO users');
     db.exec('COMMIT');
@@ -150,13 +157,16 @@ function verifyPassword(password, stored) {
   return expected.length === test.length && crypto.timingSafeEqual(expected, test);
 }
 
+const SEED_PW = { admin: 'admin1234', teacher1: '1234', student1: '1234', student2: '1234', parent1: '1234', parent2: '1234' };
+
 function seed() {
   const count = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
   if (count > 0) return;
 
-  const insertUser = db.prepare(
-    'INSERT INTO users (username, password_hash, name, role, child_id) VALUES (?, ?, ?, ?, ?)'
+  const insert = db.prepare(
+    'INSERT INTO users (username, password_hash, initial_password, name, role, child_id) VALUES (?, ?, ?, ?, ?, ?)'
   );
+  const insertUser = { run: (u, hash, name, role, child) => insert.run(u, hash, hash ? SEED_PW[u] : null, name, role, child) };
   insertUser.run('admin', hashPassword('admin1234'), '관리자', 'admin', null);
   const t1 = insertUser.run('teacher1', hashPassword('1234'), '김선생', 'teacher', null).lastInsertRowid;
 
