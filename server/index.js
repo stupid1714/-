@@ -214,6 +214,11 @@ function studentDetail(studentId) {
   const logs = db.prepare(
     'SELECT id, date, content FROM progress_logs WHERE student_id = ? ORDER BY date DESC, id DESC'
   ).all(studentId);
+  const photos = db.prepare(
+    `SELECT lp.id, lp.log_id, lp.original_name FROM log_photos lp JOIN progress_logs l ON l.id = lp.log_id
+     WHERE l.student_id = ? ORDER BY lp.id`
+  ).all(studentId);
+  logs.forEach((l) => { l.photos = photos.filter((ph) => ph.log_id === l.id).map(({ log_id, ...rest }) => rest); });
   const materials = db.prepare(
     `SELECT id, original_name, size, lesson, description, created_at, student_id IS NULL AS is_common
      FROM files WHERE kind = 'material' AND (student_id = ? OR student_id IS NULL) ORDER BY created_at DESC, id DESC`
@@ -359,7 +364,10 @@ app.put('/api/admin/students/:id/account', requireStaff, (req, res) => {
 
 app.delete('/api/admin/students/:id', requireAdmin, (req, res) => {
   const id = Number(req.params.id);
-  const files = db.prepare('SELECT stored_name FROM files WHERE student_id = ?').all(id);
+  const files = db.prepare(
+    `SELECT stored_name FROM files WHERE student_id = ?
+     UNION ALL SELECT lp.stored_name FROM log_photos lp JOIN progress_logs l ON l.id = lp.log_id WHERE l.student_id = ?`
+  ).all(id, id);
   db.prepare("DELETE FROM users WHERE role = 'parent' AND child_id = ?").run(id);
   db.prepare("DELETE FROM users WHERE id = ? AND role = 'student'").run(id);
   files.forEach((f) => fs.rm(path.join(UPLOAD_DIR, f.stored_name), { force: true }, () => {}));
@@ -476,19 +484,6 @@ app.delete('/api/admin/comments/:id', requireStaff, (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/api/admin/students/:id/logs', requireStaff, (req, res) => {
-  const { date, content } = req.body || {};
-  if (!date || !String(content || '').trim()) return res.status(400).json({ error: '날짜와 내용을 입력하세요.' });
-  db.prepare('INSERT INTO progress_logs (student_id, date, content) VALUES (?, ?, ?)')
-    .run(Number(req.params.id), String(date), String(content).trim());
-  res.json({ ok: true });
-});
-
-app.delete('/api/admin/logs/:id', requireStaff, (req, res) => {
-  db.prepare('DELETE FROM progress_logs WHERE id = ?').run(Number(req.params.id));
-  res.json({ ok: true });
-});
-
 app.post('/api/admin/students/:id/attendance', requireStaff, (req, res) => {
   const { date, status, note } = req.body || {};
   if (!date || !ATTENDANCE_STATUSES.includes(status)) return res.status(400).json({ error: '날짜와 출석 상태를 확인하세요.' });
@@ -513,6 +508,87 @@ const upload = multer({
   }),
   limits: { fileSize: MAX_FILE_MB * 1024 * 1024 },
 });
+
+// ---------- 진도 기록 (여러 줄 글 + 그날의 사진) ----------
+
+const MAX_LOG_PHOTOS = 10;
+const photoUpload = multer({
+  storage: multer.diskStorage({
+    destination: UPLOAD_DIR,
+    filename: (req, file, cb) => cb(null, `${Date.now()}-${crypto.randomBytes(8).toString('hex')}`),
+  }),
+  limits: { fileSize: MAX_FILE_MB * 1024 * 1024, files: MAX_LOG_PHOTOS },
+  fileFilter: (req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
+});
+
+const removeUploaded = (files) => (files || []).forEach((f) => fs.rm(f.path, { force: true }, () => {}));
+
+function savePhotos(logId, files) {
+  const ins = db.prepare('INSERT INTO log_photos (log_id, stored_name, original_name, size) VALUES (?, ?, ?, ?)');
+  (files || []).forEach((f) => ins.run(logId, f.filename, decodeName(f.originalname), f.size));
+}
+
+function deletePhotos(rows) {
+  rows.forEach((ph) => {
+    db.prepare('DELETE FROM log_photos WHERE id = ?').run(ph.id);
+    fs.rm(path.join(UPLOAD_DIR, ph.stored_name), { force: true }, () => {});
+  });
+}
+
+app.post('/api/admin/students/:id/logs', requireStaff, photoUpload.array('photos', MAX_LOG_PHOTOS), (req, res) => {
+  const id = Number(req.params.id);
+  const date = String((req.body || {}).date || '');
+  const content = String((req.body || {}).content || '').trim();
+  if (!getStudent(id) || !date || (!content && !(req.files || []).length)) {
+    removeUploaded(req.files);
+    return res.status(400).json({ error: '날짜와 내용(또는 사진)을 입력하세요.' });
+  }
+  const logId = db.prepare('INSERT INTO progress_logs (student_id, date, content) VALUES (?, ?, ?)').run(id, date, content).lastInsertRowid;
+  savePhotos(logId, req.files);
+  res.json({ ok: true, id: Number(logId) });
+});
+
+// 수정: 날짜·내용 변경, 사진 추가(photos), 사진 삭제(remove_photo_ids: "1,2,3")
+app.put('/api/admin/logs/:id', requireStaff, photoUpload.array('photos', MAX_LOG_PHOTOS), (req, res) => {
+  const log = db.prepare('SELECT id FROM progress_logs WHERE id = ?').get(Number(req.params.id));
+  if (!log) { removeUploaded(req.files); return res.status(404).json({ error: '진도 기록을 찾을 수 없습니다.' }); }
+  const date = String((req.body || {}).date || '');
+  const content = String((req.body || {}).content || '').trim();
+  if (!date) { removeUploaded(req.files); return res.status(400).json({ error: '날짜를 입력하세요.' }); }
+  const removeIds = String((req.body || {}).remove_photo_ids || '').split(',').map(Number).filter(Boolean);
+  const current = db.prepare('SELECT id, stored_name FROM log_photos WHERE log_id = ?').all(log.id);
+  if (current.length - current.filter((p) => removeIds.includes(p.id)).length + (req.files || []).length > MAX_LOG_PHOTOS) {
+    removeUploaded(req.files);
+    return res.status(400).json({ error: `사진은 한 기록에 ${MAX_LOG_PHOTOS}장까지 올릴 수 있습니다.` });
+  }
+  db.prepare('UPDATE progress_logs SET date = ?, content = ? WHERE id = ?').run(date, content, log.id);
+  deletePhotos(current.filter((p) => removeIds.includes(p.id)));
+  savePhotos(log.id, req.files);
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/logs/:id', requireStaff, (req, res) => {
+  const id = Number(req.params.id);
+  deletePhotos(db.prepare('SELECT id, stored_name FROM log_photos WHERE log_id = ?').all(id));
+  db.prepare('DELETE FROM progress_logs WHERE id = ?').run(id);
+  res.json({ ok: true });
+});
+
+// 사진 보기 (그 학생을 볼 수 있는 사람만: 선생님, 본인, 그 학생의 학부모)
+app.get('/api/photos/:id', requireAuth, (req, res) => {
+  const ph = db.prepare(
+    'SELECT lp.stored_name, lp.original_name, l.student_id FROM log_photos lp JOIN progress_logs l ON l.id = lp.log_id WHERE lp.id = ?'
+  ).get(Number(req.params.id));
+  if (!ph || !canViewStudent(req.user, ph.student_id)) return res.status(404).json({ error: '사진을 찾을 수 없습니다.' });
+  res.setHeader('Cache-Control', 'private, max-age=86400');
+  if (req.query.download) return res.download(path.join(UPLOAD_DIR, ph.stored_name), ph.original_name);
+  res.sendFile(path.join(UPLOAD_DIR, ph.stored_name), { headers: { 'Content-Type': mimeFromName(ph.original_name) } });
+});
+
+function mimeFromName(name) {
+  const ext = (/\.([a-z0-9]+)$/i.exec(name || '') || [])[1]?.toLowerCase();
+  return { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic' }[ext] || 'image/jpeg';
+}
 
 // 브라우저가 보내는 파일명(latin1)을 UTF-8 한글로 복원
 function decodeName(name) {
@@ -692,6 +768,9 @@ app.use('/api', (req, res) => res.status(404).json({ error: '요청한 API가 �
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({ error: `파일은 ${MAX_FILE_MB}MB 이하만 업로드할 수 있습니다.` });
+  }
+  if (err instanceof multer.MulterError && (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE')) {
+    return res.status(400).json({ error: `사진은 한 번에 ${MAX_LOG_PHOTOS}장까지 올릴 수 있습니다.` });
   }
   console.error(err);
   res.status(500).json({ error: '서버 오류가 발생했습니다.' });

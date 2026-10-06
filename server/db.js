@@ -78,6 +78,16 @@ CREATE TABLE IF NOT EXISTS progress_logs (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
+-- 진도 기록에 붙이는 그날의 사진
+CREATE TABLE IF NOT EXISTS log_photos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  log_id INTEGER NOT NULL REFERENCES progress_logs(id) ON DELETE CASCADE,
+  stored_name TEXT NOT NULL,
+  original_name TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+);
+
 CREATE TABLE IF NOT EXISTS comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

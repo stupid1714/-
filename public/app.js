@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.06-8';
+const APP_VERSION = '2026.10.07-9';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -327,11 +327,112 @@ function fileList(files, { deletable = false, showCommon = false, empty = '파�
     </li>`).join('')}</ul>`;
 }
 
-function logsList(logs, deletable = false) {
+function photoGrid(photos) {
+  if (!photos || !photos.length) return '';
+  return `<div class="photo-grid">${photos.map((ph) =>
+    `<button type="button" class="photo-thumb" data-photo="${ph.id}" title="크게 보기"><img src="/api/photos/${ph.id}" alt="" loading="lazy"></button>`).join('')}</div>`;
+}
+
+function logsList(logs, editable = false) {
   if (!logs.length) return '<div class="empty">진도 기록이 없습니다.</div>';
-  return `<ul class="list">${logs.map((l) => `
-    <li><span class="badge">${esc(l.date)}</span><span class="grow">${esc(l.content)}</span>
-    ${deletable ? `<button class="btn small ghost danger" data-del-log="${l.id}">삭제</button>` : ''}</li>`).join('')}</ul>`;
+  return `<div class="logs">${logs.map((l) => `
+    <article class="log-item">
+      <div class="log-head"><span class="badge">${esc(l.date)}</span>
+        ${l.photos && l.photos.length ? `<span class="muted small">📷 ${l.photos.length}</span>` : ''}
+        <span class="spacer"></span>
+        ${editable ? `<button class="btn small ghost" data-edit-log="${l.id}">수정</button>
+          <button class="btn small ghost danger" data-del-log="${l.id}">삭제</button>` : ''}</div>
+      ${l.content ? `<div class="log-content">${esc(l.content)}</div>` : ''}
+      ${photoGrid(l.photos)}
+    </article>`).join('')}</div>`;
+}
+
+// 사진 크게 보기 (어느 화면에서든 사진을 누르면)
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-photo]');
+  if (!btn) return;
+  const pid = btn.dataset.photo;
+  modal(`
+    <div class="lightbox"><img src="/api/photos/${pid}" alt=""></div>
+    <div class="row end" style="margin-top:10px">
+      <a class="btn" href="/api/photos/${pid}?download=1">저장</a><button type="button" class="btn primary" data-close>닫기</button>
+    </div>`, () => {});
+  document.querySelector('.modal-bg:last-child .modal').classList.add('modal-wide');
+});
+
+// 휴대폰 사진은 커서(수 MB) 올리기 전에 긴 변 1600px JPEG로 줄임. 실패하면 원본 그대로
+async function shrinkImage(file) {
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size < 400 * 1024) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+  } catch {
+    return file;
+  }
+}
+
+// 사진 고르기 + 미리보기 (선택한 사진을 x로 뺄 수 있음). getFiles()로 현재 목록을 받음
+function photoPicker(container) {
+  let files = [];
+  container.innerHTML = `
+    <label class="btn small photo-add">📷 사진 추가<input type="file" accept="image/*" multiple hidden></label>
+    <span class="muted small">여러 장 선택 가능 · 최대 10장</span>
+    <div class="photo-grid preview"></div>`;
+  const input = container.querySelector('input');
+  const grid = container.querySelector('.preview');
+  const draw = () => {
+    grid.querySelectorAll('img').forEach((img) => URL.revokeObjectURL(img.src));
+    grid.innerHTML = files.map((f, i) => `
+      <span class="photo-thumb"><img src="${URL.createObjectURL(f)}" alt=""><button type="button" class="photo-x" data-i="${i}" title="빼기">×</button></span>`).join('');
+    grid.querySelectorAll('.photo-x').forEach((b) => { b.onclick = () => { files.splice(Number(b.dataset.i), 1); draw(); }; });
+  };
+  input.onchange = () => {
+    files = files.concat([...input.files].filter((f) => f.type.startsWith('image/'))).slice(0, 10);
+    input.value = '';
+    draw();
+  };
+  return { getFiles: () => files, clear: () => { files = []; draw(); } };
+}
+
+async function logFormData(date, content, files, extra = {}) {
+  const fd = new FormData();
+  fd.append('date', date);
+  fd.append('content', content);
+  Object.entries(extra).forEach(([k, v]) => fd.append(k, v));
+  for (const f of files) fd.append('photos', await shrinkImage(f), f.name);
+  return fd;
+}
+
+function openEditLog(log, reload) {
+  modal(`
+    <h2>진도 기록 수정</h2>
+    <form>
+      <label class="field"><span>날짜</span><input type="date" name="date" value="${esc(log.date)}" required style="max-width:200px"></label>
+      <label class="field"><span>내용</span><textarea name="content" rows="6">${esc(log.content)}</textarea></label>
+      ${log.photos.length ? `<div class="field"><span class="muted small" style="font-weight:600">올린 사진 (누르면 삭제 표시)</span>
+        <div class="photo-grid">${log.photos.map((ph) => `
+          <span class="photo-thumb removable" data-pid="${ph.id}"><img src="/api/photos/${ph.id}" alt=""><span class="photo-del-mark">삭제</span></span>`).join('')}</div></div>` : ''}
+      <div class="field" id="edit-picker"></div>
+      <div class="row end"><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div>
+    </form>`, (el, close) => {
+    const picker = photoPicker(el.querySelector('#edit-picker'));
+    el.querySelectorAll('.removable').forEach((t) => { t.onclick = () => t.classList.toggle('marked'); });
+    onSubmit(el.querySelector('form'), async (fd) => {
+      const remove = [...el.querySelectorAll('.removable.marked')].map((t) => t.dataset.pid).join(',');
+      const body = await logFormData(fd.get('date'), fd.get('content'), picker.getFiles(), { remove_photo_ids: remove });
+      await api(`/api/admin/logs/${log.id}`, { method: 'PUT', form: body });
+      toast('수정되었습니다.');
+      close();
+      reload();
+    });
+  });
 }
 
 // 목록 안의 삭제 버튼들 연결
@@ -837,10 +938,11 @@ async function renderAdminDetail() {
       </section>
       <section class="card">
         <div class="card-head"><h2>진도 기록</h2></div>
-        <form id="log" class="row" style="margin-bottom:10px">
-          <input type="date" name="date" value="${today()}" style="width:auto;flex:none" required>
-          <input type="text" name="content" placeholder="오늘 수업 내용" style="flex:1;min-width:160px" required>
-          <button class="btn primary" type="submit">추가</button>
+        <form id="log" class="log-form">
+          <input type="date" name="date" value="${today()}" required style="max-width:200px">
+          <textarea name="content" rows="4" placeholder="오늘 수업 내용과 아이의 상황을 적어 주세요. (Enter로 줄 바꿈)"></textarea>
+          <div id="log-picker" class="row"></div>
+          <div class="row end"><button class="btn primary" type="submit">기록 추가</button></div>
         </form>
         ${logsList(d.logs, true)}
       </section>`;
@@ -851,10 +953,17 @@ async function renderAdminDetail() {
       toast('저장되었습니다.');
       reload();
     });
+    const picker = photoPicker(body.querySelector('#log-picker'));
     onSubmit(body.querySelector('#log'), async (fd) => {
-      await api(`/api/admin/students/${id}/logs`, { method: 'POST', body: Object.fromEntries(fd) });
+      const files = picker.getFiles();
+      if (!String(fd.get('content')).trim() && !files.length) throw new Error('내용을 쓰거나 사진을 추가해 주세요.');
+      if (files.length) toast('사진을 올리는 중...');
+      await api(`/api/admin/students/${id}/logs`, { method: 'POST', form: await logFormData(fd.get('date'), fd.get('content'), files) });
       toast('진도 기록이 추가되었습니다.');
       reload();
+    });
+    body.querySelectorAll('[data-edit-log]').forEach((btn) => {
+      btn.onclick = () => openEditLog(d.logs.find((l) => l.id === Number(btn.dataset.editLog)), reload);
     });
   }
 
