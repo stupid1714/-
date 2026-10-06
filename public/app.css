@@ -161,7 +161,8 @@ input[type=file] { width: 100%; padding: 10px; border: 1px dashed var(--border);
 .stu-item .name { font-weight: 700; }
 .stu-item .sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .stu-item .progress { height: 5px; margin-top: 6px; }
-.side-nav { padding: 10px 14px; border-top: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.side-nav { padding: 10px 14px; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.side-nav .btn { padding: 0 6px; }
 
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
@@ -216,6 +217,17 @@ input[type=file] { width: 100%; padding: 10px; border: 1px dashed var(--border);
 .tt-time { display: block; font-size: 12px; color: var(--primary); font-weight: 700; }
 .tt-name { display: block; font-weight: 700; }
 
+/* 계정 */
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .02em; }
+.login-info { background: #f8f9fc; border: 1px solid var(--border); border-radius: 12px; padding: 14px; white-space: pre-wrap; word-break: break-all;
+  font-family: inherit; font-size: 14px; line-height: 1.7; margin: 0 0 14px; max-height: 50vh; overflow-y: auto; }
+.acc-row { display: grid; grid-template-columns: 1.1fr 1.4fr 1.4fr; gap: 12px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--border); }
+.acc-row > span { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.acc-head { border-top: 0; background: #f8f9fc; font-size: 13px; color: var(--muted); font-weight: 700; }
+.acc-row .title { text-decoration: none; color: var(--text); }
+.acc-course { display: block; width: 100%; }
+.acc-label { display: none; font-size: 12px; color: var(--muted); width: 44px; }
+
 /* ---------- 모바일 ---------- */
 @media (max-width: 820px) {
   .cards, .overview { grid-template-columns: 1fr 1fr; }
@@ -226,6 +238,10 @@ input[type=file] { width: 100%; padding: 10px; border: 1px dashed var(--border);
   .admin .main { padding: 16px; }
   .back-btn { display: inline-flex; }
   .timetable { grid-template-columns: 1fr; }
+  .acc-head { display: none; }
+  .acc-row { grid-template-columns: 1fr; gap: 6px; }
+  .acc-row:nth-child(2) { border-top: 0; }
+  .acc-label { display: inline-block; }
   .tt-day { min-height: 0; }
 }
 @media (max-width: 560px) {

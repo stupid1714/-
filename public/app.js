@@ -294,6 +294,7 @@ function renderLogin() {
           <div class="error"></div>
           <button class="btn primary" type="submit" style="width:100%">로그인</button>
         </form>
+        <p class="muted small" style="text-align:center;margin:14px 0 0">아이디나 비밀번호를 잊으셨나요? 선생님께 문의해 주세요.</p>
       </div>
     </div>`;
   $app.querySelectorAll('[data-role]').forEach((b) => {
@@ -404,6 +405,58 @@ async function renderParent() {
   bindTopbar();
 }
 
+// ---------- 계정 안내 (임시 비밀번호) ----------
+
+function randomPassword() {
+  const n = new Uint32Array(1);
+  crypto.getRandomValues(n);
+  return String(n[0] % 1000000).padStart(6, '0'); // 알려주기 쉬운 6자리 숫자
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    // http 주소(같은 와이파이 접속 등)에서는 clipboard API가 막혀 있어 예전 방식으로 복사
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  }
+}
+
+function showLoginInfo(title, text) {
+  modal(`
+    <h2>${esc(title)}</h2>
+    <p class="muted small" style="margin-top:0">비밀번호는 이 창을 닫으면 다시 볼 수 없습니다. 복사해서 문자나 카톡으로 보내 주세요.</p>
+    <pre class="login-info">${esc(text)}</pre>
+    <div class="row end"><button type="button" class="btn" data-close>닫기</button><button type="button" class="btn primary" data-copy>안내 문구 복사</button></div>`,
+  (el) => {
+    el.querySelector('[data-copy]').onclick = async () => toast((await copyText(text)) ? '복사되었습니다.' : '복사하지 못했습니다. 직접 선택해서 복사해 주세요.', false);
+  });
+}
+
+function loginInfoText(who, username, password) {
+  return `[학습 관리] ${who} 로그인 정보
+주소: ${location.origin}
+아이디: ${username}
+비밀번호: ${password}
+로그인 후 오른쪽 위 '비밀번호' 버튼에서 원하는 비밀번호로 바꿔 주세요.`;
+}
+
+async function issueTempPassword(studentId, target, username, who) {
+  if (!confirm(`${who}의 비밀번호를 새 임시 비밀번호로 바꿀까요?\n기존 비밀번호로는 더 이상 로그인할 수 없습니다.`)) return;
+  const password = randomPassword();
+  await api(`/api/admin/students/${studentId}/password`, { method: 'POST', body: { target, password } });
+  showLoginInfo('임시 비밀번호 발급 완료', loginInfoText(who, username, password));
+}
+
 // ---------- 관리자 화면 ----------
 
 async function renderAdmin() {
@@ -421,7 +474,7 @@ async function renderAdmin() {
             <input type="checkbox" id="today-only" ${state.todayOnly ? 'checked' : ''}> 오늘(${DAY_LABEL[new Date().getDay()]}) 오는 학생만 보기</label>
         </div>
         <div class="side-list" id="stu-list"></div>
-        <div class="side-nav"><a class="btn small" href="#/timetable">🗓 주간 시간표</a><a class="btn small" href="#/common">📁 전체 공통 자료</a></div>
+        <div class="side-nav"><a class="btn small" href="#/timetable">🗓 시간표</a><a class="btn small" href="#/accounts">👥 계정 목록</a><a class="btn small" href="#/common">📁 공통 자료</a></div>
       </aside>
       <section class="main" id="main"></section>
     </div>`;
@@ -436,12 +489,13 @@ async function renderAdmin() {
 // 주소(#/...)에 따라 오른쪽 영역을 그림
 async function showAdminMain() {
   const m = /^#\/student\/(\d+)/.exec(location.hash);
-  const page = m ? 'student' : location.hash.startsWith('#/common') ? 'common' : location.hash.startsWith('#/timetable') ? 'timetable' : '';
+  const page = m ? 'student' : (/^#\/(common|timetable|accounts)/.exec(location.hash) || [])[1] || '';
   state.selectedId = m ? Number(m[1]) : null;
   $app.querySelector('.admin').classList.toggle('detail-open', Boolean(page));
   renderStudentList();
   if (page === 'common') await renderCommonMaterials();
   else if (page === 'timetable') await renderTimetable();
+  else if (page === 'accounts') await renderAccounts();
   else if (page === 'student') await renderAdminDetail();
   else $app.querySelector('#main').innerHTML = '<div class="welcome"><div><div style="font-size:40px">👈</div>왼쪽 목록에서 학생을 선택하세요.</div></div>';
 }
@@ -488,9 +542,12 @@ function openAddStudentModal() {
       <div class="row end"><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">추가</button></div>
     </form>`, (el, close) => {
     onSubmit(el.querySelector('form'), async (fd) => {
-      const r = await api('/api/admin/students', { method: 'POST', body: Object.fromEntries(fd) });
-      toast('학생이 추가되었습니다.');
+      const data = Object.fromEntries(fd);
+      const r = await api('/api/admin/students', { method: 'POST', body: data });
       close();
+      let info = loginInfoText(`${data.name} 학생`, data.username, data.password);
+      if (data.parent_username) info += `\n\n${loginInfoText(`${data.name} 학부모`, data.parent_username, data.parent_password)}`;
+      showLoginInfo('학생 추가 완료', info);
       await refreshList();
       location.hash = `#/student/${r.id}`; // hashchange가 상세 화면을 그림
     });
@@ -772,14 +829,42 @@ async function renderAdminDetail() {
   }
 
   if (state.tab === 'account') {
+    const parent = (d.parents || [])[0];
     body.innerHTML = `
       <section class="card">
-        <div class="card-head"><h2>비밀번호 재설정</h2></div>
+        <div class="card-head"><h2>로그인 정보</h2></div>
+        <p class="muted small" style="margin-top:0">비밀번호는 안전하게 암호화되어 저장되므로 선생님도 볼 수 없습니다.
+          학생·학부모가 비밀번호를 잊었다면 <b>임시 비밀번호 발급</b>을 눌러 새 비밀번호를 알려 주세요.</p>
+        <ul class="list">
+          <li>
+            <span class="badge common">학생</span>
+            <span class="grow"><div class="title">${esc(s.name)}</div><div class="small">아이디 <b class="mono">${esc(s.username)}</b></div></span>
+            <button class="btn small" data-temp="student">임시 비밀번호 발급</button>
+          </li>
+          ${parent ? `
+          <li>
+            <span class="badge excused">학부모</span>
+            <span class="grow"><div class="title">${esc(parent.name)}</div><div class="small">아이디 <b class="mono">${esc(parent.username)}</b></div></span>
+            <button class="btn small" data-temp="parent">임시 비밀번호 발급</button>
+          </li>` : ''}
+        </ul>
+        ${parent ? '' : `
+          <form id="add-parent" style="margin-top:12px">
+            <p class="small" style="margin:0 0 8px"><b>학부모 계정이 없습니다.</b> 지금 만들 수 있습니다.</p>
+            <div class="grid2">
+              <label class="field"><span>학부모 아이디</span><input type="text" name="username" required autocapitalize="off"></label>
+              <label class="field"><span>비밀번호</span><input type="text" name="password" required minlength="4"></label>
+            </div>
+            <div class="row end"><button class="btn primary" type="submit">학부모 계정 만들기</button></div>
+          </form>`}
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>비밀번호 직접 정하기</h2></div>
         <form id="pw">
           <div class="grid2">
             <label class="field"><span>대상</span><select name="target"><option value="student">학생 (${esc(s.username)})</option>
-              <option value="parent">학부모</option></select></label>
-            <label class="field"><span>새 비밀번호</span><input type="text" name="password" required minlength="4"></label>
+              ${parent ? `<option value="parent">학부모 (${esc(parent.username)})</option>` : ''}</select></label>
+            <label class="field"><span>새 비밀번호 (4자 이상)</span><input type="text" name="password" required minlength="4"></label>
           </div>
           <div class="row end"><button class="btn primary" type="submit">변경</button></div>
         </form>
@@ -789,9 +874,27 @@ async function renderAdminDetail() {
         <p class="muted small" style="margin-top:0">학생, 연결된 학부모 계정, 진도·출석·코멘트·파일이 모두 삭제되며 되돌릴 수 없습니다.</p>
         <button class="btn danger" id="del-student">학생 삭제</button>
       </section>`;
+    body.querySelectorAll('[data-temp]').forEach((btn) => {
+      btn.onclick = () => {
+        const isParent = btn.dataset.temp === 'parent';
+        issueTempPassword(id, btn.dataset.temp, isParent ? parent.username : s.username, isParent ? parent.name : `${s.name} 학생`)
+          .catch((e) => toast(e.message, true));
+      };
+    });
+    const addParent = body.querySelector('#add-parent');
+    if (addParent) {
+      onSubmit(addParent, async (fd) => {
+        const data = Object.fromEntries(fd);
+        await api(`/api/admin/students/${id}/parent`, { method: 'POST', body: data });
+        showLoginInfo('학부모 계정 생성 완료', loginInfoText(`${s.name} 학부모`, data.username, data.password));
+        reload();
+      });
+    }
     onSubmit(body.querySelector('#pw'), async (fd) => {
-      await api(`/api/admin/students/${id}/password`, { method: 'POST', body: Object.fromEntries(fd) });
-      toast('비밀번호가 변경되었습니다.');
+      const data = Object.fromEntries(fd);
+      await api(`/api/admin/students/${id}/password`, { method: 'POST', body: data });
+      const isParent = data.target === 'parent';
+      showLoginInfo('비밀번호 변경 완료', loginInfoText(isParent ? parent.name : `${s.name} 학생`, isParent ? parent.username : s.username, data.password));
       body.querySelector('#pw').reset();
     });
     body.querySelector('#del-student').onclick = async () => {
@@ -804,6 +907,46 @@ async function renderAdminDetail() {
   }
 
   bindDeletes(body, reload);
+}
+
+async function renderAccounts() {
+  const main = $app.querySelector('#main');
+  const rows = await api('/api/admin/accounts');
+  main.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a class="btn small back-btn" href="#/">← 목록</a><h2>계정 목록</h2></div>
+    <p class="muted small" style="margin-top:0">학생·학부모의 아이디를 확인할 수 있습니다. 비밀번호는 암호화되어 있어 볼 수 없으니,
+      잊어버렸다면 <b>임시 비밀번호</b>를 눌러 새로 발급해 주세요.</p>
+    <input type="search" id="acc-search" placeholder="이름 또는 아이디 검색" style="margin-bottom:12px">
+    <section class="card" style="padding:0;overflow:hidden">
+      ${rows.length ? `<div class="acc-table">
+        <div class="acc-row acc-head"><span>학생</span><span>학생 아이디</span><span>학부모 아이디</span></div>
+        ${rows.map((r) => {
+          const parent = r.parents[0];
+          return `
+          <div class="acc-row" data-search="${esc(`${r.name} ${r.username} ${parent ? parent.username : ''}`.toLowerCase())}">
+            <span><a href="#/student/${r.id}" class="title">${esc(r.name)}</a><span class="muted small acc-course">${esc(r.course || '')}</span></span>
+            <span><span class="acc-label">학생</span><b class="mono">${esc(r.username)}</b>
+              <button class="btn small" data-temp="student" data-id="${r.id}">임시 비밀번호</button></span>
+            <span><span class="acc-label">학부모</span>${parent ? `<b class="mono">${esc(parent.username)}</b>
+              <button class="btn small" data-temp="parent" data-id="${r.id}">임시 비밀번호</button>`
+              : `<a class="small" href="#/student/${r.id}" data-goto-account>학부모 계정 만들기</a>`}</span>
+          </div>`;
+        }).join('')}
+      </div>` : '<div class="empty">학생이 없습니다.</div>'}
+    </section>`;
+  main.querySelector('#acc-search').oninput = (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    main.querySelectorAll('.acc-row[data-search]').forEach((row) => { row.style.display = !q || row.dataset.search.includes(q) ? '' : 'none'; });
+  };
+  main.querySelectorAll('[data-goto-account]').forEach((a) => { a.onclick = () => { state.tab = 'account'; lastStudent = a.getAttribute('href').split('/').pop(); }; });
+  main.querySelectorAll('[data-temp]').forEach((btn) => {
+    btn.onclick = () => {
+      const r = rows.find((x) => x.id === Number(btn.dataset.id));
+      const isParent = btn.dataset.temp === 'parent';
+      issueTempPassword(r.id, btn.dataset.temp, isParent ? r.parents[0].username : r.username, isParent ? r.parents[0].name : `${r.name} 학생`)
+        .catch((e) => toast(e.message, true));
+    };
+  });
 }
 
 async function renderTimetable() {

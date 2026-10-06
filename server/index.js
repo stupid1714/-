@@ -156,6 +156,7 @@ app.get('/api/students/:id', requireAuth, (req, res) => {
   const detail = studentDetail(id);
   if (!detail) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
   if (req.user.role !== 'admin') delete detail.student.memo; // 선생님 전용 메모
+  else detail.parents = db.prepare("SELECT id, username, name FROM users WHERE role = 'parent' AND child_id = ? ORDER BY id").all(id);
   res.json(detail);
 });
 
@@ -232,6 +233,32 @@ app.put('/api/admin/students/:id/profile', requireAdmin, (req, res) => {
   ).run(id, String(b.course || ''), String(b.current_lesson || ''), pct, String(b.next_lesson || ''),
     String(b.assignment || ''), String(b.assignment_due || ''), String(b.memo || ''));
   if (b.name) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(String(b.name).trim(), id);
+  res.json({ ok: true });
+});
+
+// 계정 목록: 학생·학부모 아이디 한눈에 보기 (비밀번호는 암호화되어 있어 볼 수 없음)
+app.get('/api/admin/accounts', requireAdmin, (req, res) => {
+  const students = db.prepare(
+    `SELECT u.id, u.name, u.username, p.course FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id
+     WHERE u.role = 'student' ORDER BY u.name`
+  ).all();
+  const parents = db.prepare("SELECT child_id, username, name FROM users WHERE role = 'parent' ORDER BY id").all();
+  students.forEach((st) => { st.parents = parents.filter((x) => x.child_id === st.id).map(({ child_id, ...rest }) => rest); });
+  res.json(students);
+});
+
+// 학부모 계정이 없는 학생에게 나중에 학부모 계정 추가
+app.post('/api/admin/students/:id/parent', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const student = getStudent(id);
+  if (!student) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
+  const username = String((req.body || {}).username || '').trim();
+  const password = String((req.body || {}).password || '');
+  if (!username || password.length < 4) return res.status(400).json({ error: '학부모 아이디와 4자 이상 비밀번호를 입력하세요.' });
+  if (db.prepare('SELECT 1 FROM users WHERE username = ?').get(username)) return res.status(400).json({ error: '이미 사용 중인 아이디입니다.' });
+  if (db.prepare("SELECT 1 FROM users WHERE role = 'parent' AND child_id = ?").get(id)) return res.status(400).json({ error: '이미 학부모 계정이 있습니다.' });
+  db.prepare("INSERT INTO users (username, password_hash, name, role, child_id) VALUES (?, ?, ?, 'parent', ?)")
+    .run(username, hashPassword(password), `${student.name} 학부모`, id);
   res.json({ ok: true });
 });
 
