@@ -1,10 +1,12 @@
 'use strict';
 
 const $app = document.getElementById('app');
-const state = { me: null, students: [], selectedId: null, tab: 'progress', search: '' };
+const state = { me: null, students: [], selectedId: null, tab: 'progress', search: '', todayOnly: false };
 
 const ROLE_LABEL = { admin: '선생님', student: '학생', parent: '학부모' };
 const ATT_LABEL = { present: '출석', late: '지각', absent: '결석', excused: '공결' };
+const DAY_LABEL = ['일', '월', '화', '수', '목', '금', '토'];
+const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0]; // 월요일부터 표시
 
 // ---------- 유틸 ----------
 
@@ -130,6 +132,43 @@ function progressCard(s, title = '현재 진도') {
         <dt>현재 진도</dt><dd>${esc(s.current_lesson) || '-'}</dd>
         <dt>다음 진도</dt><dd>${esc(s.next_lesson) || '-'}</dd>
       </dl>
+    </section>`;
+}
+
+// 같은 시간대 요일끼리 묶어서 "월·수 16:00~18:00 / 토 10:00~12:00" 형태로
+function scheduleText(schedule) {
+  if (!schedule || !schedule.length) return '';
+  const groups = new Map();
+  [...schedule].sort((a, b) => DAY_ORDER.indexOf(a.weekday) - DAY_ORDER.indexOf(b.weekday)).forEach((x) => {
+    const key = `${x.start_time}~${x.end_time}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(DAY_LABEL[x.weekday]);
+  });
+  return [...groups].map(([time, days]) => `${days.join('·')} ${time}`).join(' / ');
+}
+
+function todaySlot(schedule) {
+  const wd = new Date().getDay();
+  return (schedule || []).find((x) => x.weekday === wd) || null;
+}
+
+function scheduleWeek(schedule) {
+  const wd = new Date().getDay();
+  return `<div class="week">${DAY_ORDER.map((d) => {
+    const slot = (schedule || []).find((x) => x.weekday === d);
+    return `<div class="day ${slot ? 'on' : ''} ${d === wd ? 'today' : ''}">
+      <b>${DAY_LABEL[d]}</b>${slot ? `<span>${esc(slot.start_time)}</span><span>~${esc(slot.end_time)}</span>` : '<span>-</span>'}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function scheduleCard(schedule) {
+  const slot = todaySlot(schedule);
+  return `
+    <section class="card">
+      <div class="card-head"><h2>수업 시간</h2>
+        ${slot ? `<span class="badge present">오늘 ${esc(slot.start_time)} 수업</span>` : '<span class="badge">오늘 수업 없음</span>'}</div>
+      ${schedule && schedule.length ? scheduleWeek(schedule) : '<div class="empty">등록된 수업 시간이 없습니다.</div>'}
     </section>`;
 }
 
@@ -273,6 +312,8 @@ async function renderStudent() {
       </div>
       <div class="cards">${progressCard(s)}${assignmentCard(s)}</div>
       <div style="height:16px"></div>
+      ${scheduleCard(d.schedule)}
+      <div style="height:16px"></div>
       <section class="card">
         <div class="card-head"><h2>실습 파일 제출</h2></div>
         <form id="upload">
@@ -325,6 +366,8 @@ async function renderParent() {
       </div>
       <div class="cards">${progressCard(s, '학습 진도')}${assignmentCard(s)}</div>
       <div style="height:16px"></div>
+      ${scheduleCard(d.schedule)}
+      <div style="height:16px"></div>
       <section class="card"><div class="card-head"><h2>선생님 코멘트</h2></div>${commentsList(d.comments)}</section>
       <div class="cards">
         <section class="card"><div class="card-head"><h2>출석 현황</h2></div>${attendanceSection(d)}</section>
@@ -340,22 +383,21 @@ async function renderParent() {
 // ---------- 관리자 화면 ----------
 
 async function renderAdmin() {
-  const m = /^#\/student\/(\d+)/.exec(location.hash);
-  const isCommon = location.hash.startsWith('#/common');
-  state.selectedId = m ? Number(m[1]) : null;
   state.students = await api('/api/admin/students');
 
   $app.innerHTML = `
     ${topbar()}
-    <div class="admin ${state.selectedId || isCommon ? 'detail-open' : ''}">
+    <div class="admin">
       <aside class="side">
         <div class="side-head">
           <div class="row" style="margin-bottom:10px"><h2>학생 목록 <span class="muted small">${state.students.length}명</span></h2>
             <span class="spacer"></span><button class="btn small primary" data-act="add">+ 학생 추가</button></div>
           <input type="search" placeholder="이름 검색" value="${esc(state.search)}" id="search">
+          <label class="row small muted" style="margin-top:8px;cursor:pointer;gap:6px">
+            <input type="checkbox" id="today-only" ${state.todayOnly ? 'checked' : ''}> 오늘(${DAY_LABEL[new Date().getDay()]}) 오는 학생만 보기</label>
         </div>
         <div class="side-list" id="stu-list"></div>
-        <div class="side-nav"><a class="btn small" href="#/common">📁 전체 공통 자료</a></div>
+        <div class="side-nav"><a class="btn small" href="#/timetable">🗓 주간 시간표</a><a class="btn small" href="#/common">📁 전체 공통 자료</a></div>
       </aside>
       <section class="main" id="main"></section>
     </div>`;
@@ -363,17 +405,31 @@ async function renderAdmin() {
   renderStudentList();
   $app.querySelector('#search').oninput = (e) => { state.search = e.target.value; renderStudentList(); };
   $app.querySelector('[data-act=add]').onclick = openAddStudentModal;
+  $app.querySelector('#today-only').onchange = (e) => { state.todayOnly = e.target.checked; renderStudentList(); };
+  await showAdminMain();
+}
 
-  if (isCommon) await renderCommonMaterials();
-  else if (state.selectedId) await renderAdminDetail();
+// 주소(#/...)에 따라 오른쪽 영역을 그림
+async function showAdminMain() {
+  const m = /^#\/student\/(\d+)/.exec(location.hash);
+  const page = m ? 'student' : location.hash.startsWith('#/common') ? 'common' : location.hash.startsWith('#/timetable') ? 'timetable' : '';
+  state.selectedId = m ? Number(m[1]) : null;
+  $app.querySelector('.admin').classList.toggle('detail-open', Boolean(page));
+  renderStudentList();
+  if (page === 'common') await renderCommonMaterials();
+  else if (page === 'timetable') await renderTimetable();
+  else if (page === 'student') await renderAdminDetail();
   else $app.querySelector('#main').innerHTML = '<div class="welcome"><div><div style="font-size:40px">👈</div>왼쪽 목록에서 학생을 선택하세요.</div></div>';
 }
 
 function renderStudentList() {
   const q = state.search.trim();
-  const list = state.students.filter((s) => !q || s.name.includes(q) || (s.course || '').includes(q));
+  const list = state.students
+    .filter((s) => !q || s.name.includes(q) || (s.course || '').includes(q))
+    .filter((s) => !state.todayOnly || todaySlot(s.schedule))
+    .sort((a, b) => (state.todayOnly ? todaySlot(a.schedule).start_time.localeCompare(todaySlot(b.schedule).start_time) : 0));
   const el = $app.querySelector('#stu-list');
-  if (!list.length) { el.innerHTML = '<div class="empty">학생이 없습니다.</div>'; return; }
+  if (!list.length) { el.innerHTML = `<div class="empty">${state.todayOnly ? '오늘 수업이 있는 학생이 없습니다.' : '학생이 없습니다.'}</div>`; return; }
   el.innerHTML = list.map((s) => `
     <button class="stu-item ${s.id === state.selectedId ? 'on' : ''}" data-id="${s.id}">
       <span class="avatar sm">${initial(s.name)}</span>
@@ -382,6 +438,7 @@ function renderStudentList() {
           ${s.today_status ? `<span class="badge ${s.today_status}">${ATT_LABEL[s.today_status]}</span>` : '<span class="badge">미체크</span>'}
           <span class="spacer"></span><span class="small muted">${Number(s.progress_percent) || 0}%</span></span>
         <span class="sub" style="display:block">${esc(s.course || '-')} · ${esc(s.current_lesson || '진도 미입력')}</span>
+        <span class="sub" style="display:block">🕒 ${esc(scheduleText(s.schedule) || '수업 시간 미등록')}</span>
         ${progressBar(s.progress_percent)}
       </span>
     </button>`).join('');
@@ -448,7 +505,7 @@ async function renderAdminDetail() {
   const s = d.student;
   const listItem = state.students.find((x) => x.id === id) || {};
   const todayAtt = d.attendance.find((a) => a.date === today());
-  const tabs = [['progress', '진도·과제'], ['files', `자료·제출물 (${d.submissions.length})`], ['comments', `코멘트 (${d.comments.length})`], ['attendance', '출석'], ['account', '계정']];
+  const tabs = [['progress', '진도·과제'], ['files', `자료·제출물 (${d.submissions.length})`], ['comments', `코멘트 (${d.comments.length})`], ['schedule', '수업 시간'], ['attendance', '출석'], ['account', '계정']];
   const reload = () => renderAdminDetail().then(refreshList);
 
   main.innerHTML = `
@@ -456,6 +513,7 @@ async function renderAdminDetail() {
       <a class="btn small back-btn" href="#/">← 목록</a>
       <div class="avatar">${initial(s.name)}</div>
       <div><h1 style="font-size:20px">${esc(s.name)}</h1>
+        <div class="muted small">🕒 ${esc(scheduleText(d.schedule) || '수업 시간 미등록')}</div>
         <div class="muted small">${esc(s.username)}${listItem.parent_name ? ` · 학부모: ${esc(listItem.parent_name)}` : ' · 학부모 계정 없음'}</div></div>
     </div>
     <div class="overview">
@@ -555,10 +613,63 @@ async function renderAdminDetail() {
     });
   }
 
-  if (state.tab === 'attendance') {
+  if (state.tab === 'schedule') {
     body.innerHTML = `
       <section class="card">
-        <div class="card-head"><h2>출석 체크</h2></div>
+        <div class="card-head"><h2>수업 요일 · 시간</h2><span class="muted small">학원에 오는 요일을 체크하고 시간을 입력하세요</span></div>
+        <form id="schedule">
+          <div class="sched-rows">
+            ${DAY_ORDER.map((wd) => {
+              const slot = d.schedule.find((x) => x.weekday === wd);
+              return `
+              <div class="sched-row ${slot ? 'on' : ''}" data-wd="${wd}">
+                <label class="sched-day"><input type="checkbox" ${slot ? 'checked' : ''}><span>${DAY_LABEL[wd]}</span></label>
+                <input type="time" class="start" value="${slot ? esc(slot.start_time) : ''}" step="300" ${slot ? '' : 'disabled'}>
+                <span class="muted">~</span>
+                <input type="time" class="end" value="${slot ? esc(slot.end_time) : ''}" step="300" ${slot ? '' : 'disabled'}>
+              </div>`;
+            }).join('')}
+          </div>
+          <p class="muted small">요일을 체크하면 바로 위에 입력한 시간이 자동으로 채워집니다.</p>
+          <div class="row end"><button class="btn primary" type="submit">저장</button></div>
+        </form>
+      </section>
+      <section class="card"><div class="card-head"><h2>미리보기</h2></div>${scheduleWeek(d.schedule)}</section>`;
+    const form = body.querySelector('#schedule');
+    let lastTimes = d.schedule[0] ? [d.schedule[0].start_time, d.schedule[0].end_time] : ['16:00', '18:00'];
+    form.querySelectorAll('.sched-row').forEach((row) => {
+      const cb = row.querySelector('[type=checkbox]');
+      const [st, en] = row.querySelectorAll('[type=time]');
+      const remember = () => { if (st.value && en.value) lastTimes = [st.value, en.value]; };
+      st.onchange = remember; en.onchange = remember;
+      cb.onchange = () => {
+        row.classList.toggle('on', cb.checked);
+        st.disabled = en.disabled = !cb.checked;
+        if (cb.checked && !st.value) { [st.value, en.value] = lastTimes; }
+      };
+    });
+    onSubmit(form, async () => {
+      const slots = [];
+      for (const row of form.querySelectorAll('.sched-row')) {
+        if (!row.querySelector('[type=checkbox]').checked) continue;
+        const [st, en] = row.querySelectorAll('[type=time]');
+        const label = DAY_LABEL[row.dataset.wd];
+        if (!st.value || !en.value) throw new Error(`${label}요일 시간을 입력하세요.`);
+        if (st.value >= en.value) throw new Error(`${label}요일 끝나는 시간이 시작 시간보다 늦어야 합니다.`);
+        slots.push({ weekday: Number(row.dataset.wd), start_time: st.value, end_time: en.value });
+      }
+      await api(`/api/admin/students/${id}/schedule`, { method: 'PUT', body: { slots } });
+      toast('수업 시간이 저장되었습니다.');
+      reload();
+    });
+  }
+
+  if (state.tab === 'attendance') {
+    const slot = todaySlot(d.schedule);
+    body.innerHTML = `
+      <section class="card">
+        <div class="card-head"><h2>출석 체크</h2>
+          ${slot ? `<span class="badge present">오늘 수업 ${esc(slot.start_time)}~${esc(slot.end_time)}</span>` : '<span class="badge">오늘은 수업 요일이 아님</span>'}</div>
         <form id="att">
           <label class="field"><span>날짜</span><input type="date" name="date" value="${today()}" required style="max-width:220px"></label>
           <div class="field status-pick">
@@ -611,6 +722,30 @@ async function renderAdminDetail() {
   bindDeletes(body, reload);
 }
 
+async function renderTimetable() {
+  const main = $app.querySelector('#main');
+  const rows = await api('/api/admin/timetable');
+  const wd = new Date().getDay();
+  main.innerHTML = `
+    <div class="row" style="margin-bottom:16px"><a class="btn small back-btn" href="#/">← 목록</a><h2>주간 시간표</h2>
+      <span class="muted small">학생 이름을 누르면 상세 화면으로 이동합니다</span></div>
+    <div class="timetable">
+      ${DAY_ORDER.map((d) => {
+        const items = rows.filter((r) => r.weekday === d);
+        return `
+        <section class="tt-day ${d === wd ? 'today' : ''}">
+          <h3>${DAY_LABEL[d]}요일 <span class="muted small">${items.length}명</span></h3>
+          ${items.length ? items.map((r) => `
+            <a class="tt-item" href="#/student/${r.student_id}">
+              <span class="tt-time">${esc(r.start_time)}~${esc(r.end_time)}</span>
+              <span class="tt-name">${esc(r.name)}</span>
+              ${r.course ? `<span class="muted small">${esc(r.course)}</span>` : ''}
+            </a>`).join('') : '<div class="empty small">수업 없음</div>'}
+        </section>`;
+      }).join('')}
+    </div>`;
+}
+
 async function refreshList() {
   state.students = await api('/api/admin/students');
   renderStudentList();
@@ -640,14 +775,8 @@ window.addEventListener('hashchange', () => {
   if (cur !== lastStudent) state.tab = 'progress';
   lastStudent = cur;
   if (state.me && state.me.role === 'admin' && document.querySelector('.admin')) {
-    // 목록은 그대로 두고 상세만 다시 그림
-    const isCommon = location.hash.startsWith('#/common');
-    state.selectedId = cur ? Number(cur) : null;
-    document.querySelector('.admin').classList.toggle('detail-open', Boolean(cur) || isCommon);
-    renderStudentList();
-    if (isCommon) renderCommonMaterials();
-    else if (cur) renderAdminDetail();
-    else document.querySelector('#main').innerHTML = '<div class="welcome"><div><div style="font-size:40px">👈</div>왼쪽 목록에서 학생을 선택하세요.</div></div>';
+    // 목록은 그대로 두고 오른쪽 영역만 다시 그림
+    showAdminMain().catch((e) => toast(e.message, true));
     window.scrollTo(0, 0);
     return;
   }

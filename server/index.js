@@ -117,6 +117,12 @@ app.post('/api/me/password', requireAuth, (req, res) => {
 
 // ---------- 학생 상세 (모든 역할 공용, 권한 검사) ----------
 
+function getSchedule(studentId) {
+  return db.prepare(
+    'SELECT weekday, start_time, end_time FROM schedules WHERE student_id = ? ORDER BY weekday, start_time'
+  ).all(studentId);
+}
+
 function studentDetail(studentId) {
   const student = getStudent(studentId);
   if (!student) return null;
@@ -138,9 +144,10 @@ function studentDetail(studentId) {
     `SELECT id, original_name, size, lesson, description, created_at
      FROM files WHERE kind = 'submission' AND student_id = ? ORDER BY created_at DESC, id DESC`
   ).all(studentId);
+  const schedule = getSchedule(studentId);
   const summary = { present: 0, late: 0, absent: 0, excused: 0 };
   attendance.forEach((a) => { summary[a.status] += 1; });
-  return { student, comments, attendance, attendanceSummary: summary, logs, materials, submissions };
+  return { student, schedule, comments, attendance, attendanceSummary: summary, logs, materials, submissions };
 }
 
 app.get('/api/students/:id', requireAuth, (req, res) => {
@@ -164,6 +171,8 @@ app.get('/api/admin/students', requireAdmin, (req, res) => {
      FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id
      WHERE u.role = 'student' ORDER BY u.name`
   ).all(today);
+  const slots = db.prepare('SELECT student_id, weekday, start_time, end_time FROM schedules ORDER BY weekday, start_time').all();
+  rows.forEach((r) => { r.schedule = slots.filter((x) => x.student_id === r.id).map(({ student_id, ...rest }) => rest); });
   res.json(rows);
 });
 
@@ -236,6 +245,43 @@ app.post('/api/admin/students/:id/password', requireAdmin, (req, res) => {
   const r = db.prepare(sql).run(hashPassword(String(password)), id);
   if (!r.changes) return res.status(404).json({ error: '계정을 찾을 수 없습니다.' });
   res.json({ ok: true });
+});
+
+const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// 수업 요일·시간 전체 교체: { slots: [{ weekday, start_time, end_time }] }
+app.put('/api/admin/students/:id/schedule', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  if (!getStudent(id)) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
+  const slots = Array.isArray((req.body || {}).slots) ? req.body.slots : [];
+  const seen = new Set();
+  for (const s of slots) {
+    const wd = Number(s.weekday);
+    if (!Number.isInteger(wd) || wd < 0 || wd > 6 || seen.has(wd)) return res.status(400).json({ error: '요일 정보가 올바르지 않습니다.' });
+    if (!TIME_RE.test(s.start_time) || !TIME_RE.test(s.end_time)) return res.status(400).json({ error: '시간을 HH:MM 형식으로 입력하세요.' });
+    if (s.start_time >= s.end_time) return res.status(400).json({ error: '끝나는 시간은 시작 시간보다 늦어야 합니다.' });
+    seen.add(wd);
+  }
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM schedules WHERE student_id = ?').run(id);
+    const ins = db.prepare('INSERT INTO schedules (student_id, weekday, start_time, end_time) VALUES (?, ?, ?, ?)');
+    slots.forEach((s) => ins.run(id, Number(s.weekday), s.start_time, s.end_time));
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  res.json({ ok: true });
+});
+
+// 주간 시간표 (전체 학생)
+app.get('/api/admin/timetable', requireAdmin, (req, res) => {
+  res.json(db.prepare(
+    `SELECT s.weekday, s.start_time, s.end_time, u.id AS student_id, u.name, p.course
+     FROM schedules s JOIN users u ON u.id = s.student_id LEFT JOIN student_profiles p ON p.user_id = u.id
+     ORDER BY s.weekday, s.start_time, u.name`
+  ).all());
 });
 
 app.post('/api/admin/students/:id/comments', requireAdmin, (req, res) => {

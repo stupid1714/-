@@ -71,6 +71,16 @@ CREATE TABLE IF NOT EXISTS files (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
+-- 학생별 수업 요일·시간 (weekday: 0=일, 1=월 ... 6=토)
+CREATE TABLE IF NOT EXISTS schedules (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  weekday INTEGER NOT NULL CHECK (weekday BETWEEN 0 AND 6),
+  start_time TEXT NOT NULL,
+  end_time TEXT NOT NULL,
+  UNIQUE (student_id, weekday)
+);
+
 CREATE TABLE IF NOT EXISTS sessions (
   token TEXT PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -114,6 +124,13 @@ function seed() {
     '구구단 출력 프로그램 만들기', '');
   insertProfile.run(s2, '엑셀 실무', '3강. 함수 기초 (SUM, AVERAGE)', 25, '4강. IF 함수',
     '성적표 시트에 평균 구하기', '');
+
+  const insertSchedule = db.prepare('INSERT INTO schedules (student_id, weekday, start_time, end_time) VALUES (?, ?, ?, ?)');
+  insertSchedule.run(s1, 1, '16:00', '18:00');
+  insertSchedule.run(s1, 3, '16:00', '18:00');
+  insertSchedule.run(s2, 2, '15:00', '16:30');
+  insertSchedule.run(s2, 4, '15:00', '16:30');
+  insertSchedule.run(s2, 6, '10:00', '12:00');
 
   const today = new Date().toISOString().slice(0, 10);
   db.prepare('INSERT INTO comments (student_id, author_id, content) VALUES (?, 1, ?)')
