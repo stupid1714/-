@@ -777,18 +777,29 @@ app.use((err, req, res, next) => {
 });
 
 // 같은 와이파이의 휴대폰에서 접속할 주소(PC의 내부 IP)를 함께 보여 줌
+// 가상 어댑터(VirtualBox, WSL, Hyper-V, VPN 등)는 휴대폰에서 접속할 수 없는 주소라 뒤로 보냄
+const VIRTUAL_IF = /(vethernet|virtualbox|vmware|vbox|hyper-v|wsl|docker|loopback|tailscale|zerotier|vpn|bluetooth)/i;
+
 function lanAddresses() {
-  return Object.values(require('node:os').networkInterfaces()).flat()
-    .filter((n) => n && n.family === 'IPv4' && !n.internal)
-    .map((n) => n.address);
+  const list = [];
+  Object.entries(require('node:os').networkInterfaces()).forEach(([ifName, addrs]) => {
+    (addrs || []).forEach((n) => {
+      if (n.family !== 'IPv4' && n.family !== 4) return;
+      if (n.internal || n.address.startsWith('169.254.')) return; // 169.254 = 네트워크 연결 안 됨
+      const home = /^192\.168\./.test(n.address) ? 0 : /^10\./.test(n.address) ? 1 : 2;
+      list.push({ ip: n.address, ifName, score: (VIRTUAL_IF.test(ifName) ? 10 : 0) + home });
+    });
+  });
+  return list.sort((a, b) => a.score - b.score);
 }
 
 app.listen(PORT, () => {
   console.log(`서버 실행 중: http://localhost:${PORT}`);
   const ips = lanAddresses();
-  if (ips.length) {
-    console.log('');
-    console.log('[휴대폰에서 보기] PC와 같은 와이파이에 연결한 뒤 휴대폰 브라우저 주소창에 입력하세요:');
-    ips.forEach((ip) => console.log(`  http://${ip}:${PORT}`));
-  }
+  if (!ips.length) return;
+  console.log('');
+  console.log('[휴대폰에서 보기] PC와 같은 와이파이에 연결한 뒤, 휴대폰 브라우저 주소창에 아래 주소를 입력하세요.');
+  console.log(`  ★ http://${ips[0].ip}:${PORT}   (${ips[0].ifName})`);
+  ips.slice(1).forEach((x) => console.log(`    http://${x.ip}:${PORT}   (${x.ifName}${x.score >= 10 ? ' - 가상 어댑터, 보통 아님' : ''})`));
+  console.log('  ※ 안 열리면 폴더의 "휴대폰접속허용.bat"을 한 번 실행하세요 (Windows 방화벽 허용).');
 });
