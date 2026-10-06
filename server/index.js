@@ -165,6 +165,9 @@ app.post('/api/signup', (req, res) => {
 
 app.get('/api/me', requireAuth, (req, res) => {
   const me = { ...req.user };
+  // 테스트용 기본 비밀번호를 그대로 쓰고 있으면 화면에 경고 (인터넷에 공개하기 전에 바꾸도록)
+  const own = db.prepare('SELECT initial_password FROM users WHERE id = ?').get(me.id);
+  me.weak_password = Boolean(own && ['1234', 'admin1234'].includes(own.initial_password));
   if (me.role === 'admin') me.pending_signups = db.prepare("SELECT COUNT(*) AS c FROM users WHERE status = 'pending'").get().c;
   if (me.role === 'parent' && me.child_id) {
     const child = getStudent(me.child_id);

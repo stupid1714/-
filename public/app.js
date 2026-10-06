@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.07-10';
+const APP_VERSION = '2026.10.07-11';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -98,7 +98,8 @@ function topbar() {
       <span class="who"><span class="role-label">${ROLE_LABEL[me.role]} · </span><b>${esc(me.name)}</b>${me.name.endsWith('님') ? '' : '님'}</span>
       <button class="btn small" data-act="password">${isStaff(me) ? '내 정보' : '비밀번호'}</button>
       <button class="btn small" data-act="logout">로그아웃</button>
-    </header>`;
+    </header>
+    ${me.weak_password ? `<div class="warn-bar">⚠️ 테스트용 기본 비밀번호를 사용 중입니다. 오른쪽 위 <b>${isStaff(me) ? '내 정보' : '비밀번호'}</b>에서 꼭 바꿔 주세요.</div>` : ''}`;
 }
 
 function bindTopbar() {
@@ -152,6 +153,7 @@ function openPasswordModal() {
       await api('/api/me/password', { method: 'POST', body: Object.fromEntries(fd) });
       toast('비밀번호가 변경되었습니다.');
       close();
+      if (state.me.weak_password) { state.me.weak_password = false; document.querySelector('.warn-bar')?.remove(); }
     });
   });
 }
