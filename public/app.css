@@ -333,6 +333,11 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
 .course-card { text-decoration: none; color: var(--text); margin: 0; }
 .course-card:hover { border-color: var(--primary); }
 
+.subject-title { margin: 14px 0 8px; font-size: 15px; color: var(--primary); }
+.subject-block + .subject-block { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.pick-group { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+.pick-subject { flex: none; width: 56px; padding-top: 9px; font-size: 13px; font-weight: 700; color: var(--muted); }
+
 /* ---------- 모바일 ---------- */
 @media (max-width: 820px) {
   .cards, .overview { grid-template-columns: 1fr 1fr; }

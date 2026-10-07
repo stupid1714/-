@@ -89,15 +89,14 @@ CREATE TABLE IF NOT EXISTS log_photos (
 );
 
 -- 교재(과정)와 목차: 목차를 체크하면 진도율이 자동 계산됨
-CREATE TABLE IF NOT EXISTS stages (
-  no INTEGER PRIMARY KEY,
-  band TEXT NOT NULL,
-  name TEXT NOT NULL
+CREATE TABLE IF NOT EXISTS seed_log (
+  name TEXT PRIMARY KEY
 );
 CREATE TABLE IF NOT EXISTS courses (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
   unit TEXT NOT NULL DEFAULT '예제',
+  subject TEXT NOT NULL DEFAULT '',
   sort INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
@@ -187,6 +186,26 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 `);
 
+// 과목별 공통 학습 단계 (파이썬 1~25, C언어 1~22 …). 예전 DB의 과목 없는 단계표는 '파이썬'으로 옮김
+const STAGES_SQL = `CREATE TABLE IF NOT EXISTS stages (
+  subject TEXT NOT NULL DEFAULT '',
+  no INTEGER NOT NULL,
+  band TEXT NOT NULL,
+  name TEXT NOT NULL,
+  PRIMARY KEY (subject, no)
+)`;
+const oldStages = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'stages'").get();
+if (oldStages && !oldStages.sql.includes('subject')) {
+  db.exec('ALTER TABLE stages RENAME TO stages_old');
+  db.exec(STAGES_SQL);
+  db.exec("INSERT INTO stages (subject, no, band, name) SELECT '파이썬', no, band, name FROM stages_old");
+  db.exec('DROP TABLE stages_old');
+}
+db.exec(STAGES_SQL);
+if (!db.prepare('PRAGMA table_info(courses)').all().some((c) => c.name === 'subject')) {
+  db.exec("ALTER TABLE courses ADD COLUMN subject TEXT NOT NULL DEFAULT ''");
+}
+
 // 예전 DB에 담당 선생님 칸 추가
 if (!db.prepare('PRAGMA table_info(student_profiles)').all().some((c) => c.name === 'teacher_id')) {
   db.exec('ALTER TABLE student_profiles ADD COLUMN teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL');
@@ -253,29 +272,41 @@ function seed() {
 
 seed();
 
-// 교재 목차 기본값(으뜸·두근두근·자기주도파이썬, 공통 25단계). 교재가 하나도 없을 때만 한 번 넣음
+// 교재 목차 기본값 (server/seed/curriculum.json: 파이썬 3권, C언어 3권 + 과목별 공통 단계)
+// 새로 추가된 기본 교재만 넣고, 한 번 넣은 교재는 기록해 두어 관리자가 지워도 다시 생기지 않음
 function seedCurriculum() {
-  if (db.prepare('SELECT COUNT(*) AS c FROM courses').get().c > 0) return;
   const file = path.join(__dirname, 'seed', 'curriculum.json');
   if (!fs.existsSync(file)) return;
   const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const subjects = data.subjects || [{ name: '파이썬', stages: data.stages || [] }];
+  const added = [];
   db.exec('BEGIN');
   try {
-    const st = db.prepare('INSERT OR REPLACE INTO stages (no, band, name) VALUES (?, ?, ?)');
-    data.stages.forEach((x) => st.run(x.no, x.band, x.name));
+    const st = db.prepare('INSERT OR IGNORE INTO stages (subject, no, band, name) VALUES (?, ?, ?, ?)');
+    subjects.forEach((sub) => sub.stages.forEach((x) => st.run(sub.name, x.no, x.band, x.name)));
     const ins = db.prepare(
       'INSERT INTO course_items (course_id, seq, stage, chapter, code, file, title, topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     );
-    data.courses.forEach((c, ci) => {
-      const id = db.prepare('INSERT INTO courses (name, unit, sort) VALUES (?, ?, ?)').run(c.name, c.unit, ci + 1).lastInsertRowid;
+    data.courses.forEach((c) => {
+      const subject = c.subject || '파이썬';
+      if (db.prepare('SELECT 1 FROM seed_log WHERE name = ?').get(c.name)) return;
+      db.prepare('INSERT INTO seed_log (name) VALUES (?)').run(c.name);
+      const existing = db.prepare('SELECT id, subject FROM courses WHERE name = ?').get(c.name);
+      if (existing) { // 예전 버전에서 이미 넣은 교재: 과목만 채움
+        if (!existing.subject) db.prepare('UPDATE courses SET subject = ? WHERE id = ?').run(subject, existing.id);
+        return;
+      }
+      const sort = db.prepare('SELECT COALESCE(MAX(sort), 0) + 1 AS s FROM courses').get().s;
+      const id = db.prepare('INSERT INTO courses (name, unit, subject, sort) VALUES (?, ?, ?, ?)').run(c.name, c.unit, subject, sort).lastInsertRowid;
       c.items.forEach((it, i) => ins.run(id, i + 1, it.stage, it.chapter, it.code, it.file, it.title, it.topic));
+      added.push(`${c.name} ${c.items.length}개`);
     });
     db.exec('COMMIT');
-    console.log('[seed] 교재 목차를 넣었습니다:', data.courses.map((c) => `${c.name} ${c.items.length}개`).join(', '));
   } catch (e) {
     db.exec('ROLLBACK');
     throw e;
   }
+  if (added.length) console.log('[seed] 교재 목차를 넣었습니다:', added.join(', '));
 }
 seedCurriculum();
 

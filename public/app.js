@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.07-13';
+const APP_VERSION = '2026.10.07-14';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -686,8 +686,15 @@ function pctOf(done, total) { return total ? (done === total ? 100 : Math.floor(
 
 function itemCode(it) {
   if (/^코드/.test(it.code)) return it.code.replace('코드 ', '');
-  if (it.code === 'Lab') return 'Lab';
+  if (it.code === 'Mini') return 'Mini';
+  if (['Lab', 'LAB', 'REAL'].includes(it.code) || /^\d+(\.\d+)?$/.test(it.code)) return it.code;
   return '';
+}
+
+function groupBySubject(list) {
+  const map = new Map();
+  list.forEach((c) => { const k = c.subject || '기타'; if (!map.has(k)) map.set(k, []); map.get(k).push(c); });
+  return [...map];
 }
 
 // 교재 한 권의 목차 카드 (editable이면 체크박스, 아니면 ✓ 표시만)
@@ -736,34 +743,42 @@ function courseCardHtml(c, editable, nextId) {
     </section>`;
 }
 
-// 공통 단계(1~25)별 진행 현황
+// 과목별 공통 단계 진행 현황 (파이썬 1~25, C언어 1~22 …)
 function stageTableHtml(cur) {
-  const rows = cur.stages.map((st) => {
-    const per = cur.courses.map((c) => {
-      const list = c.items.filter((it) => it.stage === st.no);
-      return { total: list.length, done: list.filter((it) => it.done_date).length };
-    });
-    const total = per.reduce((n, x) => n + x.total, 0);
-    if (!total) return '';
-    const done = per.reduce((n, x) => n + x.done, 0);
-    return `<tr><td>${st.no}</td><td><span class="badge band-${esc(st.band)}">${esc(st.band)}</span></td><td>${esc(st.name)}</td>
-      ${per.map((x) => `<td class="num">${x.total ? `${x.done}/${x.total}` : '-'}</td>`).join('')}
-      <td class="stage-bar">${progressBar(pctOf(done, total))}<span class="small muted">${pctOf(done, total)}%</span></td></tr>`;
+  const groups = groupBySubject(cur.courses);
+  return groups.map(([subject, courses]) => {
+    const stages = cur.stages.filter((st) => (st.subject || '기타') === subject);
+    if (!stages.length) return '';
+    const rows = stages.map((st) => {
+      const per = courses.map((c) => {
+        const list = c.items.filter((it) => it.stage === st.no);
+        return { total: list.length, done: list.filter((it) => it.done_date).length };
+      });
+      const total = per.reduce((n, x) => n + x.total, 0);
+      if (!total) return '';
+      const done = per.reduce((n, x) => n + x.done, 0);
+      return `<tr><td>${st.no}</td><td><span class="badge band-${esc(st.band)}">${esc(st.band)}</span></td><td>${esc(st.name)}</td>
+        ${per.map((x) => `<td class="num">${x.total ? `${x.done}/${x.total}` : '-'}</td>`).join('')}
+        <td class="stage-bar">${progressBar(pctOf(done, total))}<span class="small muted">${pctOf(done, total)}%</span></td></tr>`;
+    }).join('');
+    const bands = ['기초', '중급', '심화'].map((band) => {
+      const nos = stages.filter((st) => st.band === band).map((st) => st.no);
+      const list = courses.flatMap((c) => c.items.filter((it) => nos.includes(it.stage)));
+      const done = list.filter((it) => it.done_date).length;
+      return list.length ? `<div class="band-sum"><span class="badge band-${band}">${band}</span>${progressBar(pctOf(done, list.length))}<span class="small">${pctOf(done, list.length)}%</span></div>` : '';
+    }).join('');
+    return `
+      <div class="subject-block">
+        ${groups.length > 1 ? `<h3 class="subject-title">${esc(subject)}</h3>` : ''}
+        <div class="band-sums">${bands}</div>
+        <details class="stage-details"><summary>${esc(subject)} 단계별(1~${stages.length}) 자세히 보기</summary>
+          <div class="table-wrap"><table class="stage-table">
+            <thead><tr><th>단계</th><th>구간</th><th>학습 내용</th>${courses.map((c) => `<th>${esc(c.name)}</th>`).join('')}<th>통합</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table></div>
+        </details>
+      </div>`;
   }).join('');
-  const bands = ['기초', '중급', '심화'].map((band) => {
-    const nos = cur.stages.filter((st) => st.band === band).map((st) => st.no);
-    const list = cur.courses.flatMap((c) => c.items.filter((it) => nos.includes(it.stage)));
-    const done = list.filter((it) => it.done_date).length;
-    return list.length ? `<div class="band-sum"><span class="badge band-${band}">${band}</span>${progressBar(pctOf(done, list.length))}<span class="small">${pctOf(done, list.length)}%</span></div>` : '';
-  }).join('');
-  return `
-    <div class="band-sums">${bands}</div>
-    <details class="stage-details"><summary>단계별(1~25) 자세히 보기</summary>
-      <div class="table-wrap"><table class="stage-table">
-        <thead><tr><th>단계</th><th>구간</th><th>학습 내용</th>${cur.courses.map((c) => `<th>${esc(c.name)}</th>`).join('')}<th>통합</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
-    </details>`;
 }
 
 // 학생·학부모 화면: 읽기 전용
@@ -795,9 +810,10 @@ async function renderCurriculumTab(body, id, onProgress) {
   body.innerHTML = `
     <section class="card">
       <div class="card-head"><h2>교재 지정</h2><span class="muted small">여러 권 선택 가능 · 목차를 체크하면 진도율·현재/다음 진도가 자동으로 바뀝니다</span></div>
-      ${all.length ? `<div class="course-picks">${all.map((c) => `
+      ${all.length ? groupBySubject(all).map(([subject, list]) => `
+        <div class="pick-group"><span class="pick-subject">${esc(subject)}</span><div class="course-picks">${list.map((c) => `
         <label class="chip-check"><input type="checkbox" value="${c.id}" ${assigned.has(c.id) ? 'checked' : ''}>
-          <span>${esc(c.name)} <small class="muted">${c.item_count}${esc(c.unit)}</small></span></label>`).join('')}</div>`
+          <span>${esc(c.name)} <small class="muted">${c.item_count}${esc(c.unit)}</small></span></label>`).join('')}</div></div>`).join('')
         : '<div class="empty">등록된 교재가 없습니다. 왼쪽 아래 <b>📚 교재·목차</b>에서 추가하세요.</div>'}
     </section>
     ${cur.courses.length ? `
@@ -1731,23 +1747,27 @@ async function renderCourses() {
   const admin = isAdmin(state.me);
   const m = /^#\/courses\/(\d+)/.exec(location.hash);
   if (m) return renderCourseDetail(main, Number(m[1]), admin);
-  const list = await api('/api/courses');
+  const [list, subjects] = await Promise.all([api('/api/courses'), admin ? api('/api/subjects') : Promise.resolve([])]);
   main.innerHTML = `
     <div class="row" style="margin-bottom:8px"><a class="btn small back-btn" href="#/">← 목록</a><h2>교재·목차</h2></div>
     <p class="muted small" style="margin-top:0">교재마다 목차를 한 번만 올려 두면, 학생 화면의 <b>📚 교재 진도</b> 탭에서 체크만으로 진도율이 자동 계산됩니다.
       ${admin ? '' : '(교재 추가·수정은 관리자만 할 수 있습니다)'}</p>
-    <div class="course-list">${list.map((c) => `
-      <a class="card course-card" href="#/courses/${c.id}">
-        <div class="title">📘 ${esc(c.name)}</div>
-        <div class="muted small">목차 ${c.item_count}${esc(c.unit)} · 사용 학생 ${c.student_count}명</div>
-      </a>`).join('') || '<div class="empty">등록된 교재가 없습니다.</div>'}</div>
+    ${groupBySubject(list).map(([subject, items]) => `
+      <h3 class="subject-title">${esc(subject)}</h3>
+      <div class="course-list">${items.map((c) => `
+        <a class="card course-card" href="#/courses/${c.id}">
+          <div class="title">📘 ${esc(c.name)}</div>
+          <div class="muted small">목차 ${c.item_count}${esc(c.unit)} · 사용 학생 ${c.student_count}명</div>
+        </a>`).join('')}</div>`).join('') || '<div class="empty">등록된 교재가 없습니다.</div>'}
     ${admin ? `
     <section class="card" style="margin-top:16px">
       <div class="card-head"><h2>새 교재 추가</h2></div>
       <form id="new-course">
         <div class="grid2">
           <label class="field"><span>교재 이름 *</span><input type="text" name="name" required placeholder="예: 엑셀 실무"></label>
-          <label class="field"><span>목차 단위</span><select name="unit"><option>예제</option><option>장</option><option>강</option><option>단원</option></select></label>
+          <label class="field"><span>목차 단위</span><select name="unit"><option>예제</option><option>항목</option><option>장</option><option>강</option><option>단원</option></select></label>
+          <label class="field"><span>과목 (같은 과목끼리 공통 단계표를 함께 씀)</span>
+            <input type="text" name="subject" list="subject-list" placeholder="예: 파이썬, C언어, 엑셀"><datalist id="subject-list">${subjects.map((x) => `<option value="${esc(x)}">`).join('')}</datalist></label>
         </div>
         <label class="field"><span>목차 붙여넣기 (나중에 추가해도 됩니다)</span>${PASTE_HELP}<textarea name="text" rows="8" placeholder="# 1장 시작하기&#10;엑셀 화면 구성&#10;셀 서식&#10;# 2장 함수&#10;SUM, AVERAGE"></textarea></label>
         <div class="row end"><button class="btn primary" type="submit">교재 추가</button></div>
@@ -1769,12 +1789,14 @@ async function renderCourseDetail(main, courseId, admin) {
   const stageName = (no) => (c.stages.find((x) => x.no === no) || {}).name || '';
   main.innerHTML = `
     <div class="row" style="margin-bottom:12px"><a class="btn small" href="#/courses">← 교재 목록</a><h2>📘 ${esc(c.name)}</h2>
-      <span class="muted small">목차 ${c.items.length}${esc(c.unit)}</span></div>
+      <span class="muted small">${esc(c.subject || '')} · 목차 ${c.items.length}${esc(c.unit)}</span></div>
     ${admin ? `
     <section class="card">
       <form id="course-edit" class="row">
         <input type="text" name="name" value="${esc(c.name)}" required style="flex:1;min-width:160px">
-        <select name="unit" style="width:auto">${['예제', '장', '강', '단원'].map((u) => `<option ${u === c.unit ? 'selected' : ''}>${u}</option>`).join('')}</select>
+        <select name="unit" style="width:auto">${['예제', '항목', '장', '강', '단원'].map((u) => `<option ${u === c.unit ? 'selected' : ''}>${u}</option>`).join('')}</select>
+        <input type="text" name="subject" value="${esc(c.subject || '')}" list="subject-list2" placeholder="과목" style="width:120px">
+        <datalist id="subject-list2">${(c.subjects || []).map((x) => `<option value="${esc(x)}">`).join('')}</datalist>
         <button class="btn" type="submit">이름 저장</button>
         <button class="btn danger" type="button" id="course-del">교재 삭제</button>
       </form>
