@@ -489,8 +489,9 @@ function studentCourses(studentId) {
 
 // 목차 항목을 '현재/다음 진도' 칸에 넣을 짧은 이름으로
 function itemLabel(courseName, it) {
-  const tag = { Lab: '[Lab] ', LAB: '[LAB] ', Mini: '[Mini Project] ', REAL: '[REAL PROJECT] ' }[it.code];
-  const code = tag || (/^코드/.test(it.code) || /^\d+(\.\d+)?$/.test(it.code) ? `${it.code} ` : '');
+  const tag = { Lab: '[Lab] ', LAB: '[LAB] ', Mini: '[Mini Project] ', REAL: '[REAL PROJECT] ' }[it.code]
+    || (/^LAB \d/.test(it.code) ? `[${it.code}] ` : '');
+  const code = tag || (/^(코드|예제) /.test(it.code) || /^\d+(\.\d+)?$/.test(it.code) ? `${it.code} ` : '');
   return `[${courseName}] ${it.chapter ? `${it.chapter} · ` : ''}${code}${it.title}`;
 }
 

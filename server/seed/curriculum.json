@@ -5135,149 +5135,438 @@
   {
    "name": "C언어 마스터",
    "subject": "C언어",
-   "unit": "항목",
+   "unit": "예제",
+   "version": 2,
    "items": [
     {
-     "stage": 1,
+     "stage": 2,
      "chapter": "1장 프로그램과 C 언어",
-     "code": "01",
-     "file": "",
-     "title": "프로그램과 프로그래밍 언어",
-     "topic": ""
-    },
-    {
-     "stage": 1,
-     "chapter": "1장 프로그램과 C 언어",
-     "code": "02",
-     "file": "",
-     "title": "C 언어의 개요",
+     "code": "본문",
+     "file": "hello_c.c",
+     "title": "Hello C Language 출력하기",
      "topic": ""
     },
     {
      "stage": 2,
      "chapter": "1장 프로그램과 C 언어",
-     "code": "03",
-     "file": "",
-     "title": "C 프로그램 개발 환경 구축",
+     "code": "본문",
+     "file": "helloworld.c",
+     "title": "Hello World! 출력하기",
      "topic": ""
     },
     {
      "stage": 2,
      "chapter": "1장 프로그램과 C 언어",
-     "code": "04",
-     "file": "",
-     "title": "C 프로그램 작성",
+     "code": "LAB 1-1",
+     "file": "LAB_1-1.c",
+     "title": "이름과 학번 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 7,
+     "chapter": "2장 C 프로그램의 구성",
+     "code": "본문",
+     "file": "comment.c",
+     "title": "파일 정보를 담은 주석 작성 예시",
      "topic": ""
     },
     {
      "stage": 3,
      "chapter": "2장 C 프로그램의 구성",
-     "code": "01",
-     "file": "",
-     "title": "C 프로그램의 구성 요소",
+     "code": "예제 2-1",
+     "file": "ex02_01.c",
+     "title": "두 변수의 합 계산과 한 줄·여러 줄 주석",
      "topic": ""
     },
     {
      "stage": 3,
      "chapter": "2장 C 프로그램의 구성",
-     "code": "02",
-     "file": "",
-     "title": "표준 출력 함수",
+     "code": "예제 2-2",
+     "file": "ex02_02.c",
+     "title": "printf()로 정수와 실수 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장 C 프로그램의 구성",
+     "code": "예제 2-3",
+     "file": "ex02_03.c",
+     "title": "총점과 평균 출력하기(소수점 자릿수 지정)",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장 C 프로그램의 구성",
+     "code": "예제 2-4",
+     "file": "ex02_04.c",
+     "title": "공백·탭·줄 바꿈 문자로 출력 정리하기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장 C 프로그램의 구성",
+     "code": "예제 2-5",
+     "file": "ex02_05.c",
+     "title": "최소 너비와 정렬을 지정해 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장 C 프로그램의 구성",
+     "code": "LAB 2-1",
+     "file": "LAB_2-1.c",
+     "title": "형식 지정자로 숫자와 문자 정렬해 출력하기",
      "topic": ""
     },
     {
      "stage": 4,
      "chapter": "2장 C 프로그램의 구성",
-     "code": "03",
-     "file": "",
-     "title": "표준 입력 함수",
+     "code": "본문",
+     "file": "scanf_ex.c",
+     "title": "scanf()로 정수와 실수 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "2장 C 프로그램의 구성",
+     "code": "예제 2-6",
+     "file": "ex02_06.c",
+     "title": "scanf()로 문자와 문자열 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "2장 C 프로그램의 구성",
+     "code": "예제 2-7",
+     "file": "ex02_07.c",
+     "title": "\"10 + 20\" 형식으로 입력받아 덧셈 결과 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "2장 C 프로그램의 구성",
+     "code": "LAB 2-2",
+     "file": "LAB_2-2.c",
+     "title": "정수와 문자를 입력받아 출력하기",
      "topic": ""
     },
     {
      "stage": 4,
      "chapter": "2장 C 프로그램의 구성",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_circle.c",
      "title": "원의 면적과 둘레 구하기",
      "topic": ""
     },
     {
      "stage": 5,
      "chapter": "3장 변수와 자료형",
-     "code": "01",
-     "file": "",
-     "title": "변수",
+     "code": "본문",
+     "file": "variable.c",
+     "title": "변수 선언과 합계 출력하기",
      "topic": ""
     },
     {
      "stage": 5,
      "chapter": "3장 변수와 자료형",
-     "code": "02",
-     "file": "",
-     "title": "자료형",
+     "code": "예제 3-1",
+     "file": "ex03_01.c",
+     "title": "정수 자료형(short·int·long)의 표현 범위",
      "topic": ""
     },
     {
      "stage": 5,
      "chapter": "3장 변수와 자료형",
-     "code": "03",
-     "file": "",
-     "title": "상수",
+     "code": "예제 3-2",
+     "file": "ex03_02.c",
+     "title": "sizeof로 자료형의 크기 알아보기",
      "topic": ""
     },
     {
      "stage": 5,
      "chapter": "3장 변수와 자료형",
-     "code": "04",
-     "file": "",
-     "title": "자료형 변환",
+     "code": "예제 3-3",
+     "file": "ex03_03.c",
+     "title": "정수 오버플로 확인하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-4",
+     "file": "ex03_04.c",
+     "title": "정수 언더플로 확인하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-5",
+     "file": "ex03_05.c",
+     "title": "float형 변수의 덧셈과 곱셈",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-6",
+     "file": "ex03_06.c",
+     "title": "삼각형과 사각형의 넓이 계산(float·double)",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-7",
+     "file": "ex03_07.c",
+     "title": "문자형 변수와 ASCII 코드 값",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-8",
+     "file": "ex03_08.c",
+     "title": "10진수·8진수·16진수 정수 상수 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-9",
+     "file": "ex03_09.c",
+     "title": "float 실수 출력과 소수점 자릿수",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-10",
+     "file": "ex03_10.c",
+     "title": "double 실수 출력과 소수점 자릿수",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-11",
+     "file": "ex03_11.c",
+     "title": "문자 상수와 아스키코드 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-12",
+     "file": "ex03_12.c",
+     "title": "#define 기호 상수 PI로 원의 넓이 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-13",
+     "file": "ex03_13.c",
+     "title": "const 상수 PI로 원의 넓이 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "LAB 3-1",
+     "file": "LAB_3-1.c",
+     "title": "상수로 부가세 포함 음식 가격 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "본문",
+     "file": "Division.c",
+     "title": "정수끼리 나눗셈 결과와 형 변환",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-14",
+     "file": "ex03_14.c",
+     "title": "정수와 실수 연산의 자동 형 변환",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-15",
+     "file": "ex03_15.c",
+     "title": "double을 int에 대입할 때의 데이터 손실",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "예제 3-16",
+     "file": "ex03_16.c",
+     "title": "강제 형 변환 (int)",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "3장 변수와 자료형",
+     "code": "LAB 3-2",
+     "file": "LAB_3-2.c",
+     "title": "전기 요금 계산하기(long long 형 변환)",
      "topic": ""
     },
     {
      "stage": 5,
      "chapter": "3장 변수와 자료형",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_speed.c",
      "title": "자동차의 평균 속도와 입력값의 크기 출력하기",
      "topic": ""
     },
     {
      "stage": 6,
      "chapter": "4장 연산자",
-     "code": "01",
-     "file": "",
-     "title": "연산자의 개요",
+     "code": "예제 4-1",
+     "file": "ex04_01.c",
+     "title": "산술 연산자로 사칙연산과 나머지 구하기",
      "topic": ""
     },
     {
      "stage": 6,
      "chapter": "4장 연산자",
-     "code": "02",
-     "file": "",
-     "title": "산술, 대입, 증감 연산자",
+     "code": "예제 4-2",
+     "file": "ex04_02.c",
+     "title": "대입 연산자 사용하기",
      "topic": ""
     },
     {
      "stage": 6,
      "chapter": "4장 연산자",
-     "code": "03",
-     "file": "",
-     "title": "논리, 조건, 관계 연산자",
+     "code": "예제 4-3",
+     "file": "ex04_03.c",
+     "title": "복합 대입 연산자(+=, -= 등)",
      "topic": ""
     },
     {
      "stage": 6,
      "chapter": "4장 연산자",
-     "code": "04",
-     "file": "",
-     "title": "기타 연산자",
+     "code": "예제 4-4",
+     "file": "ex04_04.c",
+     "title": "증감 연산자 ++, -- 기초",
      "topic": ""
     },
     {
      "stage": 6,
      "chapter": "4장 연산자",
-     "code": "05",
-     "file": "",
+     "code": "예제 4-5",
+     "file": "ex04_05.c",
+     "title": "전위 증감 연산자의 동작",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-6",
+     "file": "ex04_06.c",
+     "title": "후위 증감 연산자의 동작",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-7",
+     "file": "ex04_07.c",
+     "title": "이항 연산자와 증감 연산자를 함께 쓸 때",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "LAB 4-1",
+     "file": "LAB_4-1.c",
+     "title": "중첩 삼항 연산자로 학점 판별하기",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-8",
+     "file": "ex04_08.c",
+     "title": "논리 연산자 &&, ||, !",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-9",
+     "file": "ex04_09.c",
+     "title": "조건 연산자로 큰 수와 작은 수 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-10",
+     "file": "ex04_10.c",
+     "title": "관계 연산자로 두 수 비교하기",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-11",
+     "file": "ex04_11.c",
+     "title": "실수 비교와 오차 범위",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "LAB 4-2",
+     "file": "LAB_4-2.c",
+     "title": "부호 반전으로 전구 상태 바꾸기",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-12",
+     "file": "ex04_12.c",
+     "title": "비트 연산자 ~, &, |, ^",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-13",
+     "file": "ex04_13.c",
+     "title": "시프트 연산자 <<, >>",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-14",
+     "file": "ex04_14.c",
+     "title": "주소 연산자 &와 sizeof 연산자",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "LAB 4-3",
+     "file": "LAB_4-3.c",
+     "title": "비트 연산으로 RGB 색상값 합치기",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "4장 연산자",
+     "code": "예제 4-15",
+     "file": "ex04_15.c",
      "title": "연산자의 우선순위",
      "topic": ""
     },
@@ -5285,488 +5574,1440 @@
      "stage": 6,
      "chapter": "4장 연산자",
      "code": "REAL",
-     "file": "",
-     "title": "날씨 프로그램 만들기",
+     "file": "REAL_temperature.c",
+     "title": "날씨 프로그램 만들기(섭씨→화씨 변환)",
      "topic": ""
     },
     {
      "stage": 8,
      "chapter": "5장 조건문",
-     "code": "01",
-     "file": "",
-     "title": "제어문",
+     "code": "예제 5-1",
+     "file": "ex05_01.c",
+     "title": "if 문 기초(입력값이 3이면 증가)",
      "topic": ""
     },
     {
      "stage": 8,
      "chapter": "5장 조건문",
-     "code": "02",
-     "file": "",
-     "title": "if 문",
+     "code": "예제 5-2",
+     "file": "ex05_02.c",
+     "title": "양수·음수·0 판별하기",
      "topic": ""
     },
     {
      "stage": 8,
      "chapter": "5장 조건문",
-     "code": "03",
-     "file": "",
-     "title": "다중 선택문",
+     "code": "예제 5-3",
+     "file": "ex05_03.c",
+     "title": "if-else 문으로 문자 바꾸기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "예제 5-4",
+     "file": "ex05_04.c",
+     "title": "대소문자 바꾸기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "예제 5-5",
+     "file": "ex05_05.c",
+     "title": "if-else if로 학점 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "예제 5-6",
+     "file": "ex05_06.c",
+     "title": "나이에 따른 요금 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "예제 5-7",
+     "file": "ex05_07.c",
+     "title": "중첩 if 문으로 MBTI 성격 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "LAB 5-1",
+     "file": "LAB_5-1.c",
+     "title": "윤년 판별하기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "LAB 5-1",
+     "file": "LAB_5-1A.c",
+     "title": "윤년 판별하기(else if 순서를 바꾼 다른 풀이)",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "LAB 5-2",
+     "file": "LAB_5-2.c",
+     "title": "좌표의 사분면 판별하기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "예제 5-8",
+     "file": "ex05_08.c",
+     "title": "switch 문으로 자판기 상태 처리하기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장 조건문",
+     "code": "LAB 5-3",
+     "file": "LAB_5-3.c",
+     "title": "switch 문으로 로봇 상태 바꾸기",
      "topic": ""
     },
     {
      "stage": 8,
      "chapter": "5장 조건문",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_taxi.c",
      "title": "서울시 택시 요금 계산하기",
      "topic": ""
     },
     {
      "stage": 9,
      "chapter": "6장 반복문",
-     "code": "01",
-     "file": "",
-     "title": "반복문의 개요",
+     "code": "예제 6-1",
+     "file": "ex06_01.c",
+     "title": "while 문으로 숫자를 거꾸로 10개씩 출력하기",
      "topic": ""
     },
     {
      "stage": 9,
      "chapter": "6장 반복문",
-     "code": "02",
-     "file": "",
-     "title": "while 문",
+     "code": "예제 6-2",
+     "file": "ex06_02.c",
+     "title": "정수의 자릿수 개수와 각 자리 합 구하기",
      "topic": ""
     },
     {
      "stage": 9,
      "chapter": "6장 반복문",
-     "code": "03",
-     "file": "",
-     "title": "do~while 문",
+     "code": "예제 6-3",
+     "file": "ex06_03.c",
+     "title": "EOF(Ctrl+Z)까지 입력받아 합계 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장 반복문",
+     "code": "LAB 6-1",
+     "file": "LAB_6-1.c",
+     "title": "목표 금액까지 저축 기간 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장 반복문",
+     "code": "LAB 6-1",
+     "file": "LAB_6_1A.c",
+     "title": "목표 금액까지 저축 기간 계산하기(오버플로 검사 추가 풀이)",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장 반복문",
+     "code": "예제 6-4",
+     "file": "ex06_04.c",
+     "title": "do~while 문으로 숫자를 거꾸로 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장 반복문",
+     "code": "예제 6-5",
+     "file": "ex06_05.c",
+     "title": "do~while 문으로 올바른 성적 입력받아 등급 출력하기",
      "topic": ""
     },
     {
      "stage": 10,
      "chapter": "6장 반복문",
-     "code": "04",
-     "file": "",
-     "title": "for 문",
+     "code": "예제 6-6",
+     "file": "ex06_06.c",
+     "title": "for 문으로 입력한 횟수만큼 출력하기",
      "topic": ""
     },
     {
      "stage": 10,
      "chapter": "6장 반복문",
-     "code": "05",
-     "file": "",
-     "title": "분기문",
+     "code": "예제 6-7",
+     "file": "ex06_07.c",
+     "title": "1부터 n까지 제곱 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "예제 6-8",
+     "file": "ex06_08.c",
+     "title": "for 문으로 A~Z 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "예제 6-9",
+     "file": "ex06_09.c",
+     "title": "중첩 for 문으로 [i, j] 좌표 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "본문",
+     "file": "ex_multiple_for.c",
+     "title": "중첩 for 문으로 # 삼각형 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "예제 6-10",
+     "file": "ex06_10.c",
+     "title": "중첩 for 문으로 구구단 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "예제 6-11",
+     "file": "ex06_11.c",
+     "title": "구구단을 가로로 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "LAB 6-2",
+     "file": "LAB_6-2.c",
+     "title": "복리 예금 만기액 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "LAB 6-3",
+     "file": "LAB_6-3.c",
+     "title": "암스트롱 수 찾기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "예제 6-12",
+     "file": "ex06_12.c",
+     "title": "break로 합이 50을 넘으면 멈추기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "예제 6-13",
+     "file": "ex06_13.c",
+     "title": "-1을 입력할 때까지 합계 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "예제 6-14",
+     "file": "ex06_14.c",
+     "title": "continue로 짝수만 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "예제 6-15",
+     "file": "ex06_15.c",
+     "title": "무한 반복과 break·continue",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장 반복문",
+     "code": "본문",
+     "file": "ex_goto.c",
+     "title": "goto 문으로 반복 빠져나가기",
      "topic": ""
     },
     {
      "stage": 10,
      "chapter": "6장 반복문",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_pyramid.c",
      "title": "피라미드 쌓기 프로그램 만들기",
      "topic": ""
     },
     {
      "stage": 11,
      "chapter": "7장 함수",
-     "code": "01",
-     "file": "",
-     "title": "함수의 개요",
+     "code": "예제 7-1",
+     "file": "ex07_01.c",
+     "title": "삼각형 넓이를 구하는 함수",
      "topic": ""
     },
     {
      "stage": 11,
      "chapter": "7장 함수",
-     "code": "02",
-     "file": "",
-     "title": "함수 선언과 정의",
+     "code": "예제 7-2",
+     "file": "ex07_02.c",
+     "title": "팩토리얼을 구하는 함수",
+     "topic": ""
+    },
+    {
+     "stage": 11,
+     "chapter": "7장 함수",
+     "code": "예제 7-3",
+     "file": "ex07_03.c",
+     "title": "매개변수와 반환값이 없는 함수",
+     "topic": ""
+    },
+    {
+     "stage": 11,
+     "chapter": "7장 함수",
+     "code": "예제 7-4",
+     "file": "ex07_04.c",
+     "title": "매개변수만 있고 반환값이 없는 함수",
+     "topic": ""
+    },
+    {
+     "stage": 11,
+     "chapter": "7장 함수",
+     "code": "예제 7-5",
+     "file": "ex07_05.c",
+     "title": "매개변수 없이 반환값만 있는 함수",
+     "topic": ""
+    },
+    {
+     "stage": 11,
+     "chapter": "7장 함수",
+     "code": "예제 7-6",
+     "file": "ex07_06.c",
+     "title": "매개변수와 반환값이 모두 있는 함수",
      "topic": ""
     },
     {
      "stage": 12,
      "chapter": "7장 함수",
-     "code": "03",
-     "file": "",
-     "title": "표준 라이브러리 함수",
+     "code": "예제 7-7",
+     "file": "ex07_07.c",
+     "title": "rand()로 난수 만들기",
      "topic": ""
     },
     {
      "stage": 12,
+     "chapter": "7장 함수",
+     "code": "예제 7-8",
+     "file": "ex07_08.c",
+     "title": "난수의 범위 정하기(0~99, 1~100)",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "7장 함수",
+     "code": "예제 7-9",
+     "file": "ex07_09.c",
+     "title": "srand(time(NULL))로 실행할 때마다 다른 난수",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "7장 함수",
+     "code": "예제 7-10",
+     "file": "ex07_10.c",
+     "title": "시드 값을 적용한 난수 발생 1",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "7장 함수",
+     "code": "예제 7-11",
+     "file": "ex07_11.c",
+     "title": "시드 값을 적용한 난수 발생 2",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "7장 함수",
+     "code": "LAB 7-1",
+     "file": "LAB_7-1.c",
+     "title": "주사위 숫자 맞히기 게임",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "7장 함수",
+     "code": "예제 7-12",
+     "file": "ex07_12.c",
+     "title": "삼각함수 sin·cos·tan 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "7장 함수",
+     "code": "예제 7-13",
+     "file": "ex07_13.c",
+     "title": "sqrt·pow·log 수학 함수 사용하기",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "7장 함수",
+     "code": "LAB 7-2",
+     "file": "LAB_7-2.c",
+     "title": "sqrt()로 소수 판별하기",
+     "topic": ""
+    },
+    {
+     "stage": 11,
      "chapter": "7장 함수",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_coffee.c",
      "title": "커피 전문점 시뮬레이션 프로그램 만들기",
      "topic": ""
     },
     {
      "stage": 13,
      "chapter": "8장 함수와 변수 영역",
-     "code": "01",
-     "file": "",
-     "title": "변수의 속성과 범위",
+     "code": "예제 8-1",
+     "file": "ex08_01.c",
+     "title": "지역변수와 중첩 블록의 범위",
      "topic": ""
     },
     {
      "stage": 13,
      "chapter": "8장 함수와 변수 영역",
-     "code": "02",
-     "file": "",
-     "title": "변수의 지속 기간",
+     "code": "예제 8-2",
+     "file": "ex08_02.c",
+     "title": "블록 안에서 바깥 지역변수 값 바꾸기",
      "topic": ""
     },
     {
      "stage": 13,
      "chapter": "8장 함수와 변수 영역",
-     "code": "03",
-     "file": "",
-     "title": "가변 매개변수 함수",
+     "code": "예제 8-3",
+     "file": "ex08_03.c",
+     "title": "전역변수 사용하기",
      "topic": ""
     },
     {
      "stage": 13,
      "chapter": "8장 함수와 변수 영역",
-     "code": "04",
-     "file": "",
-     "title": "재귀 함수",
+     "code": "예제 8-4",
+     "file": "ex08_04.c",
+     "title": "초기화하지 않은 전역변수의 기본값",
      "topic": ""
     },
     {
      "stage": 13,
      "chapter": "8장 함수와 변수 영역",
-     "code": "05",
-     "file": "",
-     "title": "변수와 함수의 연결",
+     "code": "예제 8-5",
+     "file": "ex08_05.c",
+     "title": "auto 지역변수",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "예제 8-6",
+     "file": "ex08_06.c",
+     "title": "register 변수",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "예제 8-7",
+     "file": "ex08_07.c",
+     "title": "volatile 변수",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "예제 8-8",
+     "file": "ex08_08.c",
+     "title": "static 정적 지역변수로 호출 횟수 세기",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "LAB 8-1",
+     "file": "LAB_8-1.c",
+     "title": "정적 지역변수와 일반 지역변수의 생존 기간 비교하기",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "예제 8-9",
+     "file": "ex08_09.c",
+     "title": "가변 매개변수 함수로 합계 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "예제 8-10",
+     "file": "ex08_10.c",
+     "title": "재귀 함수로 팩토리얼 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "LAB 8-2",
+     "file": "LAB_8-2.c",
+     "title": "재귀 함수로 피보나치수열 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "본문",
+     "file": "ex_externalVar.c, ex_main.c",
+     "title": "extern으로 다른 파일의 변수·함수 사용하기(외부 연결, 파일 2개)",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "8장 함수와 변수 영역",
+     "code": "본문",
+     "file": "internal01_Var.c, internal02_Var.c",
+     "title": "static 전역변수의 내부 연결(파일 2개)",
      "topic": ""
     },
     {
      "stage": 13,
      "chapter": "8장 함수와 변수 영역",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_login.c",
      "title": "사용자 계정 관리 프로그램 만들기",
      "topic": ""
     },
     {
      "stage": 14,
      "chapter": "9장 배열",
-     "code": "01",
-     "file": "",
-     "title": "배열의 개요",
+     "code": "예제 9-1",
+     "file": "ex09_01.c",
+     "title": "배열 요소에 값을 넣고 출력하기",
      "topic": ""
     },
     {
      "stage": 14,
      "chapter": "9장 배열",
-     "code": "02",
-     "file": "",
-     "title": "배열 선언과 초기화",
+     "code": "예제 9-2",
+     "file": "ex09_02.c",
+     "title": "반복문으로 배열 요소 출력하기",
      "topic": ""
     },
     {
      "stage": 14,
      "chapter": "9장 배열",
-     "code": "03",
-     "file": "",
-     "title": "배열과 함수",
+     "code": "예제 9-3",
+     "file": "ex09_03.c",
+     "title": "문자 배열을 거꾸로 출력하기",
      "topic": ""
     },
     {
      "stage": 14,
      "chapter": "9장 배열",
-     "code": "04",
-     "file": "",
-     "title": "배열의 활용",
+     "code": "예제 9-4",
+     "file": "ex09_04.c",
+     "title": "초기값 개수로 배열 크기 자동 설정",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장 배열",
+     "code": "예제 9-5",
+     "file": "ex09_05.c",
+     "title": "sizeof로 배열 요소의 개수 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장 배열",
+     "code": "예제 9-6",
+     "file": "ex09_06.c",
+     "title": "배열 요소를 하나씩 함수에 전달하기",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장 배열",
+     "code": "예제 9-7",
+     "file": "ex09_07.c",
+     "title": "배열을 함수에 전달해 평균 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장 배열",
+     "code": "예제 9-8",
+     "file": "ex09_08.c",
+     "title": "배열 요소의 개수와 합계 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장 배열",
+     "code": "예제 9-9",
+     "file": "ex09_09.c",
+     "title": "배열의 최댓값을 구하는 함수",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장 배열",
+     "code": "LAB 9-1",
+     "file": "LAB_9-1.c",
+     "title": "출생 연도와 성별로 정보 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장 배열",
+     "code": "예제 9-10",
+     "file": "ex09_10.c",
+     "title": "입력한 정수를 역순으로 5개씩 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장 배열",
+     "code": "예제 9-11",
+     "file": "ex09_11.c",
+     "title": "버블 정렬로 오름차순 정렬하기",
      "topic": ""
     },
     {
      "stage": 15,
      "chapter": "9장 배열",
-     "code": "05",
-     "file": "",
-     "title": "2차원 배열",
+     "code": "예제 9-12",
+     "file": "ex09_12.c",
+     "title": "2차원 배열에 1~16 채워 출력하기",
      "topic": ""
     },
     {
      "stage": 15,
      "chapter": "9장 배열",
-     "code": "06",
-     "file": "",
-     "title": "다차원 배열",
+     "code": "예제 9-13",
+     "file": "ex09_13.c",
+     "title": "2차원 배열 초기화와 출력",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "9장 배열",
+     "code": "예제 9-14",
+     "file": "ex09_14.c",
+     "title": "2차원 배열에 정수 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "9장 배열",
+     "code": "예제 9-15",
+     "file": "ex09_15.c",
+     "title": "2차원 배열로 성적표 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "9장 배열",
+     "code": "LAB 9-2",
+     "file": "LAB_9-2.c",
+     "title": "2차원 배열로 로또 번호 맞히기",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "9장 배열",
+     "code": "LAB 9-3",
+     "file": "LAB_9-3.c",
+     "title": "2차원 배열로 호텔 예약 상태 관리하기",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "9장 배열",
+     "code": "예제 9-16",
+     "file": "ex09_16.c",
+     "title": "3차원 배열 요소 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "9장 배열",
+     "code": "예제 9-17",
+     "file": "ex09_17.c",
+     "title": "3차원 배열에 값을 넣고 출력하기",
      "topic": ""
     },
     {
      "stage": 14,
      "chapter": "9장 배열",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_password.c",
      "title": "비밀번호 유효성 검사 프로그램 만들기",
      "topic": ""
     },
     {
      "stage": 17,
      "chapter": "10장 포인터 기초",
-     "code": "01",
-     "file": "",
-     "title": "포인터의 개요",
+     "code": "본문",
+     "file": "address_c.c",
+     "title": "변수의 메모리 주소 출력하기",
      "topic": ""
     },
     {
      "stage": 17,
      "chapter": "10장 포인터 기초",
-     "code": "02",
-     "file": "",
-     "title": "포인터와 연산",
+     "code": "본문",
+     "file": "pointer_address.c",
+     "title": "포인터 변수의 크기 알아보기",
      "topic": ""
     },
     {
      "stage": 17,
      "chapter": "10장 포인터 기초",
-     "code": "03",
-     "file": "",
-     "title": "void형 포인터",
+     "code": "예제 10-1",
+     "file": "ex10_01.c",
+     "title": "포인터로 변수의 값과 주소 다루기",
      "topic": ""
     },
     {
      "stage": 17,
      "chapter": "10장 포인터 기초",
-     "code": "04",
-     "file": "",
-     "title": "포인터와 함수",
+     "code": "예제 10-2",
+     "file": "ex10_02.c",
+     "title": "자료형별 포인터(char·float·double)",
      "topic": ""
     },
     {
      "stage": 17,
      "chapter": "10장 포인터 기초",
-     "code": "05",
-     "file": "",
-     "title": "포인터와 배열",
+     "code": "예제 10-3",
+     "file": "ex10_03.c",
+     "title": "포인터와 증감 연산 (*p)++",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "예제 10-4",
+     "file": "ex10_04.c",
+     "title": "포인터 주소의 증가 연산",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "예제 10-5",
+     "file": "ex10_05.c",
+     "title": "포인터 주소의 감소 연산",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "본문",
+     "file": "void_1.c",
+     "title": "void형 포인터에 여러 자료형의 주소 대입하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "본문",
+     "file": "void_2.c",
+     "title": "void형 포인터에 다른 포인터 대입하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "본문",
+     "file": "void_casting.c",
+     "title": "void형 포인터를 형 변환해 역참조하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "예제 10-6",
+     "file": "ex10_06.c",
+     "title": "void형 포인터의 형 변환과 역참조",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "예제 10-7",
+     "file": "ex10_07.c",
+     "title": "값에 의한 호출(call by value)",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "예제 10-8",
+     "file": "ex10_08.c",
+     "title": "포인터로 값 바꾸기(call by reference)",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "본문",
+     "file": "swap_1.c",
+     "title": "값을 전달하는 swap() 함수(값이 안 바뀜)",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "본문",
+     "file": "swap_2.c",
+     "title": "주소를 전달하는 swap() 함수",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "LAB 10-1",
+     "file": "LAB_10-1.c",
+     "title": "포인터로 배열을 정방향·역방향 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "본문",
+     "file": "pointer_array_2.c",
+     "title": "배열명과 포인터 *a, a[0]",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "예제 10-9",
+     "file": "ex10_09.c",
+     "title": "배열과 포인터로 요소 접근하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "예제 10-10",
+     "file": "ex10_10.c",
+     "title": "배열명을 포인터처럼 사용하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "예제 10-11",
+     "file": "ex10_11.c",
+     "title": "문자열 배열과 포인터",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "LAB 10-2",
+     "file": "LAB_10-2.c",
+     "title": "파일 전송 시간 계산하기(배열과 포인터)",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "10장 포인터 기초",
+     "code": "LAB 10-3",
+     "file": "LAB_10-3.c",
+     "title": "포인터로 학생 성적 처리하기",
      "topic": ""
     },
     {
      "stage": 17,
      "chapter": "10장 포인터 기초",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_stock.c",
      "title": "주식 거래 프로그램 만들기",
      "topic": ""
     },
     {
      "stage": 16,
      "chapter": "11장 문자와 문자열",
-     "code": "01",
-     "file": "",
-     "title": "문자와 문자열의 개요",
+     "code": "예제 11-1",
+     "file": "ex11_01.c",
+     "title": "문자 배열 초기화와 strcpy()",
      "topic": ""
     },
     {
      "stage": 16,
      "chapter": "11장 문자와 문자열",
-     "code": "02",
-     "file": "",
-     "title": "문자 입출력과 함수",
+     "code": "예제 11-2",
+     "file": "ex11_02.c",
+     "title": "널 문자까지 반복해 문자열 길이 구하기",
      "topic": ""
     },
     {
      "stage": 16,
      "chapter": "11장 문자와 문자열",
-     "code": "03",
-     "file": "",
-     "title": "문자열 입출력과 함수",
+     "code": "예제 11-3",
+     "file": "ex11_03.c",
+     "title": "문자열 포인터와 길이 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-4",
+     "file": "ex11_04.c",
+     "title": "문자 배열과 포인터로 문자열 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "본문",
+     "file": "getchar.c",
+     "title": "getchar()·putchar()로 문자 입출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-5",
+     "file": "ex11_05.c",
+     "title": "EOF까지 문자를 반복 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-6",
+     "file": "ex11_06.c",
+     "title": "_getch()·_putch()로 문자 입출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-7",
+     "file": "ex11_07.c",
+     "title": "문자 검사 함수 isalpha 등",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-8",
+     "file": "ex11_08.c",
+     "title": "toupper·tolower로 대소문자 변환하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "LAB 11-1",
+     "file": "LAB_11-1.c",
+     "title": "문자열을 모스 부호로 바꾸기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-9",
+     "file": "ex11_09.c",
+     "title": "gets로 문자열 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-10",
+     "file": "ex11_10.c",
+     "title": "fgets로 안전하게 문자열 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-11",
+     "file": "ex11_11.c",
+     "title": "fgets 입력의 줄 바꿈 문자 처리하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-12",
+     "file": "ex11_12.c",
+     "title": "strlen·strcpy·strcat·strcmp 문자열 함수",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "예제 11-13",
+     "file": "ex11_13.c",
+     "title": "strtok로 문자열 나누기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "11장 문자와 문자열",
+     "code": "LAB 11-2",
+     "file": "LAB_11-2.c",
+     "title": "팰린드롬(회문) 판별하기",
      "topic": ""
     },
     {
      "stage": 16,
      "chapter": "11장 문자와 문자열",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_timetable.c",
      "title": "수강 신청 프로그램 만들기",
      "topic": ""
     },
     {
      "stage": 18,
      "chapter": "12장 포인터 활용",
-     "code": "01",
-     "file": "",
-     "title": "이중 포인터",
+     "code": "예제 12-1",
+     "file": "ex12_01.c",
+     "title": "이중 포인터로 값에 접근하기",
      "topic": ""
     },
     {
      "stage": 18,
      "chapter": "12장 포인터 활용",
-     "code": "02",
-     "file": "",
-     "title": "포인터와 배열의 응용",
+     "code": "예제 12-2",
+     "file": "ex12_02.c",
+     "title": "이중·삼중 포인터로 입력받기",
      "topic": ""
     },
     {
      "stage": 18,
      "chapter": "12장 포인터 활용",
-     "code": "03",
-     "file": "",
-     "title": "함수 포인터",
+     "code": "예제 12-3",
+     "file": "ex12_03.c",
+     "title": "문자열 포인터 배열",
      "topic": ""
     },
     {
      "stage": 18,
      "chapter": "12장 포인터 활용",
-     "code": "04",
-     "file": "",
-     "title": "main() 함수의 매개변수",
+     "code": "예제 12-4",
+     "file": "ex12_04.c",
+     "title": "함수 포인터로 함수 호출하기",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "12장 포인터 활용",
+     "code": "예제 12-5",
+     "file": "ex12_05.c",
+     "title": "함수 포인터 배열로 사칙연산하기",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "12장 포인터 활용",
+     "code": "예제 12-6",
+     "file": "ex12_06.c",
+     "title": "함수 포인터를 매개변수로 전달하기",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "12장 포인터 활용",
+     "code": "예제 12-7",
+     "file": "ex12_07.c",
+     "title": "main(argc, argv)로 명령행 인수 더하기",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "12장 포인터 활용",
+     "code": "LAB 12-1",
+     "file": "LAB_12-1.c",
+     "title": "후보자별 득표율 계산하기(동적 문자열 배열)",
      "topic": ""
     },
     {
      "stage": 20,
      "chapter": "12장 포인터 활용",
-     "code": "05",
-     "file": "",
-     "title": "동적 메모리 할당",
+     "code": "예제 12-8",
+     "file": "ex12_08.c",
+     "title": "malloc()과 free()로 메모리 할당·해제",
      "topic": ""
     },
     {
-     "stage": 18,
+     "stage": 20,
+     "chapter": "12장 포인터 활용",
+     "code": "예제 12-9",
+     "file": "ex12_09.c",
+     "title": "calloc()으로 배열 메모리 할당하기",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "12장 포인터 활용",
+     "code": "예제 12-10",
+     "file": "ex12_10.c",
+     "title": "realloc()으로 배열 크기 늘리기",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "12장 포인터 활용",
+     "code": "LAB 12-2",
+     "file": "LAB_12-2.c",
+     "title": "비즈네르 암호로 평문 암호화하기",
+     "topic": ""
+    },
+    {
+     "stage": 20,
      "chapter": "12장 포인터 활용",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_inventory.c",
      "title": "재고 정리 시스템 만들기",
      "topic": ""
     },
     {
      "stage": 19,
      "chapter": "13장 구조체",
-     "code": "01",
-     "file": "",
-     "title": "구조체의 개요",
+     "code": "예제 13-1",
+     "file": "ex13_01.c",
+     "title": "Student 구조체 정의와 사용",
      "topic": ""
     },
     {
      "stage": 19,
      "chapter": "13장 구조체",
-     "code": "02",
-     "file": "",
-     "title": "구조체의 활용",
+     "code": "예제 13-2",
+     "file": "ex13_02.c",
+     "title": "구조체 변수에 학생 정보 입력받기",
      "topic": ""
     },
     {
      "stage": 19,
      "chapter": "13장 구조체",
-     "code": "03",
-     "file": "",
-     "title": "구조체 배열",
+     "code": "예제 13-3",
+     "file": "ex13_03.c",
+     "title": "구조체 안의 구조체(직원과 주소)",
      "topic": ""
     },
     {
      "stage": 19,
      "chapter": "13장 구조체",
-     "code": "04",
-     "file": "",
-     "title": "구조체 포인터와 함수",
+     "code": "예제 13-4",
+     "file": "ex13_04.c",
+     "title": "중첩 구조체 초기화와 출력",
      "topic": ""
     },
     {
      "stage": 19,
      "chapter": "13장 구조체",
-     "code": "05",
-     "file": "",
-     "title": "공용체",
+     "code": "LAB 13-1",
+     "file": "LAB_13-1.c",
+     "title": "구조체로 분수 계산하기",
      "topic": ""
     },
     {
      "stage": 19,
      "chapter": "13장 구조체",
-     "code": "06",
-     "file": "",
-     "title": "열거형",
+     "code": "예제 13-5",
+     "file": "ex13_05.c",
+     "title": "구조체 배열에 여러 사람 정보 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제 13-6",
+     "file": "ex13_06.c",
+     "title": "구조체 포인터와 -> 연산자",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제 13-7",
+     "file": "ex13_07.c",
+     "title": "구조체를 동적 메모리로 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제 13-8",
+     "file": "ex13_08.c",
+     "title": "구조체를 값으로 함수에 전달하기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제 13-9",
+     "file": "ex13_09.c",
+     "title": "구조체 포인터를 함수에 전달하기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "LAB 13-2",
+     "file": "LAB_13-2.c",
+     "title": "구조체로 방사성 물질 붕괴 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "LAB 13-3",
+     "file": "LAB_13-3.c",
+     "title": "구조체 안의 2차원 배열로 픽셀 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제 13-10",
+     "file": "ex13_10.c",
+     "title": "공용체로 같은 메모리 나눠 쓰기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제 13-11",
+     "file": "ex13_11.c",
+     "title": "공용체에 정수·실수 저장하기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제 13-12",
+     "file": "ex13_12.c",
+     "title": "열거형으로 신호등 상태 표현하기",
      "topic": ""
     },
     {
      "stage": 19,
      "chapter": "13장 구조체",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_wine.c",
      "title": "와인 분류 프로그램 만들기",
      "topic": ""
     },
     {
      "stage": 21,
      "chapter": "14장 파일 입출력",
-     "code": "01",
-     "file": "",
-     "title": "파일의 개요",
+     "code": "LAB 14-1",
+     "file": "LAB_14-1.c",
+     "title": "파일을 열고 닫는 간단한 메모장",
      "topic": ""
     },
     {
      "stage": 21,
      "chapter": "14장 파일 입출력",
-     "code": "02",
-     "file": "",
-     "title": "텍스트 파일 처리",
+     "code": "예제 14-1",
+     "file": "ex14_01.c",
+     "title": "텍스트 파일에 데이터 쓰기",
      "topic": ""
     },
     {
      "stage": 21,
      "chapter": "14장 파일 입출력",
-     "code": "03",
-     "file": "",
-     "title": "이진 파일 처리",
+     "code": "예제 14-2",
+     "file": "ex14_02.c",
+     "title": "텍스트 파일에서 데이터 읽기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "예제 14-3",
+     "file": "ex14_03.c",
+     "title": "fputc()로 파일에 문자 쓰기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "예제 14-4",
+     "file": "ex14_04.c",
+     "title": "fgetc()로 파일에서 문자 읽기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "예제 14-5",
+     "file": "ex14_05.c",
+     "title": "fputs()로 파일에 문자열 쓰기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "예제 14-6",
+     "file": "ex14_06.c",
+     "title": "fgets()로 파일에서 문자열 읽기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "예제 14-7",
+     "file": "ex14_07.c",
+     "title": "fprintf()로 직원 정보 쓰기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "예제 14-8",
+     "file": "ex14_08.c",
+     "title": "fscanf()로 직원 정보 읽기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "LAB 14-2",
+     "file": "LAB_14-2.c",
+     "title": "파일 압축하기(RLE)",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "예제 14-9",
+     "file": "ex14_09.c",
+     "title": "fwrite()로 이진 파일에 구조체 저장하기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "14장 파일 입출력",
+     "code": "예제 14-10",
+     "file": "ex14_10.c",
+     "title": "fread()로 이진 파일에서 구조체 읽기",
      "topic": ""
     },
     {
      "stage": 21,
      "chapter": "14장 파일 입출력",
      "code": "REAL",
-     "file": "",
+     "file": "REAL_members.c",
      "title": "회원 관리 프로그램 만들기",
      "topic": ""
     },
     {
      "stage": 22,
      "chapter": "15장 전처리기",
-     "code": "01",
-     "file": "",
-     "title": "전처리기의 개요",
+     "code": "예제 15-1",
+     "file": "ex15_01.c",
+     "title": "#define 상수로 급여 계산하기",
      "topic": ""
     },
     {
      "stage": 22,
      "chapter": "15장 전처리기",
-     "code": "02",
-     "file": "",
-     "title": "단순 매크로와 매크로 함수",
+     "code": "예제 15-2",
+     "file": "ex15_02.c",
+     "title": "매크로 함수(덧셈·곱셈·최댓값·절댓값 등)",
      "topic": ""
     },
     {
      "stage": 22,
      "chapter": "15장 전처리기",
-     "code": "03",
-     "file": "",
-     "title": "조건부 컴파일 지시문",
+     "code": "LAB 15-1",
+     "file": "LAB_15-1.c, math_utils.h",
+     "title": "헤더 파일의 매크로 사용하기(최댓값·최솟값·제곱)",
      "topic": ""
     },
     {
      "stage": 22,
      "chapter": "15장 전처리기",
-     "code": "04",
-     "file": "",
-     "title": "시스템 내장 매크로",
+     "code": "예제 15-3",
+     "file": "ex15_03.c",
+     "title": "#ifdef로 기능 켜고 끄기",
      "topic": ""
     },
     {
      "stage": 22,
      "chapter": "15장 전처리기",
-     "code": "05",
-     "file": "",
-     "title": "분할 컴파일",
+     "code": "예제 15-4",
+     "file": "ex15_04.c",
+     "title": "#if·#else로 조건부 컴파일하기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "15장 전처리기",
+     "code": "예제 15-5",
+     "file": "ex15_05.c",
+     "title": "#undef로 매크로 제거하기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "15장 전처리기",
+     "code": "예제 15-6",
+     "file": "ex15_06.c",
+     "title": "__FILE__·__LINE__ 등 내장 매크로와 #line",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "15장 전처리기",
+     "code": "예제 15-7",
+     "file": "ex15_07.c",
+     "title": "__DATE__·__TIME__ 컴파일 날짜와 시간",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "15장 전처리기",
+     "code": "본문",
+     "file": "main.c, math_functions.c, math_functions.h",
+     "title": "분할 컴파일과 헤더 파일 중복 포함 방지(파일 3개)",
      "topic": ""
     },
     {
      "stage": 22,
      "chapter": "15장 전처리기",
      "code": "REAL",
-     "file": "",
-     "title": "할인 적용 프로그램 만들기",
+     "file": "REAL_coupon_main.c, coupon.h",
+     "title": "할인 적용 프로그램 만들기(쿠폰 헤더 파일)",
      "topic": ""
     }
    ]

@@ -202,6 +202,9 @@ if (oldStages && !oldStages.sql.includes('subject')) {
   db.exec('DROP TABLE stages_old');
 }
 db.exec(STAGES_SQL);
+if (!db.prepare('PRAGMA table_info(seed_log)').all().some((c) => c.name === 'version')) {
+  db.exec('ALTER TABLE seed_log ADD COLUMN version INTEGER NOT NULL DEFAULT 1');
+}
 if (!db.prepare('PRAGMA table_info(courses)').all().some((c) => c.name === 'subject')) {
   db.exec("ALTER TABLE courses ADD COLUMN subject TEXT NOT NULL DEFAULT ''");
 }
@@ -274,6 +277,8 @@ seed();
 
 // 교재 목차 기본값 (server/seed/curriculum.json: 파이썬 3권, C언어 3권 + 과목별 공통 단계)
 // 새로 추가된 기본 교재만 넣고, 한 번 넣은 교재는 기록해 두어 관리자가 지워도 다시 생기지 않음
+// 교재에 version이 올라가면(예: C언어 마스터 절 단위 → 예제 단위) 체크 기록이 없을 때만 목차를 바꾸고,
+// 이미 체크한 학생이 있으면 기존 교재는 그대로 두고 '(예제)' 교재를 따로 추가함
 function seedCurriculum() {
   const file = path.join(__dirname, 'seed', 'curriculum.json');
   if (!fs.existsSync(file)) return;
@@ -287,19 +292,39 @@ function seedCurriculum() {
     const ins = db.prepare(
       'INSERT INTO course_items (course_id, seq, stage, chapter, code, file, title, topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     );
+    const addCourse = (name, c, subject) => {
+      const sort = db.prepare('SELECT COALESCE(MAX(sort), 0) + 1 AS s FROM courses').get().s;
+      const id = db.prepare('INSERT INTO courses (name, unit, subject, sort) VALUES (?, ?, ?, ?)').run(name, c.unit, subject, sort).lastInsertRowid;
+      c.items.forEach((it, i) => ins.run(id, i + 1, it.stage, it.chapter, it.code, it.file, it.title, it.topic));
+      added.push(`${name} ${c.items.length}개`);
+    };
     data.courses.forEach((c) => {
       const subject = c.subject || '파이썬';
-      if (db.prepare('SELECT 1 FROM seed_log WHERE name = ?').get(c.name)) return;
-      db.prepare('INSERT INTO seed_log (name) VALUES (?)').run(c.name);
+      const ver = c.version || 1;
+      const log = db.prepare('SELECT version FROM seed_log WHERE name = ?').get(c.name);
+      if (log && log.version >= ver) return;
       const existing = db.prepare('SELECT id, subject FROM courses WHERE name = ?').get(c.name);
-      if (existing) { // 예전 버전에서 이미 넣은 교재: 과목만 채움
+      if (!log) {
+        db.prepare('INSERT INTO seed_log (name, version) VALUES (?, ?)').run(c.name, ver);
+        if (!existing) { addCourse(c.name, c, subject); return; }
+        // 예전 버전(기록 없음)에서 이미 넣은 교재: 과목만 채움
         if (!existing.subject) db.prepare('UPDATE courses SET subject = ? WHERE id = ?').run(subject, existing.id);
         return;
       }
-      const sort = db.prepare('SELECT COALESCE(MAX(sort), 0) + 1 AS s FROM courses').get().s;
-      const id = db.prepare('INSERT INTO courses (name, unit, subject, sort) VALUES (?, ?, ?, ?)').run(c.name, c.unit, subject, sort).lastInsertRowid;
-      c.items.forEach((it, i) => ins.run(id, i + 1, it.stage, it.chapter, it.code, it.file, it.title, it.topic));
-      added.push(`${c.name} ${c.items.length}개`);
+      // 교재 목차가 새 버전으로 바뀐 경우
+      db.prepare('UPDATE seed_log SET version = ? WHERE name = ?').run(ver, c.name);
+      if (!existing) return; // 관리자가 지운 교재는 다시 만들지 않음
+      const used = db.prepare(
+        'SELECT COUNT(*) AS c FROM item_progress ip JOIN course_items ci ON ci.id = ip.item_id WHERE ci.course_id = ?'
+      ).get(existing.id).c;
+      if (!used) {
+        db.prepare('DELETE FROM course_items WHERE course_id = ?').run(existing.id);
+        c.items.forEach((it, i) => ins.run(existing.id, i + 1, it.stage, it.chapter, it.code, it.file, it.title, it.topic));
+        db.prepare('UPDATE courses SET unit = ?, subject = ? WHERE id = ?').run(c.unit, subject, existing.id);
+        added.push(`${c.name} 목차 갱신 ${c.items.length}개`);
+      } else if (!db.prepare('SELECT 1 FROM courses WHERE name = ?').get(`${c.name} (예제)`)) {
+        addCourse(`${c.name} (예제)`, c, subject);
+      }
     });
     db.exec('COMMIT');
   } catch (e) {

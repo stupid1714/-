@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.07-14';
+const APP_VERSION = '2026.10.08-15';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -685,7 +685,8 @@ function groupChapters(items) {
 function pctOf(done, total) { return total ? (done === total ? 100 : Math.floor((done / total) * 100)) : 0; }
 
 function itemCode(it) {
-  if (/^코드/.test(it.code)) return it.code.replace('코드 ', '');
+  if (/^(코드|예제) /.test(it.code)) return it.code.replace(/^(코드|예제) /, '');
+  if (/^LAB \d/.test(it.code)) return it.code;
   if (it.code === 'Mini') return 'Mini';
   if (['Lab', 'LAB', 'REAL'].includes(it.code) || /^\d+(\.\d+)?$/.test(it.code)) return it.code;
   return '';
@@ -724,7 +725,7 @@ function courseCardHtml(c, editable, nextId) {
           <label class="cur-item ${it.done_date ? 'done' : ''} ${firstTodo === it ? 'next' : ''}">
             ${editable ? `<input type="checkbox" data-item="${it.id}" ${it.done_date ? 'checked' : ''}>` : `<span class="cur-mark">${it.done_date ? '✓' : '○'}</span>`}
             ${itemCode(it) ? `<span class="cur-code">${esc(itemCode(it))}</span>` : ''}
-            <span class="cur-title">${esc(it.title)}${firstTodo === it ? ' <span class="badge late">다음</span>' : ''}</span>
+            <span class="cur-title">${esc(it.title)}${firstTodo === it ? ' <span class="badge late">다음</span>' : ''}${editable && it.file ? ` <span class="muted small cur-file">${esc(it.file)}</span>` : ''}</span>
             <span class="cur-tags">
               ${it.stage ? `<span class="badge">${it.stage}단계</span>` : ''}
               ${it.topic ? `<span class="badge common">${esc(it.topic)}</span>` : ''}
