@@ -314,6 +314,26 @@ function seedCurriculum() {
       // 교재 목차가 새 버전으로 바뀐 경우
       db.prepare('UPDATE seed_log SET version = ? WHERE name = ?').run(ver, c.name);
       if (!existing) return; // 관리자가 지운 교재는 다시 만들지 않음
+      if (c.upgrade === 'merge') { // 같은 항목은 그대로 두고(체크 기록 유지) 파일명·순서만 갱신, 새 항목만 추가
+        const cur = db.prepare('SELECT id, chapter, code, title FROM course_items WHERE course_id = ?').all(existing.id);
+        const taken = new Set();
+        let fresh = 0;
+        c.items.forEach((it, i) => {
+          const same = (x) => !taken.has(x.id) && x.chapter === it.chapter && x.code === it.code;
+          const m = cur.find((x) => same(x) && x.title === it.title) || (/^\d+\.\d+$/.test(it.code) ? cur.find(same) : null);
+          if (m) {
+            taken.add(m.id);
+            db.prepare('UPDATE course_items SET seq = ?, stage = ?, file = ? WHERE id = ?').run(i + 1, it.stage, it.file, m.id);
+          } else {
+            ins.run(existing.id, i + 1, it.stage, it.chapter, it.code, it.file, it.title, it.topic);
+            fresh += 1;
+          }
+        });
+        let seq = c.items.length; // 관리자가 직접 추가한 항목은 맨 뒤에 그대로
+        cur.filter((x) => !taken.has(x.id)).forEach((x) => db.prepare('UPDATE course_items SET seq = ? WHERE id = ?').run(++seq, x.id));
+        added.push(`${c.name} 목차 갱신(예제 ${fresh}개 추가)`);
+        return;
+      }
       const used = db.prepare(
         'SELECT COUNT(*) AS c FROM item_progress ip JOIN course_items ci ON ci.id = ip.item_id WHERE ci.course_id = ?'
       ).get(existing.id).c;

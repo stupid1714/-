@@ -1052,6 +1052,9 @@ function lanAddresses() {
   return list.sort((a, b) => a.score - b.score);
 }
 
+// 교재 목차가 갱신됐을 수 있으니 서버를 켤 때 교재를 쓰는 학생들의 진도율을 다시 계산
+db.prepare('SELECT DISTINCT student_id FROM student_courses').all().forEach((r) => recomputeProgress(r.student_id));
+
 app.listen(PORT, () => {
   console.log(`서버 실행 중: http://localhost:${PORT}`);
   const ips = lanAddresses();

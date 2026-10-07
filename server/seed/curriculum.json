@@ -3513,6 +3513,8 @@
    "name": "C언어 Express",
    "subject": "C언어",
    "unit": "항목",
+   "version": 2,
+   "upgrade": "merge",
    "items": [
     {
      "stage": 1,
@@ -3605,6 +3607,14 @@
     {
      "stage": 2,
      "chapter": "2장 프로그램 작성 과정",
+     "code": "예제",
+     "file": "hello.c",
+     "title": "Hello World! 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 2,
+     "chapter": "2장 프로그램 작성 과정",
      "code": "2.5",
      "file": "",
      "title": "예제 프로그램의 간략한 설명",
@@ -3621,8 +3631,24 @@
     {
      "stage": 2,
      "chapter": "2장 프로그램 작성 과정",
+     "code": "예제",
+     "file": "hello1.c",
+     "title": "Hello World!와 이름 출력하기(줄 바꿈 없음)",
+     "topic": ""
+    },
+    {
+     "stage": 2,
+     "chapter": "2장 프로그램 작성 과정",
+     "code": "예제",
+     "file": "test1.c",
+     "title": "줄 바꿈 문자 \\n으로 두 줄 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 2,
+     "chapter": "2장 프로그램 작성 과정",
      "code": "LAB",
-     "file": "",
+     "file": "add.c",
      "title": "간단한 계산을 해보자",
      "topic": ""
     },
@@ -3630,7 +3656,7 @@
      "stage": 2,
      "chapter": "2장 프로그램 작성 과정",
      "code": "LAB",
-     "file": "",
+     "file": "gugu9.c",
      "title": "구구단을 출력해보자",
      "topic": ""
     },
@@ -3645,8 +3671,40 @@
     {
      "stage": 7,
      "chapter": "2장 프로그램 작성 과정",
+     "code": "예제",
+     "file": "error1.c",
+     "title": "세미콜론을 빠뜨린 컴파일 오류 고치기",
+     "topic": ""
+    },
+    {
+     "stage": 7,
+     "chapter": "2장 프로그램 작성 과정",
+     "code": "예제",
+     "file": "error2.c",
+     "title": "큰따옴표를 빠뜨린 컴파일 오류 고치기",
+     "topic": ""
+    },
+    {
+     "stage": 7,
+     "chapter": "2장 프로그램 작성 과정",
+     "code": "예제",
+     "file": "error3.c",
+     "title": "printf 철자를 틀린 링크 오류 고치기",
+     "topic": ""
+    },
+    {
+     "stage": 7,
+     "chapter": "2장 프로그램 작성 과정",
+     "code": "예제",
+     "file": "error4.c",
+     "title": "줄 바꿈이 없어 출력이 붙어 나오는 논리 오류 고치기",
+     "topic": ""
+    },
+    {
+     "stage": 7,
+     "chapter": "2장 프로그램 작성 과정",
      "code": "Mini",
-     "file": "",
+     "file": "bug.c, debugged.c",
      "title": "오류를 처리해보자",
      "topic": ""
     },
@@ -3654,7 +3712,7 @@
      "stage": 3,
      "chapter": "3장 C 프로그램 구성요소",
      "code": "3.1",
-     "file": "",
+     "file": "add1.c",
      "title": "덧셈 프로그램 #1",
      "topic": ""
     },
@@ -3710,7 +3768,7 @@
      "stage": 3,
      "chapter": "3장 C 프로그램 구성요소",
      "code": "LAB",
-     "file": "",
+     "file": "calculation.c",
      "title": "사칙 연산",
      "topic": ""
     },
@@ -3726,7 +3784,7 @@
      "stage": 4,
      "chapter": "3장 C 프로그램 구성요소",
      "code": "3.9",
-     "file": "",
+     "file": "add2.c",
      "title": "덧셈 프로그램 #2",
      "topic": ""
     },
@@ -3734,7 +3792,7 @@
      "stage": 4,
      "chapter": "3장 C 프로그램 구성요소",
      "code": "LAB",
-     "file": "",
+     "file": "circle.c",
      "title": "원의 면적 구하기 프로그램",
      "topic": ""
     },
@@ -3742,7 +3800,7 @@
      "stage": 4,
      "chapter": "3장 C 프로그램 구성요소",
      "code": "LAB",
-     "file": "",
+     "file": "exchange_rate.c",
      "title": "환율계산 프로그램",
      "topic": ""
     },
@@ -3758,7 +3816,7 @@
      "stage": 4,
      "chapter": "3장 C 프로그램 구성요소",
      "code": "Mini",
-     "file": "",
+     "file": "rect_area.c",
      "title": "사각형의 둘레와 면적",
      "topic": ""
     },
@@ -3814,7 +3872,7 @@
      "stage": 5,
      "chapter": "4장 변수와 자료형",
      "code": "Mini",
-     "file": "",
+     "file": "number.c",
      "title": "태양빛 도달 시간 계산",
      "topic": ""
     },
