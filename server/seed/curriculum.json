@@ -3513,7 +3513,7 @@
    "name": "C언어 Express",
    "subject": "C언어",
    "unit": "항목",
-   "version": 4,
+   "version": 5,
    "upgrade": "merge",
    "items": [
     {
@@ -5303,6 +5303,22 @@
     {
      "stage": 17,
      "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "address_of.c",
+     "title": "주소 연산자 &로 변수의 주소 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "pointer_variable.c",
+     "title": "포인터 변수 선언과 주소 저장",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
      "code": "11.2",
      "file": "",
      "title": "간접 참조 연산자 *",
@@ -5311,8 +5327,32 @@
     {
      "stage": 17,
      "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "pointer1.c",
+     "title": "변수의 값·주소와 포인터의 값 비교하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "pointer2.c",
+     "title": "포인터가 가리키는 대상 바꾸기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "pointer3.c",
+     "title": "char 포인터로 int 데이터를 바이트 단위로 읽기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
      "code": "LAB",
-     "file": "",
+     "file": "embed.c",
      "title": "임베디드 프로그래밍 체험 #1",
      "topic": ""
     },
@@ -5335,9 +5375,57 @@
     {
      "stage": 17,
      "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "pointer_arith1.c",
+     "title": "자료형별 포인터의 증가 연산",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "pointer_arith2.c",
+     "title": "(*pi)++와 *pi++의 차이",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "pointer_arith3.c",
+     "title": "포인터 연산으로 메모리의 바이트 읽기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
      "code": "11.5",
      "file": "",
      "title": "포인터와 함수",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "swap1.c",
+     "title": "값을 전달하는 swap()(값이 안 바뀜)",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "swap2.c",
+     "title": "주소를 전달하는 swap()",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "slope.c",
+     "title": "포인터 매개변수로 기울기와 y절편 돌려받기",
      "topic": ""
     },
     {
@@ -5351,8 +5439,40 @@
     {
      "stage": 17,
      "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "p_array1.c",
+     "title": "배열 요소의 주소와 배열 이름",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "p_array2.c",
+     "title": "배열 이름으로 포인터 연산하기 *(a+1)",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "p_array3.c",
+     "title": "포인터를 배열 이름처럼 사용하기 p[i]",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
+     "code": "예제",
+     "file": "p_func.c",
+     "title": "배열을 함수에 전달하면 원본이 바뀜",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "11장 포인터",
      "code": "LAB",
-     "file": "",
+     "file": "image_proc.c",
      "title": "영상 처리",
      "topic": ""
     },
@@ -5368,7 +5488,7 @@
      "stage": 17,
      "chapter": "11장 포인터",
      "code": "Mini",
-     "file": "",
+     "file": "self_drive.c",
      "title": "자율 주행 자동차",
      "topic": ""
     },
@@ -5383,9 +5503,65 @@
     {
      "stage": 16,
      "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "string1.c",
+     "title": "문자 배열에 한 글자씩 넣고 NULL 문자로 끝내기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "string2.c",
+     "title": "문자 배열을 문자열로 초기화하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "string3.c",
+     "title": "반복문으로 문자열 복사하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "string4.c",
+     "title": "NULL 문자까지 세어 문자열 길이 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "stringconst.c",
+     "title": "문자열 상수와 char 포인터",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
      "code": "12.2",
      "file": "",
      "title": "문자 입출력 라이브러리",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "getchar.c",
+     "title": "getchar()·putchar()로 EOF까지 문자 입출력",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "getch.c",
+     "title": "_getch()·_putch()로 q까지 문자 입출력",
      "topic": ""
     },
     {
@@ -5399,6 +5575,22 @@
     {
      "stage": 16,
      "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "scanf_printf.c",
+     "title": "scanf(\"%s\")로 이름과 주소 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "gets.c",
+     "title": "gets_s()로 공백이 있는 한 줄 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
      "code": "12.4",
      "file": "",
      "title": "문자 처리 라이브러리",
@@ -5407,8 +5599,16 @@
     {
      "stage": 16,
      "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "char_process.c",
+     "title": "islower()·toupper()로 소문자를 대문자로 바꾸기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
      "code": "LAB",
-     "file": "",
+     "file": "wc.c",
      "title": "단어 세기",
      "topic": ""
     },
@@ -5416,7 +5616,7 @@
      "stage": 16,
      "chapter": "12장 문자와 문자열",
      "code": "LAB",
-     "file": "",
+     "file": "check_pass.c",
      "title": "유효한 암호 확인",
      "topic": ""
     },
@@ -5431,8 +5631,48 @@
     {
      "stage": 16,
      "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "strcpy_strcat.c",
+     "title": "strcpy()·strcat()으로 문자열 복사·연결",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "strcmp.c",
+     "title": "strcmp()로 두 단어 비교하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "strchr.c",
+     "title": "strchr()로 문자 위치 찾기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "strstr.c",
+     "title": "strstr()로 부분 문자열 찾기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "strtok.c",
+     "title": "strtok()로 문자열을 토큰으로 나누기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
      "code": "LAB",
-     "file": "",
+     "file": "short_ans.c",
      "title": "단답형 퀴즈",
      "topic": ""
     },
@@ -5447,8 +5687,32 @@
     {
      "stage": 16,
      "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "sscanf.c",
+     "title": "sscanf()로 문자열에서 값 읽기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "sprintf.c (Project20)",
+     "title": "sprintf()로 계산 결과를 문자열로 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "atoi.c",
+     "title": "atoi()·atof()로 문자열을 숫자로 바꾸기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
      "code": "LAB",
-     "file": "",
+     "file": "sprintf.c (Project21)",
      "title": "영상 파일 이름 자동 생성",
      "topic": ""
     },
@@ -5463,8 +5727,24 @@
     {
      "stage": 16,
      "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "stringarray1.c",
+     "title": "2차원 문자 배열로 메뉴 문자열 저장하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
+     "code": "예제",
+     "file": "stringarray2.c",
+     "title": "2차원 문자 배열에 과일 이름 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "12장 문자와 문자열",
      "code": "LAB",
-     "file": "",
+     "file": "dic.c",
      "title": "한영 사전의 구현",
      "topic": ""
     },
@@ -5472,7 +5752,7 @@
      "stage": 16,
      "chapter": "12장 문자와 문자열",
      "code": "LAB",
-     "file": "",
+     "file": "encrypt.c",
      "title": "메시지 암호화",
      "topic": ""
     },
@@ -5480,7 +5760,7 @@
      "stage": 16,
      "chapter": "12장 문자와 문자열",
      "code": "Mini",
-     "file": "",
+     "file": "hangman.c",
      "title": "행맨 게임",
      "topic": ""
     },
@@ -5503,8 +5783,32 @@
     {
      "stage": 19,
      "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "student1.c",
+     "title": "student 구조체 선언과 멤버 사용",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "student2.c",
+     "title": "구조체 멤버에 값 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "init_method.c",
+     "title": "구조체 변수를 초기화하는 여러 방법",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
      "code": "LAB",
-     "file": "",
+     "file": "point.c",
      "title": "2차원 공간 상의 점을 구조체로 표현하기",
      "topic": ""
     },
@@ -5512,7 +5816,7 @@
      "stage": 19,
      "chapter": "13장 구조체",
      "code": "LAB",
-     "file": "",
+     "file": "nested_struct.c",
      "title": "사각형을 point 구조체로 나타내기",
      "topic": ""
     },
@@ -5527,9 +5831,33 @@
     {
      "stage": 19,
      "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "array_of_struct.c",
+     "title": "구조체 배열로 학생 정보 저장하기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
      "code": "13.4",
      "file": "",
      "title": "구조체와 포인터",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "pointer_to_st.c",
+     "title": "포인터로 구조체 참조하기(-> 연산자)",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "st_pointer.c",
+     "title": "포인터를 멤버로 가진 구조체",
      "topic": ""
     },
     {
@@ -5544,7 +5872,7 @@
      "stage": 19,
      "chapter": "13장 구조체",
      "code": "LAB",
-     "file": "",
+     "file": "vector.c",
      "title": "벡터 연산",
      "topic": ""
     },
@@ -5559,9 +5887,33 @@
     {
      "stage": 19,
      "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "union.c",
+     "title": "공용체는 멤버가 같은 메모리를 나눠 씀",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "union2.c",
+     "title": "구조체 안의 공용체로 학번·주민번호 저장하기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
      "code": "13.7",
      "file": "",
      "title": "열거형",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장 구조체",
+     "code": "예제",
+     "file": "enum1.c",
+     "title": "열거형으로 요일 다루기",
      "topic": ""
     },
     {
@@ -5576,7 +5928,7 @@
      "stage": 19,
      "chapter": "13장 구조체",
      "code": "LAB",
-     "file": "",
+     "file": "typedef.c",
      "title": "2차원 공간 상의 점을 POINT 타입으로 정의하기",
      "topic": ""
     },
@@ -5584,7 +5936,7 @@
      "stage": 19,
      "chapter": "13장 구조체",
      "code": "Mini",
-     "file": "",
+     "file": "multiple_choice.c",
      "title": "4지 선다 퀴즈 프로그램",
      "topic": ""
     },
