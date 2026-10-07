@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.07-11';
+const APP_VERSION = '2026.10.07-13';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -590,6 +590,7 @@ async function renderStudent() {
       <div class="cards">${progressCard(s)}${assignmentCard(s)}</div>
       <div style="height:16px"></div>
       ${scheduleCard(d.schedule)}
+      <div id="cur-view"></div>
       <div style="height:16px"></div>
       <section class="card">
         <div class="card-head"><h2>실습 파일 제출</h2></div>
@@ -616,6 +617,7 @@ async function renderStudent() {
       <section class="card"><div class="card-head"><h2>진도 기록</h2></div>${logsList(d.logs)}</section>
     </main>`;
   bindTopbar();
+  loadCurriculumView(state.me.id, $app.querySelector('#cur-view'));
   bindDeletes($app, renderStudent);
   onSubmit($app.querySelector('#upload'), async (fd) => {
     await api('/api/files', { method: 'POST', form: fd });
@@ -649,6 +651,7 @@ async function renderParent() {
       <div class="cards">${progressCard(s, '학습 진도')}${assignmentCard(s)}</div>
       <div style="height:16px"></div>
       ${scheduleCard(d.schedule)}
+      <div id="cur-view"></div>
       <div style="height:16px"></div>
       <section class="card"><div class="card-head"><h2>선생님 코멘트</h2></div>${commentsList(d.comments)}</section>
       <div class="cards">
@@ -660,8 +663,212 @@ async function renderParent() {
         ${fileList(d.submissions, { empty: '제출한 파일이 없습니다.' })}</section>
     </main>`;
   bindTopbar();
+  loadCurriculumView(state.me.child_id, $app.querySelector('#cur-view'));
   await renderMessageBox($app.querySelector('#msg-box'), state.me.child_id, false);
   state.me.unread_messages = 0;
+}
+
+// ---------- 교재 목차 진도 ----------
+
+const curState = { filter: 'all', search: '', open: new Set(), date: '' };
+
+function groupChapters(items) {
+  const map = new Map();
+  items.forEach((it) => {
+    const key = it.chapter || '목차';
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(it);
+  });
+  return [...map].map(([chapter, list]) => ({ chapter, items: list }));
+}
+
+function pctOf(done, total) { return total ? (done === total ? 100 : Math.floor((done / total) * 100)) : 0; }
+
+function itemCode(it) {
+  if (/^코드/.test(it.code)) return it.code.replace('코드 ', '');
+  if (it.code === 'Lab') return 'Lab';
+  return '';
+}
+
+// 교재 한 권의 목차 카드 (editable이면 체크박스, 아니면 ✓ 표시만)
+function courseCardHtml(c, editable, nextId) {
+  const q = curState.search.trim().toLowerCase();
+  const match = (it) => (curState.filter === 'all' || (curState.filter === 'done') === Boolean(it.done_date))
+    && (!q || `${it.title} ${it.code} ${it.topic} ${it.file}`.toLowerCase().includes(q));
+  // '다음' 표시는 서버가 계산한 다음 진도(마지막으로 한 곳 다음)와 같게
+  const firstTodo = c.items.find((it) => it.id === nextId) || null;
+  const chapters = groupChapters(c.items);
+  const body = chapters.map((g) => {
+    const shown = g.items.filter(match);
+    if (!shown.length) return '';
+    const d = g.items.filter((it) => it.done_date).length;
+    const key = `${c.id}|${g.chapter}`;
+    // 사용자가 연 장 + 검색 중 + '다음에 할 항목'이 있는 장은 항상 펼침
+    const open = curState.open.has(key) || Boolean(q) || Boolean(firstTodo && g.items.includes(firstTodo));
+    return `
+      <details class="cur-chapter" data-key="${esc(key)}" ${open ? 'open' : ''}>
+        <summary>
+          <b>${esc(g.chapter)}</b>
+          <span class="muted small">${d}/${g.items.length}</span>
+          <span class="mini-bar">${progressBar(pctOf(d, g.items.length))}</span>
+          ${editable ? `<button type="button" class="btn small ghost" data-chapter-all="${esc(key)}">${d === g.items.length ? '장 전체 해제' : '장 전체 완료'}</button>` : ''}
+        </summary>
+        <div class="cur-items">${shown.map((it) => `
+          <label class="cur-item ${it.done_date ? 'done' : ''} ${firstTodo === it ? 'next' : ''}">
+            ${editable ? `<input type="checkbox" data-item="${it.id}" ${it.done_date ? 'checked' : ''}>` : `<span class="cur-mark">${it.done_date ? '✓' : '○'}</span>`}
+            ${itemCode(it) ? `<span class="cur-code">${esc(itemCode(it))}</span>` : ''}
+            <span class="cur-title">${esc(it.title)}${firstTodo === it ? ' <span class="badge late">다음</span>' : ''}</span>
+            <span class="cur-tags">
+              ${it.stage ? `<span class="badge">${it.stage}단계</span>` : ''}
+              ${it.topic ? `<span class="badge common">${esc(it.topic)}</span>` : ''}
+              ${it.done_date ? `<span class="muted small">${esc(it.done_date.slice(5).replace('-', '/'))}</span>` : ''}
+            </span>
+          </label>`).join('')}</div>
+      </details>`;
+  }).join('');
+  const p = pctOf(c.done, c.total);
+  return `
+    <section class="card cur-course" data-course="${c.id}">
+      <div class="card-head"><h2>📘 ${esc(c.name)}</h2><span class="big-pct" style="font-size:22px">${p}%</span></div>
+      ${progressBar(p)}
+      <div class="progress-label"><span>완료 ${c.done} / 전체 ${c.total}${esc(c.unit)}</span><span>${c.total - c.done}${esc(c.unit)} 남음</span></div>
+      <div style="margin-top:12px">${body || '<div class="empty">조건에 맞는 목차가 없습니다.</div>'}</div>
+    </section>`;
+}
+
+// 공통 단계(1~25)별 진행 현황
+function stageTableHtml(cur) {
+  const rows = cur.stages.map((st) => {
+    const per = cur.courses.map((c) => {
+      const list = c.items.filter((it) => it.stage === st.no);
+      return { total: list.length, done: list.filter((it) => it.done_date).length };
+    });
+    const total = per.reduce((n, x) => n + x.total, 0);
+    if (!total) return '';
+    const done = per.reduce((n, x) => n + x.done, 0);
+    return `<tr><td>${st.no}</td><td><span class="badge band-${esc(st.band)}">${esc(st.band)}</span></td><td>${esc(st.name)}</td>
+      ${per.map((x) => `<td class="num">${x.total ? `${x.done}/${x.total}` : '-'}</td>`).join('')}
+      <td class="stage-bar">${progressBar(pctOf(done, total))}<span class="small muted">${pctOf(done, total)}%</span></td></tr>`;
+  }).join('');
+  const bands = ['기초', '중급', '심화'].map((band) => {
+    const nos = cur.stages.filter((st) => st.band === band).map((st) => st.no);
+    const list = cur.courses.flatMap((c) => c.items.filter((it) => nos.includes(it.stage)));
+    const done = list.filter((it) => it.done_date).length;
+    return list.length ? `<div class="band-sum"><span class="badge band-${band}">${band}</span>${progressBar(pctOf(done, list.length))}<span class="small">${pctOf(done, list.length)}%</span></div>` : '';
+  }).join('');
+  return `
+    <div class="band-sums">${bands}</div>
+    <details class="stage-details"><summary>단계별(1~25) 자세히 보기</summary>
+      <div class="table-wrap"><table class="stage-table">
+        <thead><tr><th>단계</th><th>구간</th><th>학습 내용</th>${cur.courses.map((c) => `<th>${esc(c.name)}</th>`).join('')}<th>통합</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </details>`;
+}
+
+// 학생·학부모 화면: 읽기 전용
+async function loadCurriculumView(studentId, el) {
+  if (!el) return;
+  const cur = await api(`/api/students/${studentId}/curriculum`).catch(() => null);
+  if (!cur || !cur.courses.length) { el.innerHTML = ''; return; }
+  const draw = () => {
+    el.innerHTML = `
+      <section class="card">
+        <div class="card-head"><h2>📚 교재 진도</h2>
+          <span class="seg">${[['all', '전체'], ['todo', '남은 것'], ['done', '완료']].map(([k, l]) => `<button type="button" data-f="${k}" class="${curState.filter === k ? 'on' : ''}">${l}</button>`).join('')}</span></div>
+        ${stageTableHtml(cur)}
+      </section>
+      ${cur.courses.map((c) => courseCardHtml(c, false, cur.next_item_id)).join('')}`;
+    el.querySelectorAll('[data-f]').forEach((b) => { b.onclick = () => { curState.filter = b.dataset.f; draw(); }; });
+    el.querySelectorAll('details.cur-chapter').forEach((dt) => {
+      dt.addEventListener('toggle', () => { if (dt.open) curState.open.add(dt.dataset.key); else curState.open.delete(dt.dataset.key); });
+    });
+  };
+  draw();
+}
+
+// 선생님 화면: 교재 지정 + 체크
+async function renderCurriculumTab(body, id, onProgress) {
+  const [cur, all] = await Promise.all([api(`/api/students/${id}/curriculum`), api('/api/courses')]);
+  const assigned = new Set(cur.courses.map((c) => c.id));
+  if (!curState.date) curState.date = today();
+  body.innerHTML = `
+    <section class="card">
+      <div class="card-head"><h2>교재 지정</h2><span class="muted small">여러 권 선택 가능 · 목차를 체크하면 진도율·현재/다음 진도가 자동으로 바뀝니다</span></div>
+      ${all.length ? `<div class="course-picks">${all.map((c) => `
+        <label class="chip-check"><input type="checkbox" value="${c.id}" ${assigned.has(c.id) ? 'checked' : ''}>
+          <span>${esc(c.name)} <small class="muted">${c.item_count}${esc(c.unit)}</small></span></label>`).join('')}</div>`
+        : '<div class="empty">등록된 교재가 없습니다. 왼쪽 아래 <b>📚 교재·목차</b>에서 추가하세요.</div>'}
+    </section>
+    ${cur.courses.length ? `
+      <section class="card cur-toolbar">
+        <label class="row small" style="gap:6px">완료 날짜 <input type="date" id="cur-date" value="${esc(curState.date)}" style="width:auto"></label>
+        <span class="seg">${[['all', '전체'], ['todo', '남은 것'], ['done', '완료']].map(([k, l]) => `<button type="button" data-f="${k}" class="${curState.filter === k ? 'on' : ''}">${l}</button>`).join('')}</span>
+        <input type="search" id="cur-search" placeholder="예제 제목·코드 검색" value="${esc(curState.search)}" style="flex:1;min-width:160px">
+      </section>
+      <div id="cur-courses"></div>
+      <section class="card"><div class="card-head"><h2>단계별 진행 현황</h2></div><div id="stage-box"></div></section>`
+      : '<p class="muted" style="margin-left:4px">위에서 교재를 선택하면 목차 체크리스트가 나타납니다. 교재를 선택하지 않으면 지금처럼 슬라이드바로 진도율을 정합니다.</p>'}`;
+
+  body.querySelectorAll('.course-picks input').forEach((cb) => {
+    cb.onchange = async () => {
+      const ids = [...body.querySelectorAll('.course-picks input:checked')].map((x) => Number(x.value));
+      if (!cb.checked && !confirm('이 교재를 학생에게서 뺄까요? (체크 기록은 남아 있어 다시 지정하면 돌아옵니다)')) { cb.checked = true; return; }
+      try {
+        await api(`/api/admin/students/${id}/courses`, { method: 'PUT', body: { course_ids: ids } });
+        toast('교재가 저장되었습니다.');
+        onProgress(true);
+      } catch (e) { toast(e.message, true); }
+    };
+  });
+  if (!cur.courses.length) return;
+
+  const box = body.querySelector('#cur-courses');
+  const draw = () => {
+    box.innerHTML = cur.courses.map((c) => courseCardHtml(c, true, cur.next_item_id)).join('');
+    body.querySelector('#stage-box').innerHTML = stageTableHtml(cur);
+    box.querySelectorAll('details.cur-chapter').forEach((dt) => {
+      dt.addEventListener('toggle', () => { if (dt.open) curState.open.add(dt.dataset.key); else curState.open.delete(dt.dataset.key); });
+    });
+  };
+  const send = async (itemIds, done) => {
+    const r = await api(`/api/admin/students/${id}/progress`, { method: 'POST', body: { item_ids: itemIds, done, date: curState.date } });
+    cur.courses.forEach((c) => {
+      c.items.forEach((it) => { if (itemIds.includes(it.id)) it.done_date = done ? curState.date : null; });
+      c.done = c.items.filter((it) => it.done_date).length;
+    });
+    cur.next_item_id = r.next_item_id;
+    // 열려 있던 장은 그대로 두기
+    box.querySelectorAll('details.cur-chapter[open]').forEach((dt) => curState.open.add(dt.dataset.key));
+    draw();
+    onProgress(false, r.student);
+  };
+  box.addEventListener('change', (e) => {
+    const cb = e.target.closest('[data-item]');
+    if (cb) send([Number(cb.dataset.item)], cb.checked).catch((err) => { cb.checked = !cb.checked; toast(err.message, true); });
+  });
+  box.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-chapter-all]');
+    if (!btn) return;
+    e.preventDefault();
+    const [cid, ...rest] = btn.dataset.chapterAll.split('|');
+    const chapter = rest.join('|');
+    const c = cur.courses.find((x) => x.id === Number(cid));
+    const list = c.items.filter((it) => (it.chapter || '목차') === chapter);
+    const allDone = list.every((it) => it.done_date);
+    if (allDone && !confirm(`${chapter}의 완료 체크를 모두 해제할까요?`)) return;
+    send(list.filter((it) => Boolean(it.done_date) === allDone).map((it) => it.id), !allDone).catch((err) => toast(err.message, true));
+  });
+  body.querySelector('#cur-date').onchange = (e) => { curState.date = e.target.value || today(); };
+  body.querySelectorAll('.cur-toolbar [data-f]').forEach((b) => {
+    b.onclick = () => {
+      curState.filter = b.dataset.f;
+      body.querySelectorAll('.cur-toolbar [data-f]').forEach((x) => x.classList.toggle('on', x === b));
+      draw();
+    };
+  });
+  body.querySelector('#cur-search').oninput = (e) => { curState.search = e.target.value; draw(); };
+  draw();
 }
 
 // ---------- 계정 안내 (임시 비밀번호) ----------
@@ -756,6 +963,7 @@ async function renderAdmin() {
           <a class="btn small" href="#/timetable">🗓 시간표</a>
           <a class="btn small" href="#/accounts">👥 계정 목록</a>
           <a class="btn small" href="#/common">📁 공통 자료</a>
+          <a class="btn small" href="#/courses">📚 교재·목차</a>
         </div>
         ${isAdmin(state.me) ? `
         <div class="side-nav admin-nav">
@@ -778,7 +986,7 @@ async function renderAdmin() {
 // 주소(#/...)에 따라 오른쪽 영역을 그림
 async function showAdminMain() {
   const m = /^#\/student\/(\d+)/.exec(location.hash);
-  const page = m ? 'student' : (/^#\/(common|timetable|accounts|signups|teachers|inbox)/.exec(location.hash) || [])[1] || '';
+  const page = m ? 'student' : (/^#\/(common|timetable|accounts|signups|teachers|inbox|courses)/.exec(location.hash) || [])[1] || '';
   state.selectedId = m ? Number(m[1]) : null;
   $app.querySelector('.admin').classList.toggle('detail-open', Boolean(page));
   renderStudentList();
@@ -786,6 +994,7 @@ async function showAdminMain() {
   else if (page === 'timetable') await renderTimetable();
   else if (page === 'accounts') await renderAccounts();
   else if (page === 'inbox') await renderInbox();
+  else if (page === 'courses') await renderCourses();
   else if (page === 'signups' && isAdmin(state.me)) await renderSignups();
   else if (page === 'teachers' && isAdmin(state.me)) await renderTeachers();
   else if (page === 'student') await renderAdminDetail();
@@ -892,7 +1101,7 @@ async function renderAdminDetail() {
   const s = d.student;
   const listItem = state.students.find((x) => x.id === id) || {};
   const todayAtt = d.attendance.find((a) => a.date === today());
-  const tabs = [['progress', '진도·과제'], ['files', `자료·제출물 (${d.submissions.length})`], ['comments', `코멘트 (${d.comments.length})`], ['messages', `메시지${listItem.unread_messages ? ` 🔴${listItem.unread_messages}` : ''}`], ['schedule', '수업 시간'], ['attendance', '출석'], ['account', '계정']];
+  const tabs = [['progress', '진도·과제'], ['curriculum', '📚 교재 진도'], ['files', `자료·제출물 (${d.submissions.length})`], ['comments', `코멘트 (${d.comments.length})`], ['messages', `메시지${listItem.unread_messages ? ` 🔴${listItem.unread_messages}` : ''}`], ['schedule', '수업 시간'], ['attendance', '출석'], ['account', '계정']];
   const reload = () => renderAdminDetail().then(refreshList);
 
   main.innerHTML = `
@@ -904,9 +1113,9 @@ async function renderAdminDetail() {
         <div class="muted small">${s.username ? esc(s.username) : '로그인 계정 없음'} · 담당 ${esc(s.teacher_name || '없음')}${listItem.parent_name ? ` · 학부모: ${esc(listItem.parent_name)}` : ' · 학부모 계정 없음'}</div></div>
     </div>
     <div class="overview">
-      <div class="card"><div class="label">진도율</div><div class="value">${Number(s.progress_percent) || 0}%</div>${progressBar(s.progress_percent)}</div>
-      <div class="card"><div class="label">현재 진도</div><div class="value">${esc(s.current_lesson) || '-'}</div></div>
-      <div class="card"><div class="label">다음 진도</div><div class="value">${esc(s.next_lesson) || '-'}</div></div>
+      <div class="card" id="ov-pct"><div class="label">진도율${listItem.course_count ? ' <span class="badge common">교재 자동</span>' : ''}</div><div class="value">${Number(s.progress_percent) || 0}%</div>${progressBar(s.progress_percent)}</div>
+      <div class="card"><div class="label">현재 진도</div><div class="value" id="ov-cur">${esc(s.current_lesson) || '-'}</div></div>
+      <div class="card"><div class="label">다음 진도</div><div class="value" id="ov-next">${esc(s.next_lesson) || '-'}</div></div>
       <div class="card"><div class="label">오늘 출석</div><div class="value">${todayAtt ? `<span class="badge ${todayAtt.status}">${ATT_LABEL[todayAtt.status]}</span>` : '<span class="badge">미체크</span>'}</div></div>
     </div>
     <nav class="tabs">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${state.tab === k ? 'on' : ''}">${l}</button>`).join('')}</nav>
@@ -925,11 +1134,12 @@ async function renderAdminDetail() {
             <label class="field"><span>수강 과정</span><input type="text" name="course" value="${esc(s.course)}"></label>
             <label class="field"><span>담당 선생님</span><select name="teacher_id">${teacherOptions(s.teacher_id)}</select></label>
             <span></span>
-            <label class="field"><span>현재 진도</span><input type="text" name="current_lesson" value="${esc(s.current_lesson)}"></label>
-            <label class="field"><span>다음 진도</span><input type="text" name="next_lesson" value="${esc(s.next_lesson)}"></label>
+            <label class="field"><span>현재 진도</span><input type="text" name="current_lesson" value="${esc(s.current_lesson)}" ${listItem.course_count ? 'readonly title="교재 진도 탭의 체크로 자동 계산됩니다"' : ''}></label>
+            <label class="field"><span>다음 진도</span><input type="text" name="next_lesson" value="${esc(s.next_lesson)}" ${listItem.course_count ? 'readonly title="교재 진도 탭의 체크로 자동 계산됩니다"' : ''}></label>
           </div>
-          <label class="field"><span>진도율 <b id="pct-label">${Number(s.progress_percent) || 0}%</b></span>
-            <input type="range" name="progress_percent" min="0" max="100" step="5" value="${Number(s.progress_percent) || 0}" style="width:100%"></label>
+          <label class="field"><span>진도율 <b id="pct-label">${Number(s.progress_percent) || 0}%</b>
+            ${listItem.course_count ? ' — <b>📚 교재 진도</b> 탭에서 목차를 체크하면 자동으로 계산됩니다' : ''}</span>
+            <input type="range" name="progress_percent" min="0" max="100" step="5" value="${Number(s.progress_percent) || 0}" style="width:100%" ${listItem.course_count ? 'disabled' : ''}></label>
           <label class="field"><span>과제</span><textarea name="assignment">${esc(s.assignment)}</textarea></label>
           <div class="grid2">
             <label class="field"><span>과제 마감일</span><input type="date" name="assignment_due" value="${esc(s.assignment_due)}"></label>
@@ -1007,6 +1217,21 @@ async function renderAdminDetail() {
       await api(`/api/admin/students/${id}/comments`, { method: 'POST', body: Object.fromEntries(fd) });
       toast('코멘트가 등록되었습니다.');
       reload();
+    });
+  }
+
+  if (state.tab === 'curriculum') {
+    body.innerHTML = '<div class="empty">불러오는 중...</div>';
+    await renderCurriculumTab(body, id, (full, student) => {
+      if (full) { refreshList().then(() => renderAdminDetail()); return; }
+      // 체크할 때마다 위쪽 진도율·현재/다음 진도와 왼쪽 목록을 바로 갱신
+      if (student) {
+        main.querySelector('#ov-pct .value').textContent = `${student.progress_percent}%`;
+        main.querySelector('#ov-pct .progress > i').style.width = `${student.progress_percent}%`;
+        main.querySelector('#ov-cur').textContent = student.current_lesson || '-';
+        main.querySelector('#ov-next').textContent = student.next_lesson || '-';
+      }
+      refreshList();
     });
   }
 
@@ -1493,6 +1718,142 @@ async function renderTeachers() {
         toast('삭제되었습니다.');
         reload();
       } catch (e) { toast(e.message, true); }
+    };
+  });
+}
+
+const PASTE_HELP = `<p class="muted small" style="margin:0 0 6px">
+  <b>방법 1 (엑셀):</b> 엑셀에서 <b>머리글 줄(No, 단계, 교재 장, 코드 번호, 예제 제목 …)부터</b> 표를 복사해 붙여넣으면 칸이 자동으로 맞춰집니다.<br>
+  <b>방법 2 (직접):</b> 한 줄에 하나씩 쓰세요. <code>#</code>으로 시작하는 줄은 장 이름이 됩니다. 예) <code># 4장 반복문</code></p>`;
+
+async function renderCourses() {
+  const main = $app.querySelector('#main');
+  const admin = isAdmin(state.me);
+  const m = /^#\/courses\/(\d+)/.exec(location.hash);
+  if (m) return renderCourseDetail(main, Number(m[1]), admin);
+  const list = await api('/api/courses');
+  main.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a class="btn small back-btn" href="#/">← 목록</a><h2>교재·목차</h2></div>
+    <p class="muted small" style="margin-top:0">교재마다 목차를 한 번만 올려 두면, 학생 화면의 <b>📚 교재 진도</b> 탭에서 체크만으로 진도율이 자동 계산됩니다.
+      ${admin ? '' : '(교재 추가·수정은 관리자만 할 수 있습니다)'}</p>
+    <div class="course-list">${list.map((c) => `
+      <a class="card course-card" href="#/courses/${c.id}">
+        <div class="title">📘 ${esc(c.name)}</div>
+        <div class="muted small">목차 ${c.item_count}${esc(c.unit)} · 사용 학생 ${c.student_count}명</div>
+      </a>`).join('') || '<div class="empty">등록된 교재가 없습니다.</div>'}</div>
+    ${admin ? `
+    <section class="card" style="margin-top:16px">
+      <div class="card-head"><h2>새 교재 추가</h2></div>
+      <form id="new-course">
+        <div class="grid2">
+          <label class="field"><span>교재 이름 *</span><input type="text" name="name" required placeholder="예: 엑셀 실무"></label>
+          <label class="field"><span>목차 단위</span><select name="unit"><option>예제</option><option>장</option><option>강</option><option>단원</option></select></label>
+        </div>
+        <label class="field"><span>목차 붙여넣기 (나중에 추가해도 됩니다)</span>${PASTE_HELP}<textarea name="text" rows="8" placeholder="# 1장 시작하기&#10;엑셀 화면 구성&#10;셀 서식&#10;# 2장 함수&#10;SUM, AVERAGE"></textarea></label>
+        <div class="row end"><button class="btn primary" type="submit">교재 추가</button></div>
+      </form>
+    </section>` : ''}`;
+  const form = main.querySelector('#new-course');
+  if (form) {
+    onSubmit(form, async (fd) => {
+      const r = await api('/api/admin/courses', { method: 'POST', body: Object.fromEntries(fd) });
+      toast(`교재를 추가했습니다 (목차 ${r.added}개).`);
+      location.hash = `#/courses/${r.id}`;
+    });
+  }
+}
+
+async function renderCourseDetail(main, courseId, admin) {
+  let c;
+  try { c = await api(`/api/courses/${courseId}`); } catch (e) { main.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  const stageName = (no) => (c.stages.find((x) => x.no === no) || {}).name || '';
+  main.innerHTML = `
+    <div class="row" style="margin-bottom:12px"><a class="btn small" href="#/courses">← 교재 목록</a><h2>📘 ${esc(c.name)}</h2>
+      <span class="muted small">목차 ${c.items.length}${esc(c.unit)}</span></div>
+    ${admin ? `
+    <section class="card">
+      <form id="course-edit" class="row">
+        <input type="text" name="name" value="${esc(c.name)}" required style="flex:1;min-width:160px">
+        <select name="unit" style="width:auto">${['예제', '장', '강', '단원'].map((u) => `<option ${u === c.unit ? 'selected' : ''}>${u}</option>`).join('')}</select>
+        <button class="btn" type="submit">이름 저장</button>
+        <button class="btn danger" type="button" id="course-del">교재 삭제</button>
+      </form>
+    </section>` : ''}
+    <section class="card">
+      <div class="card-head"><h2>목차</h2><input type="search" id="item-search" placeholder="검색" style="max-width:220px"></div>
+      <div id="item-box">${groupChapters(c.items).map((g) => `
+        <details class="cur-chapter" open>
+          <summary><b>${esc(g.chapter)}</b> <span class="muted small">${g.items.length}${esc(c.unit)}</span></summary>
+          <div class="cur-items">${g.items.map((it) => `
+            <div class="cur-item" data-search="${esc(`${it.title} ${it.code} ${it.topic} ${it.file}`.toLowerCase())}">
+              <span class="cur-code">${esc(it.code)}</span>
+              <span class="cur-title">${esc(it.title)}${it.file ? ` <span class="muted small">${esc(it.file)}</span>` : ''}</span>
+              <span class="cur-tags">
+                ${it.stage ? `<span class="badge" title="${esc(stageName(it.stage))}">${it.stage}단계</span>` : ''}
+                ${it.topic ? `<span class="badge common">${esc(it.topic)}</span>` : ''}
+                ${admin ? `<button class="btn small ghost" data-edit-item="${it.id}">수정</button><button class="btn small ghost danger" data-del-item="${it.id}">삭제</button>` : ''}
+              </span>
+            </div>`).join('')}</div>
+        </details>`).join('') || '<div class="empty">목차가 없습니다. 아래에서 붙여넣어 추가하세요.</div>'}</div>
+    </section>
+    ${admin ? `
+    <section class="card">
+      <div class="card-head"><h2>목차 추가 (맨 뒤에 붙음)</h2></div>
+      <form id="add-items">${PASTE_HELP}<textarea name="text" rows="6" required></textarea>
+        <div class="row end" style="margin-top:8px"><button class="btn primary" type="submit">추가</button></div></form>
+    </section>` : ''}`;
+  const reload = () => renderCourseDetail(main, courseId, admin);
+  main.querySelector('#item-search').oninput = (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    main.querySelectorAll('#item-box .cur-item').forEach((row) => { row.style.display = !q || row.dataset.search.includes(q) ? '' : 'none'; });
+  };
+  if (!admin) return;
+  onSubmit(main.querySelector('#course-edit'), async (fd) => {
+    await api(`/api/admin/courses/${courseId}`, { method: 'PUT', body: Object.fromEntries(fd) });
+    toast('저장되었습니다.');
+    reload();
+  });
+  main.querySelector('#course-del').onclick = async () => {
+    if (!confirm(`'${c.name}' 교재를 삭제할까요?\n이 교재를 쓰는 학생들의 체크 기록도 함께 지워집니다.`)) return;
+    try {
+      await api(`/api/admin/courses/${courseId}`, { method: 'DELETE' });
+      toast('삭제되었습니다.');
+      location.hash = '#/courses';
+    } catch (e) { toast(e.message, true); }
+  };
+  onSubmit(main.querySelector('#add-items'), async (fd) => {
+    const r = await api(`/api/admin/courses/${courseId}/items`, { method: 'POST', body: Object.fromEntries(fd) });
+    toast(`목차 ${r.added}개를 추가했습니다.`);
+    reload();
+  });
+  main.querySelectorAll('[data-del-item]').forEach((b) => {
+    b.onclick = async () => {
+      if (!confirm('이 목차 항목을 삭제할까요? (학생들의 이 항목 체크 기록도 지워집니다)')) return;
+      try { await api(`/api/admin/course-items/${b.dataset.delItem}`, { method: 'DELETE' }); toast('삭제되었습니다.'); reload(); } catch (e) { toast(e.message, true); }
+    };
+  });
+  main.querySelectorAll('[data-edit-item]').forEach((b) => {
+    b.onclick = () => {
+      const it = c.items.find((x) => x.id === Number(b.dataset.editItem));
+      modal(`
+        <h2>목차 항목 수정</h2>
+        <form>
+          <label class="field"><span>제목</span><input type="text" name="title" value="${esc(it.title)}" required></label>
+          <div class="grid2">
+            <label class="field"><span>장</span><input type="text" name="chapter" value="${esc(it.chapter)}"></label>
+            <label class="field"><span>코드 번호·구분</span><input type="text" name="code" value="${esc(it.code)}"></label>
+            <label class="field"><span>단계 (1~25)</span><select name="stage"><option value="">없음</option>${c.stages.map((st) =>
+              `<option value="${st.no}" ${st.no === it.stage ? 'selected' : ''}>${st.no}. ${esc(st.name)}</option>`).join('')}</select></label>
+          </div>
+          <div class="row end"><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div>
+        </form>`, (el, close) => {
+        onSubmit(el.querySelector('form'), async (fd) => {
+          await api(`/api/admin/course-items/${it.id}`, { method: 'PUT', body: Object.fromEntries(fd) });
+          toast('저장되었습니다.');
+          close();
+          reload();
+        });
+      });
     };
   });
 }

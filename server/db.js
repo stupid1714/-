@@ -88,6 +88,45 @@ CREATE TABLE IF NOT EXISTS log_photos (
   created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
+-- 교재(과정)와 목차: 목차를 체크하면 진도율이 자동 계산됨
+CREATE TABLE IF NOT EXISTS stages (
+  no INTEGER PRIMARY KEY,
+  band TEXT NOT NULL,
+  name TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS courses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  unit TEXT NOT NULL DEFAULT '예제',
+  sort INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now','localtime'))
+);
+CREATE TABLE IF NOT EXISTS course_items (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  seq INTEGER NOT NULL,
+  stage INTEGER,
+  chapter TEXT DEFAULT '',
+  code TEXT DEFAULT '',
+  file TEXT DEFAULT '',
+  title TEXT NOT NULL,
+  topic TEXT DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_course_items ON course_items(course_id, seq);
+CREATE TABLE IF NOT EXISTS student_courses (
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  course_id INTEGER NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  sort INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (student_id, course_id)
+);
+CREATE TABLE IF NOT EXISTS item_progress (
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  item_id INTEGER NOT NULL REFERENCES course_items(id) ON DELETE CASCADE,
+  done_date TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  PRIMARY KEY (student_id, item_id)
+);
+
 CREATE TABLE IF NOT EXISTS comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -213,5 +252,31 @@ function seed() {
 }
 
 seed();
+
+// 교재 목차 기본값(으뜸·두근두근·자기주도파이썬, 공통 25단계). 교재가 하나도 없을 때만 한 번 넣음
+function seedCurriculum() {
+  if (db.prepare('SELECT COUNT(*) AS c FROM courses').get().c > 0) return;
+  const file = path.join(__dirname, 'seed', 'curriculum.json');
+  if (!fs.existsSync(file)) return;
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  db.exec('BEGIN');
+  try {
+    const st = db.prepare('INSERT OR REPLACE INTO stages (no, band, name) VALUES (?, ?, ?)');
+    data.stages.forEach((x) => st.run(x.no, x.band, x.name));
+    const ins = db.prepare(
+      'INSERT INTO course_items (course_id, seq, stage, chapter, code, file, title, topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    data.courses.forEach((c, ci) => {
+      const id = db.prepare('INSERT INTO courses (name, unit, sort) VALUES (?, ?, ?)').run(c.name, c.unit, ci + 1).lastInsertRowid;
+      c.items.forEach((it, i) => ins.run(id, i + 1, it.stage, it.chapter, it.code, it.file, it.title, it.topic));
+    });
+    db.exec('COMMIT');
+    console.log('[seed] 교재 목차를 넣었습니다:', data.courses.map((c) => `${c.name} ${c.items.length}개`).join(', '));
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+}
+seedCurriculum();
 
 module.exports = { db, UPLOAD_DIR, hashPassword, verifyPassword };

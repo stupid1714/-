@@ -304,6 +304,7 @@ app.get('/api/admin/students', requireStaff, (req, res) => {
   const today = todayStr();
   const rows = db.prepare(
     `SELECT u.id, u.username, u.name, p.course, p.current_lesson, p.progress_percent, u.username IS NOT NULL AS has_account,
+            (SELECT COUNT(*) FROM student_courses sc WHERE sc.student_id = u.id) AS course_count,
             (SELECT status FROM attendance a WHERE a.student_id = u.id AND a.date = ?) AS today_status,
             (SELECT COUNT(*) FROM files f WHERE f.kind = 'submission' AND f.student_id = u.id) AS submission_count,
             (SELECT COUNT(*) FROM messages m WHERE m.student_id = u.id AND m.from_staff = 0 AND m.read_by_staff = 0) AS unread_messages,
@@ -392,6 +393,7 @@ app.put('/api/admin/students/:id/profile', requireStaff, (req, res) => {
   ).run(id, String(b.course || ''), String(b.current_lesson || ''), pct, String(b.next_lesson || ''),
     String(b.assignment || ''), String(b.assignment_due || ''), String(b.memo || ''), validTeacherId(b.teacher_id));
   if (b.name) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(String(b.name).trim(), id);
+  recomputeProgress(id); // 교재 목차를 쓰는 학생은 진도율·현재/다음 진도를 목차 기준으로 유지
   res.json({ ok: true });
 });
 
@@ -472,6 +474,244 @@ app.get('/api/admin/timetable', requireStaff, (req, res) => {
      WHERE u.status = 'active'
      ORDER BY s.weekday, s.start_time, u.name`
   ).all());
+});
+
+// ---------- 교재 목차 진도 ----------
+
+const COURSE_ITEM_COLS = 'ci.id, ci.course_id, ci.seq, ci.stage, ci.chapter, ci.code, ci.file, ci.title, ci.topic';
+
+function studentCourses(studentId) {
+  return db.prepare(
+    `SELECT c.id, c.name, c.unit FROM student_courses sc JOIN courses c ON c.id = sc.course_id
+     WHERE sc.student_id = ? ORDER BY sc.sort, c.sort, c.id`
+  ).all(studentId);
+}
+
+// 목차 항목을 '현재/다음 진도' 칸에 넣을 짧은 이름으로
+function itemLabel(courseName, it) {
+  const code = /^코드/.test(it.code) ? `${it.code} ` : it.code === 'Lab' ? '[Lab] ' : '';
+  return `[${courseName}] ${it.chapter ? `${it.chapter} · ` : ''}${code}${it.title}`;
+}
+
+// 지정된 교재 전체에서 '마지막으로 한 항목'과 '다음에 할 항목' 찾기
+//  다음 = 마지막으로 체크한 항목 뒤의 첫 미완료 항목 (없으면 같은 교재의 첫 미완료, 그것도 없으면 다음 교재)
+function progressState(studentId) {
+  const courses = studentCourses(studentId);
+  if (!courses.length) return null;
+  const order = new Map(courses.map((c, i) => [c.id, i]));
+  const items = db.prepare(
+    `SELECT ${COURSE_ITEM_COLS}, ip.done_date, ip.updated_at FROM course_items ci
+     JOIN student_courses sc ON sc.course_id = ci.course_id AND sc.student_id = ?
+     LEFT JOIN item_progress ip ON ip.item_id = ci.id AND ip.student_id = sc.student_id`
+  ).all(studentId).sort((a, b) => order.get(a.course_id) - order.get(b.course_id) || a.seq - b.seq);
+  if (!items.length) return null;
+  const done = items.filter((it) => it.done_date);
+  const last = [...done].sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || '') || b.seq - a.seq)[0] || null;
+  let next = null;
+  if (last) next = items.find((it) => it.course_id === last.course_id && it.seq > last.seq && !it.done_date);
+  if (!next) next = items.find((it) => (!last || it.course_id === last.course_id) && !it.done_date) || items.find((it) => !it.done_date) || null;
+  return { courses, items, done, last, next };
+}
+
+// 체크한 목차로 진도율·현재 진도·다음 진도를 다시 계산해 저장 (교재가 없으면 손대지 않음 = 슬라이드바 방식)
+function recomputeProgress(studentId) {
+  const st = progressState(studentId);
+  if (!st) return;
+  const name = (it) => st.courses.find((c) => c.id === it.course_id).name;
+  const pct = st.done.length === st.items.length ? 100 : Math.floor((st.done.length / st.items.length) * 100);
+  db.prepare('UPDATE student_profiles SET progress_percent = ?, current_lesson = ?, next_lesson = ? WHERE user_id = ?')
+    .run(pct, st.last ? itemLabel(name(st.last), st.last) : '', st.next ? itemLabel(name(st.next), st.next) : '모든 목차 완료 🎉', studentId);
+}
+
+function curriculumFor(studentId) {
+  const courses = studentCourses(studentId).map((c) => {
+    const items = db.prepare(
+      `SELECT ${COURSE_ITEM_COLS}, ip.done_date FROM course_items ci
+       LEFT JOIN item_progress ip ON ip.item_id = ci.id AND ip.student_id = ?
+       WHERE ci.course_id = ? ORDER BY ci.seq`
+    ).all(studentId, c.id);
+    return { ...c, total: items.length, done: items.filter((it) => it.done_date).length, items };
+  });
+  const st = progressState(studentId);
+  return { stages: db.prepare('SELECT no, band, name FROM stages ORDER BY no').all(), courses, next_item_id: st && st.next ? st.next.id : null };
+}
+
+app.get('/api/students/:id/curriculum', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!canViewStudent(req.user, id) || !getStudent(id)) return res.status(403).json({ error: '권한이 없습니다.' });
+  res.json(curriculumFor(id));
+});
+
+// 학생에게 교재 지정 (여러 권 가능, 순서대로)
+app.put('/api/admin/students/:id/courses', requireStaff, (req, res) => {
+  const id = Number(req.params.id);
+  if (!getStudent(id)) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
+  const ids = [...new Set((Array.isArray((req.body || {}).course_ids) ? req.body.course_ids : []).map(Number).filter(Boolean))];
+  const valid = ids.filter((cid) => db.prepare('SELECT 1 FROM courses WHERE id = ?').get(cid));
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM student_courses WHERE student_id = ?').run(id);
+    valid.forEach((cid, i) => db.prepare('INSERT INTO student_courses (student_id, course_id, sort) VALUES (?, ?, ?)').run(id, cid, i));
+    if (valid.length) {
+      const names = valid.map((cid) => db.prepare('SELECT name FROM courses WHERE id = ?').get(cid).name);
+      db.prepare('UPDATE student_profiles SET course = ? WHERE user_id = ?').run(names.join(' + '), id);
+    }
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  recomputeProgress(id);
+  res.json({ ok: true });
+});
+
+// 목차 체크/해제: { item_ids: [..], done: true|false, date: 'YYYY-MM-DD' }
+app.post('/api/admin/students/:id/progress', requireStaff, (req, res) => {
+  const id = Number(req.params.id);
+  const b = req.body || {};
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(b.date || '')) ? String(b.date) : todayStr();
+  const itemIds = (Array.isArray(b.item_ids) ? b.item_ids : []).map(Number).filter(Boolean);
+  // 그 학생에게 지정된 교재의 항목만
+  const allowed = itemIds.filter((iid) => db.prepare(
+    'SELECT 1 FROM course_items ci JOIN student_courses sc ON sc.course_id = ci.course_id WHERE ci.id = ? AND sc.student_id = ?'
+  ).get(iid, id));
+  if (!allowed.length) return res.status(400).json({ error: '체크할 목차를 찾을 수 없습니다.' });
+  db.exec('BEGIN');
+  try {
+    allowed.forEach((iid) => {
+      if (b.done) {
+        db.prepare(`INSERT INTO item_progress (student_id, item_id, done_date) VALUES (?, ?, ?)
+                    ON CONFLICT(student_id, item_id) DO UPDATE SET done_date = excluded.done_date, updated_at = datetime('now','localtime')`)
+          .run(id, iid, date);
+      } else {
+        db.prepare('DELETE FROM item_progress WHERE student_id = ? AND item_id = ?').run(id, iid);
+      }
+    });
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  recomputeProgress(id);
+  const st = progressState(id);
+  res.json({ ok: true, student: getStudent(id), next_item_id: st && st.next ? st.next.id : null });
+});
+
+// ----- 교재·목차 관리 (보기: 선생님, 수정: 관리자) -----
+
+app.get('/api/courses', requireStaff, (req, res) => {
+  res.json(db.prepare(
+    `SELECT c.id, c.name, c.unit,
+            (SELECT COUNT(*) FROM course_items ci WHERE ci.course_id = c.id) AS item_count,
+            (SELECT COUNT(*) FROM student_courses sc JOIN users u ON u.id = sc.student_id
+             WHERE sc.course_id = c.id AND u.status = 'active') AS student_count
+     FROM courses c ORDER BY c.sort, c.id`
+  ).all());
+});
+
+app.get('/api/courses/:id', requireStaff, (req, res) => {
+  const c = db.prepare('SELECT id, name, unit FROM courses WHERE id = ?').get(Number(req.params.id));
+  if (!c) return res.status(404).json({ error: '교재를 찾을 수 없습니다.' });
+  c.items = db.prepare(`SELECT ${COURSE_ITEM_COLS} FROM course_items ci WHERE ci.course_id = ? ORDER BY ci.seq`).all(c.id);
+  c.stages = db.prepare('SELECT no, band, name FROM stages ORDER BY no').all();
+  res.json(c);
+});
+
+// 붙여넣은 목차 해석
+//  - 엑셀에서 머리글(No, 단계, 교재 장, 코드 번호, 예제 제목 …)까지 복사해 붙여넣으면 칸을 자동으로 맞춤
+//  - 아니면 한 줄에 하나씩. '# 4장 반복문' 처럼 #으로 시작하는 줄은 그 아래 항목들의 '장'이 됨
+function parseItems(text) {
+  const lines = String(text || '').replace(/\r/g, '').split('\n').filter((l) => l.trim());
+  if (!lines.length) return [];
+  const head = lines[0].split('\t').map((h) => h.trim());
+  const titleCol = head.findIndex((h) => h.includes('제목'));
+  if (lines[0].includes('\t') && titleCol >= 0) {
+    const col = (...names) => { for (const n of names) { const i = head.indexOf(n); if (i >= 0) return i; } return -1; };
+    const c = { stage: col('단계'), chapter: col('교재 장', '장'), code: col('코드 번호', '장 번호', '구분'), file: col('파일명'), topic: col('교재 공통 주제', '공통 주제') };
+    const get = (cells, i) => (i >= 0 ? String(cells[i] || '').trim() : '');
+    return lines.slice(1).map((l) => l.split('\t')).filter((cells) => get(cells, titleCol)).map((cells) => ({
+      stage: Number.parseInt(get(cells, c.stage), 10) || null, chapter: get(cells, c.chapter), code: get(cells, c.code),
+      file: get(cells, c.file), title: get(cells, titleCol), topic: get(cells, c.topic),
+    }));
+  }
+  let chapter = '';
+  const items = [];
+  lines.forEach((l) => {
+    const t = l.trim();
+    if (t.startsWith('#')) { chapter = t.replace(/^#+\s*/, ''); return; }
+    items.push({ stage: null, chapter, code: '', file: '', title: t.replace(/\t+/g, ' '), topic: '' });
+  });
+  return items;
+}
+
+function appendItems(courseId, items) {
+  let seq = db.prepare('SELECT COALESCE(MAX(seq), 0) AS m FROM course_items WHERE course_id = ?').get(courseId).m;
+  const ins = db.prepare('INSERT INTO course_items (course_id, seq, stage, chapter, code, file, title, topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  items.forEach((it) => ins.run(courseId, ++seq, it.stage, it.chapter, it.code, it.file, it.title.slice(0, 300), it.topic));
+}
+
+function recomputeCourseStudents(courseId) {
+  db.prepare('SELECT student_id FROM student_courses WHERE course_id = ?').all(courseId).forEach((r) => recomputeProgress(r.student_id));
+}
+
+app.post('/api/admin/courses', requireAdmin, (req, res) => {
+  const name = String((req.body || {}).name || '').trim();
+  const unit = String((req.body || {}).unit || '').trim() || '예제';
+  if (!name) return res.status(400).json({ error: '교재 이름을 입력하세요.' });
+  if (db.prepare('SELECT 1 FROM courses WHERE name = ?').get(name)) return res.status(400).json({ error: '같은 이름의 교재가 이미 있습니다.' });
+  const items = parseItems((req.body || {}).text);
+  const sort = db.prepare('SELECT COALESCE(MAX(sort), 0) + 1 AS s FROM courses').get().s;
+  const id = db.prepare('INSERT INTO courses (name, unit, sort) VALUES (?, ?, ?)').run(name, unit, sort).lastInsertRowid;
+  appendItems(id, items);
+  res.json({ id: Number(id), added: items.length });
+});
+
+app.put('/api/admin/courses/:id', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const name = String((req.body || {}).name || '').trim();
+  if (!name) return res.status(400).json({ error: '교재 이름을 입력하세요.' });
+  if (db.prepare('SELECT 1 FROM courses WHERE name = ? AND id != ?').get(name, id)) return res.status(400).json({ error: '같은 이름의 교재가 이미 있습니다.' });
+  db.prepare('UPDATE courses SET name = ?, unit = ? WHERE id = ?').run(name, String((req.body || {}).unit || '예제'), id);
+  recomputeCourseStudents(id);
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/courses/:id', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  const students = db.prepare('SELECT student_id FROM student_courses WHERE course_id = ?').all(id);
+  db.prepare('DELETE FROM courses WHERE id = ?').run(id);
+  students.forEach((r) => recomputeProgress(r.student_id));
+  res.json({ ok: true });
+});
+
+app.post('/api/admin/courses/:id/items', requireAdmin, (req, res) => {
+  const id = Number(req.params.id);
+  if (!db.prepare('SELECT 1 FROM courses WHERE id = ?').get(id)) return res.status(404).json({ error: '교재를 찾을 수 없습니다.' });
+  const items = parseItems((req.body || {}).text);
+  if (!items.length) return res.status(400).json({ error: '추가할 목차가 없습니다.' });
+  appendItems(id, items);
+  recomputeCourseStudents(id);
+  res.json({ ok: true, added: items.length });
+});
+
+app.put('/api/admin/course-items/:id', requireAdmin, (req, res) => {
+  const it = db.prepare('SELECT id, course_id FROM course_items WHERE id = ?').get(Number(req.params.id));
+  if (!it) return res.status(404).json({ error: '목차 항목을 찾을 수 없습니다.' });
+  const b = req.body || {};
+  const title = String(b.title || '').trim();
+  if (!title) return res.status(400).json({ error: '제목을 입력하세요.' });
+  db.prepare('UPDATE course_items SET title = ?, chapter = ?, code = ?, stage = ? WHERE id = ?')
+    .run(title, String(b.chapter || '').trim(), String(b.code || '').trim(), Number.parseInt(b.stage, 10) || null, it.id);
+  recomputeCourseStudents(it.course_id);
+  res.json({ ok: true });
+});
+
+app.delete('/api/admin/course-items/:id', requireAdmin, (req, res) => {
+  const it = db.prepare('SELECT id, course_id FROM course_items WHERE id = ?').get(Number(req.params.id));
+  if (!it) return res.status(404).json({ error: '목차 항목을 찾을 수 없습니다.' });
+  db.prepare('DELETE FROM course_items WHERE id = ?').run(it.id);
+  recomputeCourseStudents(it.course_id);
+  res.json({ ok: true });
 });
 
 app.post('/api/admin/students/:id/comments', requireStaff, (req, res) => {

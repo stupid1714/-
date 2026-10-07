@@ -1,0 +1,3637 @@
+{
+ "stages": [
+  {
+   "no": 1,
+   "band": "기초",
+   "name": "파이썬 소개·설치·실행환경"
+  },
+  {
+   "no": 2,
+   "band": "기초",
+   "name": "출력 print()"
+  },
+  {
+   "no": 3,
+   "band": "기초",
+   "name": "변수와 입력 input()"
+  },
+  {
+   "no": 4,
+   "band": "기초",
+   "name": "연산자"
+  },
+  {
+   "no": 5,
+   "band": "기초",
+   "name": "자료형과 문자열 기초"
+  },
+  {
+   "no": 6,
+   "band": "기초",
+   "name": "주석·오류·디버깅"
+  },
+  {
+   "no": 7,
+   "band": "기초",
+   "name": "리스트 기초"
+  },
+  {
+   "no": 8,
+   "band": "기초",
+   "name": "조건문 if·elif·else"
+  },
+  {
+   "no": 9,
+   "band": "기초",
+   "name": "for 반복문·range()·중첩 for"
+  },
+  {
+   "no": 10,
+   "band": "기초",
+   "name": "while·무한 루프·break·continue"
+  },
+  {
+   "no": 11,
+   "band": "중급",
+   "name": "문자열 심화(슬라이싱·메소드)"
+  },
+  {
+   "no": 12,
+   "band": "중급",
+   "name": "리스트 활용(추가·삭제·정렬·내장함수)"
+  },
+  {
+   "no": 13,
+   "band": "중급",
+   "name": "리스트 슬라이싱·연산·축약"
+  },
+  {
+   "no": 14,
+   "band": "중급",
+   "name": "딕셔너리"
+  },
+  {
+   "no": 15,
+   "band": "중급",
+   "name": "튜플·집합·zip()"
+  },
+  {
+   "no": 16,
+   "band": "중급",
+   "name": "함수 기초(정의·매개변수·return)"
+  },
+  {
+   "no": 17,
+   "band": "중급",
+   "name": "함수 심화(변수 범위·전역변수·인수·재귀)"
+  },
+  {
+   "no": 18,
+   "band": "중급",
+   "name": "모듈(random·math·datetime·time)"
+  },
+  {
+   "no": 19,
+   "band": "중급",
+   "name": "터틀 그래픽 종합·미니 프로젝트"
+  },
+  {
+   "no": 20,
+   "band": "심화",
+   "name": "예외 처리"
+  },
+  {
+   "no": 21,
+   "band": "심화",
+   "name": "파일 입출력"
+  },
+  {
+   "no": 22,
+   "band": "심화",
+   "name": "클래스와 객체"
+  },
+  {
+   "no": 23,
+   "band": "심화",
+   "name": "파이썬다운 코딩(람다·map·filter·제너레이터)"
+  },
+  {
+   "no": 24,
+   "band": "심화",
+   "name": "GUI 만들기 tkinter"
+  },
+  {
+   "no": 25,
+   "band": "심화",
+   "name": "외부 라이브러리·pygame 프로젝트"
+  }
+ ],
+ "courses": [
+  {
+   "name": "으뜸파이썬",
+   "unit": "예제",
+   "items": [
+    {
+     "stage": 2,
+     "chapter": "1장",
+     "code": "코드 1-1",
+     "file": "C0101_print_hello.py",
+     "title": "Hello World 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 2,
+     "chapter": "1장",
+     "code": "코드 1-2",
+     "file": "C0102_print_hello_3.py",
+     "title": "Hello World 3번 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 2,
+     "chapter": "2장",
+     "code": "코드 2-1",
+     "file": "C0201_print_test.py",
+     "title": "스크립트 코드로 간단한 출력 프로그램 작성하기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "코드 2-2",
+     "file": "C0202_circle.py",
+     "title": "원의 반지름, 면적, 둘레를 출력하는 프로그램",
+     "topic": "원 면적·둘레"
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "코드 2-3",
+     "file": "C0203_circle_with_var.py",
+     "title": "변수를 이용하여 원의 면적과 둘레를 구하는 방법",
+     "topic": "원 면적·둘레"
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "코드 2-4",
+     "file": "C0204_circle_with_var_2.py",
+     "title": "변수를 이용하여 원의 면적과 둘레를 구하는 방법 (수정)",
+     "topic": "원 면적·둘레"
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "코드 2-5",
+     "file": "C0205_variable_test.py",
+     "title": "변수에 값을 지정하고 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "코드 2-6",
+     "file": "C0206_change_var.py",
+     "title": "변수에 새로운 값을 할당하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "2장",
+     "code": "코드 2-7",
+     "file": "C0207_number_and_string1.py",
+     "title": "문자열과 정수의 덧셈연산",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "2장",
+     "code": "코드 2-8",
+     "file": "C0208_number_and_string2.py",
+     "title": "실수와 정수의 덧셈 연산",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "코드 2-9",
+     "file": "C0209_circle_with_var.py",
+     "title": "변수를 이용하여 원의 면적과 둘레를 구하는 방법 (다시 보기)",
+     "topic": "원 면적·둘레"
+    },
+    {
+     "stage": 6,
+     "chapter": "2장",
+     "code": "코드 2-10",
+     "file": "C0210_circle_with_var_comment.py",
+     "title": "주석을 넣은 후 코드",
+     "topic": "주석"
+    },
+    {
+     "stage": 6,
+     "chapter": "2장",
+     "code": "코드 2-11",
+     "file": "C0211_comment_test1.py",
+     "title": "파이썬의 주석문에 대해 알아보는 예제",
+     "topic": "주석"
+    },
+    {
+     "stage": 6,
+     "chapter": "2장",
+     "code": "코드 2-12",
+     "file": "C0212_comment_test2.py",
+     "title": "파이썬의 주석문에 대해 알아보는 예제",
+     "topic": "주석"
+    },
+    {
+     "stage": 6,
+     "chapter": "2장",
+     "code": "코드 2-13",
+     "file": "C0213_comment_test3.py",
+     "title": "여러줄에 걸친 주석문의 사용",
+     "topic": "주석"
+    },
+    {
+     "stage": 6,
+     "chapter": "2장",
+     "code": "코드 2-14",
+     "file": "C0214_comment_test4.py",
+     "title": "주석문의 잘못된 사용",
+     "topic": "주석"
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "코드 2-15",
+     "file": "C0215_input_test.py",
+     "title": "input() 함수를 통해 사용자의 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-1",
+     "file": "C0301_seq_test.py",
+     "title": "순차적 실행 구조를 이용한 변수의 덧셈",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-2",
+     "file": "C0302_if_youth_discount.py",
+     "title": "if 조건문을 이용한 출력기능(조건을 만족하는 경우)",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-3",
+     "file": "C0303_if_youth_discount2.py",
+     "title": "if 조건문을 이용한 출력기능(조건을 만족하지 않는 경우)",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-4",
+     "file": "C0304_if_walk_count.py",
+     "title": "if 조건문을 이용한 출력기능(조건을 만족하는 경우)",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-5",
+     "file": "C0305_if_youth_error.py",
+     "title": "들여쓰기 없는 print() 문",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-6",
+     "file": "C0306_if_modulo1.py",
+     "title": "3의 배수를 판단하기 위한 모듈로 연산과 조건문",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-7",
+     "file": "C0307_if_modulo2.py",
+     "title": "3과 5의 배수를 판단하기 위한 모듈로 연산과 and 조건문",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-8",
+     "file": "C0308_if_hour_test.py",
+     "title": "if 문을 이용한 ‘오전’ 혹은 ‘오후’의 출력기능",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-9",
+     "file": "C0309_if_else_hour_test.py",
+     "title": "if-else 문을 이용한 ‘오전’ 혹은 ‘오후’의 출력 기능",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-10",
+     "file": "C0310_if_else_minus_test.py",
+     "title": "if-else 문을 이용한 ‘음수’ 혹은 ‘양수’의 출력기능",
+     "topic": "양수·음수 판별"
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-11",
+     "file": "C0311_if_else_even_test.py",
+     "title": "if-else 문을 이용한 ‘짝수’ 혹은 ‘홀수’의 출력기능",
+     "topic": "짝수·홀수 판별"
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-12",
+     "file": "C0312_if_block.py",
+     "title": "외부 if-else 문과 내부 if-else 문의 사용",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-13",
+     "file": "C0313_if_and_or_test.py",
+     "title": "and와 or 조건문의 사용법",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-14",
+     "file": "C0314_if_leapyear_test.py",
+     "title": "윤년을 판별하기 위한 코드",
+     "topic": "윤년 판별"
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-15",
+     "file": "C0315_if_grade1.py",
+     "title": "'A','B','C','D','F' 등급 계산을 위한 if 문",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-16",
+     "file": "C0316_if_grade2.py",
+     "title": "'A','B','C','D','F' 등급 계산을 위한 복합 if 문",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "3장",
+     "code": "코드 3-17",
+     "file": "C0317_if_elif_grade.py",
+     "title": "if-elif-else 문으로 구성된 등급계산기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-1",
+     "file": "C0401_print_welcome.py",
+     "title": "print() 함수의 호출을 통한 반복적 수행",
+     "topic": "반복 출력(Welcome)"
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-2",
+     "file": "C0402_print_welcome_with_for1.py",
+     "title": "for 문을 이용한 반복적 수행",
+     "topic": "반복 출력(Welcome)"
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-3",
+     "file": "C0403_print_welcome_with_for2.py",
+     "title": "for 문을 이용한 반복적 수행 - 10회 수행",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-4",
+     "file": "C0404_for_in_range_test1.py",
+     "title": "range() 함수를 이용한 for 문의 제어",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-5",
+     "file": "C0405_for_in_range_test2.py",
+     "title": "for 문의 제어와 print() 함수의 end 키워드 인자 사용방법",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-6",
+     "file": "C0406_for_in_range_test3.py",
+     "title": "for 문의 제어와 print() 함수의 end 인자 사용방법",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-7",
+     "file": "C0407_for_in_range_test4.py",
+     "title": "range() 함수를 이용한 for 문의 제어와 간격값 사용법",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-8",
+     "file": "C0408_for_sum_ex1.py",
+     "title": "연속적인 값의 생성과 누적 덧셈",
+     "topic": "1부터 n까지 합"
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-9",
+     "file": "C0409_for_sum_ex2.py",
+     "title": "누적 덧셈의 중간 결과 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-10",
+     "file": "C0410_for_sum_input1.py",
+     "title": "사용자로부터 입력을 받은 후 누적 합계 값 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-11",
+     "file": "C0411_for_sum_input2.py",
+     "title": "사용자로부터 입력을 받은 후 누적 합계 값 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-12",
+     "file": "C0412_for_factorial.py",
+     "title": "for 반복문을 이용한 5 팩토리얼(5!) 계산",
+     "topic": "팩토리얼"
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-13",
+     "file": "C0413_for_in_numbers.py",
+     "title": "for 문을 이용한 리스트의 정수 객체 순회",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-14",
+     "file": "C0414_for_in_f_numbers.py",
+     "title": "for 문을 이용한 리스트의 실수 객체 순회",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-15",
+     "file": "C0415_for_in_str_list.py",
+     "title": "for 문을 이용한 리스트의 문자열 객체 순회",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-16",
+     "file": "C0416_for_sum1.py",
+     "title": "리스트 항목내 정수 값들의 누적 덧셈",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-17",
+     "file": "C0417_for_sum2.py",
+     "title": "sum() 함수의 사용",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-18",
+     "file": "C0418_for_in_hello.py",
+     "title": "for 반복문에서 문자열의 사용",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-19",
+     "file": "C0419_double_for.py",
+     "title": "중첩 for 문을 사용한 구구단 출력",
+     "topic": "구구단"
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-20",
+     "file": "C0420_double_for_pattern.py",
+     "title": "이중 for 루프를 사용한 패턴 생성하기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-21",
+     "file": "C0421_for_pattern.py",
+     "title": "for 루프와 *를 사용한 패턴 생성하기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-22",
+     "file": "C0422_pattern_test1.py",
+     "title": "4, 3, 2, 1, 0을 순서대로 출력하는 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-23",
+     "file": "C0423_pattern_test2.py",
+     "title": "1, 3, 5, 7, 9를 순서대로 출력하는 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-24",
+     "file": "C0424_triangle_pattern1.py",
+     "title": "삼각형 패턴을 출력하는 기능",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-25",
+     "file": "C0425_triangle_pattern2.py",
+     "title": "삼각형 패턴을 출력하는 기능을 가진 짧은 코드",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "4장",
+     "code": "코드 4-26",
+     "file": "C0426_get_primes.py",
+     "title": "2부터 100까지의 소수 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "4장",
+     "code": "코드 4-27",
+     "file": "C0427_print_welcome_with_for.py",
+     "title": "for 문을 이용한 'Welcome to everyone!!'의 반복 출력기능",
+     "topic": "반복 출력(Welcome)"
+    },
+    {
+     "stage": 10,
+     "chapter": "4장",
+     "code": "코드 4-28",
+     "file": "C0428_print_welcome_with_while.py",
+     "title": "while 문을 이용한 'Welcome to everyone!!'의 반복 출력기능",
+     "topic": "반복 출력(Welcome)"
+    },
+    {
+     "stage": 10,
+     "chapter": "4장",
+     "code": "코드 4-29",
+     "file": "C0429_while_sum_input.py",
+     "title": "지정된 수까지의 누적 합을 구하는 기능",
+     "topic": "1부터 n까지 합"
+    },
+    {
+     "stage": 10,
+     "chapter": "4장",
+     "code": "코드 4-30",
+     "file": "C0430_rsp_input.py",
+     "title": "while 반복문을 이용한 가위, 바위, 보 선택하기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "4장",
+     "code": "코드 4-31",
+     "file": "C0431_for_sum_input2.py",
+     "title": "양수 n을 입력받아 1부터 n까지의 합을 구하는 코드",
+     "topic": "1부터 n까지 합"
+    },
+    {
+     "stage": 10,
+     "chapter": "4장",
+     "code": "코드 4-32",
+     "file": "C0432_for_sum_input2_!.py",
+     "title": "1부터 n까지의 합을 구하는 코드로 while 문 내에서 입력문 사용",
+     "topic": "1부터 n까지 합"
+    },
+    {
+     "stage": 10,
+     "chapter": "4장",
+     "code": "코드 4-33",
+     "file": "C0433_skip_vowel_break.py",
+     "title": "break를 사용하여 모음이 나타나면 즉시 반복문을 종료하는 기능",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "4장",
+     "code": "코드 4-34",
+     "file": "C0443_skip_vowel_continue.py",
+     "title": "continue를 사용하여 모음일 경우 출력을 건너뛰는 기능",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-1",
+     "file": "C0501_print_star_func.py",
+     "title": "별표 출력을 위한 함수 정의와 호출",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-2",
+     "file": "C0502_print_star_4.py",
+     "title": "별표 출력을 위한 함수 정의와 반복 호출",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-3",
+     "file": "C0503_print_star3.py",
+     "title": "3줄 별표 출력을 위한 함수 정의와 호출 방법",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-4",
+     "file": "C0504_print_star_plus.py",
+     "title": "별표 출력을 위한 함수 정의와 호출 방법의 수정",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-5",
+     "file": "C0505_print_star_param.py",
+     "title": "매개변수를 가진 별표 출력 함수와 인자를 이용한 호출",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-6",
+     "file": "C0506_print_hello_n_times.py",
+     "title": "매개변수를 사용하여 지정된 문자를 인자 값만큼 반복 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-7",
+     "file": "C0507_sum_func.py",
+     "title": "매개변수를 사용한 인자값의 합계",
+     "topic": "합계 함수"
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-8",
+     "file": "C0508_root_ex1.py",
+     "title": "2차 방정식의 근을 구하는 기능",
+     "topic": "2차 방정식 근"
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-9",
+     "file": "C0509_root_ex2.py",
+     "title": "2차 방정식의 근을 구하는 기능의 반복 사용",
+     "topic": "2차 방정식 근"
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-10",
+     "file": "C0510_root_ex3.py",
+     "title": "2차 방정식의 근을 구하는 기능을 함수로 만들기",
+     "topic": "2차 방정식 근"
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-11",
+     "file": "C0511_sum_with_return1.py",
+     "title": "두 값의 합을 반환하는 get_sum() 함수와 return 문의 사용1",
+     "topic": "합계 함수"
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-12",
+     "file": "C0512_sum_with_return2.py",
+     "title": "두 값의 합을 반환하는 get_sum() 함수와 return 문의 사용2",
+     "topic": "합계 함수"
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-13",
+     "file": "C0513_root_func.py",
+     "title": "두 개의 값을 튜플로 반환하는 방법과 전달 받는 방법",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-14",
+     "file": "C0514_sum_func_global1.py",
+     "title": "매개변수를 사용하지 않고 외부 변수를 사용하는 경우",
+     "topic": "전역변수 global"
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-15",
+     "file": "C0515_sum_func_global2.py",
+     "title": "함수 외부에서 정의된 값을 함수 내부에서 변경하는 경우",
+     "topic": "전역변수 global"
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-16",
+     "file": "C0516_sum_func_global3.py",
+     "title": "함수 내부에서 값을 변경하고, 그 값을 외부에서 확인하기",
+     "topic": "전역변수 global"
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-17",
+     "file": "C0517_sum_func_global4.py",
+     "title": "global 키워드를 사용한 전역변수의 참조 방법",
+     "topic": "전역변수 global"
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-18",
+     "file": "C0518_print_star_param_error.py",
+     "title": "인자를 빠뜨린 호출",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-19",
+     "file": "C0519_print_default_param.py",
+     "title": "디폴트 값을 가지는 print_star() 함수",
+     "topic": "디폴트 인수"
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-20",
+     "file": "C0520_default_param1.py",
+     "title": "디폴트 인자를 1개 사용한 div() 함수",
+     "topic": "디폴트 인수"
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-21",
+     "file": "C0521_default_param2.py",
+     "title": "매개변수에 디폴트 값을 2개 사용한 div() 함수",
+     "topic": "디폴트 인수"
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-22",
+     "file": "C0522_root_func.py",
+     "title": "2차 방정식의 근을 구하는 함수와 함수 호출문",
+     "topic": "2차 방정식 근"
+    },
+    {
+     "stage": 16,
+     "chapter": "5장",
+     "code": "코드 5-23",
+     "file": "C0523_areas_of_shapes.py",
+     "title": "직사각형과 원의 면적을 구하는 함수의 구현",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-24",
+     "file": "C0524_arg_greet1.py",
+     "title": "인자를 하나 가지는 함수",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-25",
+     "file": "C0525_arg_greet2.py",
+     "title": "인자를 2개 가지는 함수",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-26",
+     "file": "C0526_arg_greet.py",
+     "title": "가변 인자를 가지는 함수의 정의와 호출",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-27",
+     "file": "C0527_arg_foo.py",
+     "title": "가변 인자를 가지는 함수에서 len() 함수 활용",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-28",
+     "file": "C0528_arg_sum_nums.py",
+     "title": "가변 인자를 가지는 함수를 이용한 합계 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-29",
+     "file": "C0529_factorial_recursion.py",
+     "title": "재귀함수를 이용하여 정의한 팩토리얼",
+     "topic": "팩토리얼"
+    },
+    {
+     "stage": 17,
+     "chapter": "5장",
+     "code": "코드 5-30",
+     "file": "C0530_fibonacci_recursion.py",
+     "title": "재귀함수를 이용하여 정의한 피보나치 수열",
+     "topic": "재귀함수"
+    },
+    {
+     "stage": 3,
+     "chapter": "5장",
+     "code": "코드 5-31",
+     "file": "C0531_input_name1.py",
+     "title": "input() 입력함수를 사용한 name의 입력 방법",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "5장",
+     "code": "코드 5-32",
+     "file": "C0532_print_format1.py",
+     "title": "플레이스홀더와 format() 메소드의 사용",
+     "topic": "문자열 서식(format·f-문자열)"
+    },
+    {
+     "stage": 5,
+     "chapter": "5장",
+     "code": "코드 5-33",
+     "file": "C0533_print_format2.py",
+     "title": "플레이스홀더와 format() 메소드의 사용",
+     "topic": "문자열 서식(format·f-문자열)"
+    },
+    {
+     "stage": 12,
+     "chapter": "6장",
+     "code": "코드 6-1",
+     "file": "C0601_list_del_ex.py",
+     "title": "del 명령어를 통한 리스트의 항목 삭제",
+     "topic": "리스트 항목 삭제"
+    },
+    {
+     "stage": 12,
+     "chapter": "6장",
+     "code": "코드 6-2",
+     "file": "C0602_list_remove_ex1.py",
+     "title": "remove() 메소드를 이용한 리스트의 항목 삭제",
+     "topic": "리스트 항목 삭제"
+    },
+    {
+     "stage": 12,
+     "chapter": "6장",
+     "code": "코드 6-3",
+     "file": "C0603_list_remove_ex2.py",
+     "title": "리스트 내부에 존재하지 않는 항목을 삭제하는 경우",
+     "topic": "리스트 항목 삭제"
+    },
+    {
+     "stage": 12,
+     "chapter": "6장",
+     "code": "코드 6-4",
+     "file": "C0604_value_in_list.py",
+     "title": "리스트 내부에 값이 존재하는가를 확인하는 기능",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "6장",
+     "code": "코드 6-5",
+     "file": "C0605_list_remove_ex3.py",
+     "title": "in 연산자를 이용한 안전한 원소 삭제",
+     "topic": "리스트 항목 삭제"
+    },
+    {
+     "stage": 13,
+     "chapter": "6장",
+     "code": "코드 6-6",
+     "file": "C0606_list_plus_ex.py",
+     "title": "두 리스트를 합치는 연산자 +",
+     "topic": "리스트 +, * 연산"
+    },
+    {
+     "stage": 13,
+     "chapter": "6장",
+     "code": "코드 6-7",
+     "file": "C0607_list_mult_ex.py",
+     "title": "리스트에 대한 정수 곱셈 연산의 결과",
+     "topic": "리스트 +, * 연산"
+    },
+    {
+     "stage": 12,
+     "chapter": "6장",
+     "code": "코드 6-8",
+     "file": "C0608_list_element_ex1.py",
+     "title": "리스트 요소들을 하나하나 꺼내서 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "6장",
+     "code": "코드 6-9",
+     "file": "C0609_list_element_ex2.py",
+     "title": "리스트의 축약 표현을 사용하여 10을 곱하는 기능",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "6장",
+     "code": "코드 6-10",
+     "file": "C0610_list_element_ex3.py",
+     "title": "람다 함수와 map을 이용하여 리스트 요소들을 조작하기",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "7장",
+     "code": "코드 7-1",
+     "file": "C0701_list_pop.py",
+     "title": "리스트의 항목 삭제와 lst[1] 항목의 변화 여부",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "7장",
+     "code": "코드 7-2",
+     "file": "C0702_dic_pop.py",
+     "title": "딕셔너리의 항목 삭제와 dic[1] 항목의 변화 여부",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "7장",
+     "code": "코드 7-3",
+     "file": "C0703_swap_temp.py",
+     "title": "임시변수 temp를 이용한 값의 교환",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "7장",
+     "code": "코드 7-4",
+     "file": "C0704_swap_tuple.py",
+     "title": "튜플과 할당 연산자를 이용한 간단한 swap",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "7장",
+     "code": "코드 7-5",
+     "file": "C0705_tuple_item_change.py",
+     "title": "튜플의 항목 값을 리스트를 이용하여 변경",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "7장",
+     "code": "코드 7-6",
+     "file": "C0706_circle_area_and_circum.py",
+     "title": "원의 면적과 둘레를 튜플 형식으로 반환하는 함수",
+     "topic": "원 면적·둘레"
+    },
+    {
+     "stage": 15,
+     "chapter": "7장",
+     "code": "코드 7-7",
+     "file": "C0707_product_set_test.py",
+     "title": "곱집합 함수 product_set()와 A, B 집합의 곱집합",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "7장",
+     "code": "코드 7-8",
+     "file": "C0708_set_exponent.py",
+     "title": "곱집합 함수를 이용한 집합의 세제곱 연산",
+     "topic": ""
+    },
+    {
+     "stage": 15,
+     "chapter": "7장",
+     "code": "코드 7-9",
+     "file": "C0709_set_dice_twice.py",
+     "title": "주사위 두 번 던져 얻는 경우를 모두 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-1",
+     "file": "C0801_xmas_left_day.py",
+     "title": "datetime 모듈을 사용하여 크리스마스까지 남은 시간 구하기",
+     "topic": "날짜 계산(datetime)"
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-2",
+     "file": "C0802_day_delta.py",
+     "title": "100일 후, 100일 전 날짜 구하기",
+     "topic": "날짜 계산(datetime)"
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-3",
+     "file": "C0803_epoch_time_2_local_time.py",
+     "title": "time 모듈의 유닉스 시간을 현재 지역 시간으로 표시하기",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-4",
+     "file": "C0804_sleep_time.py",
+     "title": "time 모듈의 sleep() 함수 사용",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-5",
+     "file": "C0805_elapsed_time.py",
+     "title": "time 모듈을 사용한 경과시간의 출력",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-6",
+     "file": "C0806_pseudo_rand_ex.py",
+     "title": "의사 랜덤 함수를 이용한 난수 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-7",
+     "file": "C0807_pseudo_rand_for.py",
+     "title": "의사 랜덤 함수를 이용한 연속적인 난수 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-8",
+     "file": "C0808_lotto_gen1.py",
+     "title": "random 모듈을 이용한 로또 번호 만들기 1",
+     "topic": "로또 번호"
+    },
+    {
+     "stage": 18,
+     "chapter": "8장",
+     "code": "코드 8-9",
+     "file": "C0809_lotto_gen2.py",
+     "title": "random 모듈을 이용한 로또 번호 만들기 2",
+     "topic": "로또 번호"
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-1",
+     "file": "C0901_div_with_try_except.py",
+     "title": "try-except 구문을 이용한 예외처리",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-2",
+     "file": "C0902_find_error1.py",
+     "title": "try-except 문을 사용한 예외처리와 예외의 종류를 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-3",
+     "file": "C0903_find_error2.py",
+     "title": "try-except 문을 사용한 예외처리와 예외의 종류를 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-4",
+     "file": "C0904_find_error3.py",
+     "title": "try-except 문을 사용한 구체적인 예외처리",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-5",
+     "file": "C0905_find_error4.py",
+     "title": "try-except 문을 사용한 구체적인 예외처리",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-6",
+     "file": "C0906_find_error5.py",
+     "title": "구체적인 예외처리와 보편적인 예외처리 문을 가진 문장",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-7",
+     "file": "C0907_try_except_else_test.py",
+     "title": "복수의 except 문과 else 문을 포함한 예외처리",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-8",
+     "file": "C0908_divide_func.py",
+     "title": "try-except-else-finally 구문의 사용법",
+     "topic": ""
+    },
+    {
+     "stage": 20,
+     "chapter": "9장",
+     "code": "코드 9-9",
+     "file": "C0909_raise_test.py",
+     "title": "raise를 이용한 예외의 발생",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-10",
+     "file": "C0910_file_write_hello.py",
+     "title": "파일 열기와 쓰기, 파일 닫기의 표현",
+     "topic": "파일 쓰기"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-11",
+     "file": "C0911_file_read_hello.py",
+     "title": "파일 열기와 읽기, 파일 닫기의 표현",
+     "topic": "파일 읽기"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-12",
+     "file": "C0912_file_read_5char.py",
+     "title": "read() 메소드를 이용하여 지정된 문자 크기만큼 읽기",
+     "topic": "파일 읽기"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-13",
+     "file": "C0913_file_readline.py",
+     "title": "readline() 메소드를 이용한 줄 단위 읽기와 출력하기",
+     "topic": "파일 읽기"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-14",
+     "file": "C0914_file_readline_rstrip.py",
+     "title": "readline() 메소드와 rstrip()을 이용한 줄 단위 읽기와 출력",
+     "topic": "파일 읽기"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-15",
+     "file": "C0915_file_append.py",
+     "title": "파일 추가(append) 모드를 이용한 파일 열기와 추가하기",
+     "topic": "파일 추가(append)"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-16",
+     "file": "C0916_file_write_5num.py",
+     "title": "사용자로부터 입력받은 다섯 개의 정수를 저장하는 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-17",
+     "file": "C0917_file_read_5num.py",
+     "title": "사용자로부터 입력받은 정수 저장",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-18",
+     "file": "C0918_file_numbering1.py",
+     "title": "사용자로부터 입력받은 파일을 번호를 붙여서 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-19",
+     "file": "C0919_file_numbering2.py",
+     "title": "try-except 문을 사용한 파일 입출력",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-20",
+     "file": "C0920_file_write_hello1.py",
+     "title": "파일 열기와 쓰기, 파일 닫기의 표현 1",
+     "topic": "파일 쓰기"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-21",
+     "file": "C0921_file_write_hello2.py",
+     "title": "파일 열기와 쓰기, 파일 닫기의 표현 2",
+     "topic": "파일 쓰기"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-22",
+     "file": "C0922_file_write_hello3.py",
+     "title": "파일 열기와 쓰기, 파일 닫기의 표현 3",
+     "topic": "파일 쓰기"
+    },
+    {
+     "stage": 21,
+     "chapter": "9장",
+     "code": "코드 9-23",
+     "file": "C0923_urllib_with.py",
+     "title": "with 문을 사용한 웹 접속",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-1",
+     "file": "C1001_cat_pass.py",
+     "title": "Cat 클래스 정의와 객체 생성 문법",
+     "topic": "클래스·객체 생성"
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-2",
+     "file": "C1002_cat_class.py",
+     "title": "Cat 클래스 정의와 meow() 메소드",
+     "topic": "클래스·객체 생성"
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-3",
+     "file": "C1003_many_cats.py",
+     "title": "Cat 클래스 정의와 여러 개의 객체 생성",
+     "topic": "클래스·객체 생성"
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-4",
+     "file": "C1004_init_cats.py",
+     "title": "생성자를 가진 Cat 클래스의 정의와 인스턴스 생성",
+     "topic": "클래스·객체 생성"
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-5",
+     "file": "C1005_str_cats.py",
+     "title": "__str__ 메소드와 print() 함수에서 적용하기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-6",
+     "file": "C1006_cat_age_change.py",
+     "title": "nabi.age에 직접 값을 할당하기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-7",
+     "file": "C1007_cat_age_with_setter_getter.py",
+     "title": "set_age() 메소드를 통해서 age 값을 할당하기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-8",
+     "file": "C1008_is_test.py",
+     "title": "인스턴스의 아이덴티티 연산자 : is, is not 연산자",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-9",
+     "file": "C1009_equal_test.py",
+     "title": "두 개의 리스트와 == 연산",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-10",
+     "file": "C1010_equal_string_test.py",
+     "title": "두 개의 문자열 참조변수와 is, is not 연산",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-11",
+     "file": "C1011_vector2d_error.py",
+     "title": "사용자 정의 Vector2D 클래스와 + 연산",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-12",
+     "file": "C1012_vector_add.py",
+     "title": "add() 메소드를 이용한 벡터의 덧셈",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-13",
+     "file": "C1013_vector2d_add_sub.py",
+     "title": "__add__, __sub__, __str__ 특수 메소드와 연산자의 관계",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-14",
+     "file": "C1014_inheritance_class.py",
+     "title": "클래스 A를 상속받는 클래스 B",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-15",
+     "file": "C1015_inheritance_test.py",
+     "title": "클래스 A를 상속받는 클래스 B",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-16",
+     "file": "C1016_super.py",
+     "title": "클래스 A를 상속받는 클래스 B",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-17",
+     "file": "C1017_isinstance_test.py",
+     "title": "isinstance() 함수의 사용",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-18",
+     "file": "C1018_issubclass_test.py",
+     "title": "isinstance() 함수의 사용",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-19",
+     "file": "C1019_circle_instance_var.py",
+     "title": "Circle 클래스의 인스턴스와 인스턴스 속성 PI",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "10장",
+     "code": "코드 10-20",
+     "file": "C1020_circle_class_var.py",
+     "title": "Circle 인스턴스와 클래스 변수 PI",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-1",
+     "file": "C1101_function_add.py",
+     "title": "add() 함수를 이용한 정수의 덧셈과 결과 반환",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-2",
+     "file": "C1102_lambda_add.py",
+     "title": "람다 함수를 정의하고 add라는 변수를 통해 참조하기",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-3",
+     "file": "C1103_inline_lambda_add.py",
+     "title": "인라인 람다 함수와 인자를 이용한 덧셈",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-4",
+     "file": "C1104_age_filter.py",
+     "title": "19 이상의 값을 반환하는 adult_func() 함수와 필터 함수의 사용",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-5",
+     "file": "C1105_age_lambda_filter.py",
+     "title": "람다 함수를 이용한 간략화된 필터",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-6",
+     "file": "C1106_age_lambda_filter_list.py",
+     "title": "람다 함수를 이용한 간략화된 필터",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-7",
+     "file": "C1107_minus_filter_func.py",
+     "title": "람다 함수를 이용한 음수 값 추출기능 1",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-8",
+     "file": "C1108_lambda_filter_minus1.py",
+     "title": "람다 함수를 이용한 음수 값 추출기능 2",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-9",
+     "file": "C1109_lambda_filter_minus2.py",
+     "title": "람다 함수를 이용한 음수 값 추출기능 3",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-10",
+     "file": "C1110_square_map_for.py",
+     "title": "맵 함수를 이용한 제곱값 리스트 생성",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-11",
+     "file": "C1111_square_map_func.py",
+     "title": "맵 함수와 square() 호출을 이용한 제곱값 리스트 생성",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-12",
+     "file": "C1112_square_map_lambda.py",
+     "title": "맵 함수와 람다 함수를 이용한 제곱값 리스트 생성",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-13",
+     "file": "C1113_list_map_lambda_square.py",
+     "title": "맵과 람다 함수를 이용한 리스트의 제곱 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-14",
+     "file": "C1114_list_comp_square.py",
+     "title": "리스트 축약 표현식을 이용한 리스트의 제곱 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-15",
+     "file": "C1115_list_comp_range_square.py",
+     "title": "리스트 축약 표현식과 range를 이용한 리스트의 제곱 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-16",
+     "file": "C1116_upper_chars_from_string.py",
+     "title": "문자열 각각을 대문자로 바꾸는 기능",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-17",
+     "file": "C1117_age_lambda_filter_list.py",
+     "title": "list() 함수, filter() 함수, 람다 함수를 이용한 필터링 (다시 보기)",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-18",
+     "file": "C1118_age_list_comp_filter.py",
+     "title": "리스트 축약표현을 이용한 필터링",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-19",
+     "file": "C1119_lambda_filter_minus2.py",
+     "title": "list() 함수, fliter() 함수, 람다 함수를 이용한 필터링 (다시 보기)",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-20",
+     "file": "C1120_list_comp_if_condition.py",
+     "title": "리스트 축약 표현과 if 조건식을 이용한 필터링",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-21",
+     "file": "C1121_product_xy_for_loop.py",
+     "title": "두 리스트를 곱하여 새 리스트를 생성하는 코드",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-22",
+     "file": "C1122_product_xy_comprehension.py",
+     "title": "리스트 축약을 이용한 두 리스트의 곱하기 기능",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-23",
+     "file": "C1123_iterable_test.py",
+     "title": "리스트와 튜플, 정수 값을 반복자 객체로 변환시키기",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-24",
+     "file": "C1124_oddcounter_with_next.py",
+     "title": "OddCounter 클래스의 정의와 객체 생성",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-25",
+     "file": "C1125_oddcounter_with_for.py",
+     "title": "OddCounter 클래스의 정의와 20보다 작은 홀수를 출력하는 방법",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-26",
+     "file": "C1126_oddcounter_with_raise.py",
+     "title": "OddCounter 클래스와 StopIteration 예외 생성기능",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-27",
+     "file": "C1127_func_with_return.py",
+     "title": "1에서 10까지의 정수를 반환하는 함수",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-28",
+     "file": "C1128_use_generator.py",
+     "title": "제너레이터와 yield 문 사용",
+     "topic": ""
+    },
+    {
+     "stage": 23,
+     "chapter": "11장",
+     "code": "코드 11-29",
+     "file": "C1129_id_float.py",
+     "title": "부동소수점 데이터의 아이디",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "코드 12-1",
+     "file": "numpy_linear_ex.py",
+     "title": "넘파이로 선형 방정식 풀기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-1",
+     "file": "C1301_turtle_example.py",
+     "title": "터틀 그래픽의 setup(), forward(), left(), bye() 메소드",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-2",
+     "file": "C1302_turtle_show.py",
+     "title": "터틀 화면 보이기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-3",
+     "file": "C1303_turtle_shape1.py",
+     "title": "터틀 그래픽의 shapesize(), shape(), done() 메소드",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-4",
+     "file": "C1304_turtle_forward.py",
+     "title": "forward() 명령을 사용한 직선 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-5",
+     "file": "C1305_turtle_triangle.py",
+     "title": "forward() 명령과 left() 명령을 사용한 삼각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-6",
+     "file": "C1306_turtle_triangle_with_for.py",
+     "title": "for 문을 사용한 삼각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-7",
+     "file": "C1307_turtle_rect.py",
+     "title": "for 반복문과 forware(), left() 메소들를 사용한 사각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-8",
+     "file": "C1308_turtle_circle_with_for.py",
+     "title": "forward(), left() 메소드를 사용한 원 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-9",
+     "file": "C1309_turtle_circle.py",
+     "title": "circle() 메소드를 이용한 여러 개의 원 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-10",
+     "file": "C1310_turtle_fill_rect1.py",
+     "title": "color(), begin_fill(), end_fill()을 이용한 색상 사각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-11",
+     "file": "C1311_turtle_fill_rect2.py",
+     "title": "여러 개의 사각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-12",
+     "file": "C1312_turtle_color_rects.py",
+     "title": "pencolor() 메소드를 이용한 패턴 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-13",
+     "file": "C1313_turtle_penup_pendown.py",
+     "title": "goto(), penup(), pendown() 메소드",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "13장",
+     "code": "코드 13-14",
+     "file": "C1314_turtle_random.py",
+     "title": "터틀 그래픽의 랜덤 플로팅",
+     "topic": "터틀 랜덤 그리기"
+    },
+    {
+     "stage": 24,
+     "chapter": "13장",
+     "code": "코드 13-15",
+     "file": "C1315_tkinter_hello.py",
+     "title": "Tkinter를 이용한 간단한 실습 코드",
+     "topic": "tkinter 기본 창"
+    },
+    {
+     "stage": 24,
+     "chapter": "13장",
+     "code": "코드 13-16",
+     "file": "C1316_tkinter_change_label.py",
+     "title": "Tkinter를 이용한 간단한 실습 코드",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "13장",
+     "code": "코드 13-17",
+     "file": "C1317_bmi_input_interface.py",
+     "title": "체질량지수를 계산하기 위해 필요한 인터페이스 요소를 배치하는 코드",
+     "topic": "BMI 계산"
+    },
+    {
+     "stage": 24,
+     "chapter": "13장",
+     "code": "코드 13-18",
+     "file": "C1318_bmi_calculator.py",
+     "title": "tkinter 기반의 체질량지수를 계산기",
+     "topic": "BMI 계산"
+    },
+    {
+     "stage": 24,
+     "chapter": "13장",
+     "code": "코드 13-19",
+     "file": "C1319_tkinter_calculator1.py",
+     "title": "Tkinter를 이용한 계산기 외형 만들기",
+     "topic": "tkinter 계산기"
+    },
+    {
+     "stage": 24,
+     "chapter": "13장",
+     "code": "코드 13-20",
+     "file": "C1320_tkinter_calculator2.py",
+     "title": "Tkinter를 이용한 간단한 계산기 만들기의 완성",
+     "topic": "tkinter 계산기"
+    }
+   ]
+  },
+  {
+   "name": "두근두근파이썬",
+   "unit": "예제",
+   "items": [
+    {
+     "stage": 2,
+     "chapter": "1장",
+     "code": "Lab",
+     "file": "lab1.py",
+     "title": "print() 함수 실습",
+     "topic": ""
+    },
+    {
+     "stage": 2,
+     "chapter": "1장",
+     "code": "본문",
+     "file": "test.py",
+     "title": "좋아하는 음식 출력(문자열 반복)",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "1장",
+     "code": "본문",
+     "file": "error1.py",
+     "title": "문법적인 오류 확인",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "1장",
+     "code": "본문",
+     "file": "error2.py",
+     "title": "실행 오류 확인",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "1장",
+     "code": "Lab",
+     "file": "drawrect.py",
+     "title": "터틀 그래픽으로 사각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "1장",
+     "code": "Lab",
+     "file": "circle.py",
+     "title": "컬러 원 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "1장",
+     "code": "Lab",
+     "file": "car.py",
+     "title": "자동차 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "1장",
+     "code": "Lab",
+     "file": "spiral.py",
+     "title": "파이썬으로 무엇을 만들 수 있을까(스파이럴)",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "본문",
+     "file": "sum1.py",
+     "title": "변수로 두 수의 합 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "Lab",
+     "file": "draw_cir.py",
+     "title": "변수는 어디에 유용할까(원 그리기)",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "본문",
+     "file": "add.py",
+     "title": "사용자로부터 정수 입력받기 #1",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "본문",
+     "file": "sum2.py",
+     "title": "사용자로부터 정수 입력받기 #2",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "본문",
+     "file": "string1.py",
+     "title": "사용자로부터 문자열 입력받기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "Lab",
+     "file": "house.py",
+     "title": "집 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "Lab",
+     "file": "journal.py",
+     "title": "로봇 기자 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "Lab",
+     "file": "webopen.py",
+     "title": "웹 사이트 오픈하기",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "Lab",
+     "file": "webopen1.py",
+     "title": "웹 사이트 오픈하기(입력 버전)",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "본문",
+     "file": "remainder1.py",
+     "title": "나머지 연산자",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "본문",
+     "file": "remainder2.py",
+     "title": "초를 분·초로 바꾸기(나머지 연산)",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "polygon(lab).py",
+     "title": "다각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "caffe(lab).py",
+     "title": "커피 가게 매출 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "temp(lab).py",
+     "title": "화씨온도를 섭씨온도로 변환하기",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "atm(lab).py",
+     "title": "자동 판매기 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "본문",
+     "file": "power.py",
+     "title": "지수 연산자(복리 계산)",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "본문",
+     "file": "test.py",
+     "title": "5년 후 원리금 계산",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "eqn.py",
+     "title": "2차 방정식 근 계산하기",
+     "topic": "2차 방정식 근"
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "bmi.py",
+     "title": "BMI 계산하기",
+     "topic": "BMI 계산"
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "본문",
+     "file": "comp.py",
+     "title": "복합 연산자",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "본문",
+     "file": "streq.py",
+     "title": "문자열의 비교",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "본문",
+     "file": "floateq.py",
+     "title": "실수와 실수의 비교",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "3장",
+     "code": "본문",
+     "file": "comment.py",
+     "title": "주석 달기",
+     "topic": "주석"
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "avg.py",
+     "title": "평균 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "quiz.py",
+     "title": "산수 퀴즈 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "3장",
+     "code": "Lab",
+     "file": "math.py",
+     "title": "math 모듈 사용하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "type.py",
+     "title": "자료형 확인 type()",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "var.py",
+     "title": "변수에 여러 자료형 저장하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "string.py",
+     "title": "문자열 만들기와 연결",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "sum.py",
+     "title": "문자열을 정수로 변환하기 int()",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "error.py",
+     "title": "자료형 변환 오류 확인",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "mod.py",
+     "title": "몫과 나머지 구하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "Lab",
+     "file": "chat.py",
+     "title": "챗봇 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "fstring.py",
+     "title": "f-문자열",
+     "topic": "문자열 서식(format·f-문자열)"
+    },
+    {
+     "stage": 11,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "slice.py",
+     "title": "문자열에서 개별 문자 추출·슬라이싱",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "Lab",
+     "file": "initial.py",
+     "title": "이니셜 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "Lab",
+     "file": "tts.py",
+     "title": "TTS 만들어보기(gTTS)",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "Lab",
+     "file": "quiz2.py",
+     "title": "단답형 퀴즈 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 18,
+     "chapter": "4장",
+     "code": "Lab",
+     "file": "datediff.py",
+     "title": "날짜 차이 계산하기",
+     "topic": "날짜 계산(datetime)"
+    },
+    {
+     "stage": 7,
+     "chapter": "4장",
+     "code": "본문",
+     "file": "list.py",
+     "title": "리스트 생성과 요소 접근",
+     "topic": ""
+    },
+    {
+     "stage": 7,
+     "chapter": "4장",
+     "code": "Lab",
+     "file": "list1.py",
+     "title": "친구들의 리스트 생성하기",
+     "topic": ""
+    },
+    {
+     "stage": 7,
+     "chapter": "4장",
+     "code": "Lab",
+     "file": "list2.py",
+     "title": "리스트에 저장된 색상으로 원 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "본문",
+     "file": "if1.py",
+     "title": "if-else 문(합격·불합격)",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "본문",
+     "file": "if2.py",
+     "title": "if-else 문(짝수·홀수)",
+     "topic": "짝수·홀수 판별"
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "if3.py",
+     "title": "정수의 부호에 따라 거북이 움직이기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "movie.py",
+     "title": "영화 나이 제한 검사",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "robot.py",
+     "title": "거북이 제어하기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "leap.py",
+     "title": "윤년 판단",
+     "topic": "윤년 판별"
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "coin.py",
+     "title": "동전 던지기 게임",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "coin2.py",
+     "title": "동전 던지기 게임(그래픽 버전)",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "본문",
+     "file": "if4.py",
+     "title": "연속 조건 검사(양수·0·음수)",
+     "topic": "양수·음수 판별"
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "본문",
+     "file": "elif.py",
+     "title": "if-elif-else 문",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "sing.py",
+     "title": "종달새가 노래할까?",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "본문",
+     "file": "nested.py",
+     "title": "if-else 문 안에 if-else 문 넣기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "login.py",
+     "title": "로그인 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "command.py",
+     "title": "컴퓨터 제어하기",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "fgame.py",
+     "title": "축구게임",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "5장",
+     "code": "Lab",
+     "file": "drawshape.py",
+     "title": "도형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "5장",
+     "code": "본문",
+     "file": "test.py",
+     "title": "원 6개 그리기(반복 예고)",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "본문",
+     "file": "welcome.py",
+     "title": "반복 없이 환영 메시지 출력",
+     "topic": "반복 출력(Welcome)"
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "본문",
+     "file": "forloop.py",
+     "title": "횟수 제어 반복 #1",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "본문",
+     "file": "forloop1.py",
+     "title": "횟수 제어 반복 #2",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "본문",
+     "file": "forloop2.py",
+     "title": "횟수 제어 반복 #3",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "본문",
+     "file": "range.py",
+     "title": "range() 함수",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "range1.py",
+     "title": "range() 함수 실습",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "draw_cir.py",
+     "title": "6개의 원 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "draw_poly.py",
+     "title": "n-각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "count.py",
+     "title": "카운트 다운 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "timer.py",
+     "title": "요리 타이머",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "mtable.py",
+     "title": "구구단 출력",
+     "topic": "구구단"
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "randw.py",
+     "title": "거북이를 랜덤하게 움직이기",
+     "topic": "터틀 랜덤 그리기"
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "fact.py",
+     "title": "팩토리얼 계산하기",
+     "topic": "팩토리얼"
+    },
+    {
+     "stage": 9,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "allcom.py",
+     "title": "모든 샌드위치 종류 출력하기(중첩 반복)",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "본문",
+     "file": "while1.py",
+     "title": "조건 제어 반복 while",
+     "topic": "1부터 n까지 합"
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "login.py",
+     "title": "로그인 프로그램(while)",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "calc_sum.py",
+     "title": "1부터 10까지의 합 계산",
+     "topic": "1부터 n까지 합"
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "star.py",
+     "title": "별 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "spiral2.py",
+     "title": "스파이럴 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "본문",
+     "file": "while3.py",
+     "title": "while로 사각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "guess.py",
+     "title": "숫자 맞추기 게임",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "mquiz.py",
+     "title": "초등생을 위한 산수 문제 발생기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "본문",
+     "file": "inf_loop.py",
+     "title": "무한 루프와 break",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "decode.py",
+     "title": "암호 해독 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "randrect.py",
+     "title": "랜덤 사각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "6장",
+     "code": "Lab",
+     "file": "for_teller.py",
+     "title": "점치는 게임",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "func1.py",
+     "title": "함수 작성하고 호출하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "func2.py",
+     "title": "함수에 1개의 입력 전달하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "func3.py",
+     "title": "값 반환하기(원의 면적)",
+     "topic": "원 면적·둘레"
+    },
+    {
+     "stage": 16,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "get_sum.py",
+     "title": "함수에 여러 개의 입력 전달하기",
+     "topic": "합계 함수"
+    },
+    {
+     "stage": 16,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "calc2.py",
+     "title": "여러 값 반환하기(오류 확인)",
+     "topic": "원 면적·둘레"
+    },
+    {
+     "stage": 16,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "draw_rect.py",
+     "title": "사각형을 그리는 함수 작성하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "count.py",
+     "title": "자음과 모음의 개수 카운팅하기",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "lotto.py",
+     "title": "로또 번호 생성 함수",
+     "topic": "로또 번호"
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "var1.py",
+     "title": "변수의 범위(지역변수)",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "var2.py",
+     "title": "함수 안에서 전역변수 읽기",
+     "topic": "전역변수 global"
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "var3.py",
+     "title": "함수 안에서 전역변수 변경(실패 사례)",
+     "topic": "전역변수 global"
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "var4.py",
+     "title": "global 키워드로 전역변수 사용",
+     "topic": "전역변수 global"
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "default.py",
+     "title": "디폴트 인수",
+     "topic": "디폴트 인수"
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "max3.py",
+     "title": "3개 중에서 가장 큰 값 찾기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "본문",
+     "file": "keyword.py",
+     "title": "키워드 인수",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "click.py",
+     "title": "클릭하는 곳에 사각형 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "paint.py",
+     "title": "마우스로 그림 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "fractal.py",
+     "title": "나무 그리기(재귀)",
+     "topic": "재귀함수"
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "bar_graph.py",
+     "title": "막대 그래프 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "7장",
+     "code": "Lab",
+     "file": "maze.py",
+     "title": "터틀 메이즈 러너",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "8장",
+     "code": "프로젝트",
+     "file": "race.py",
+     "title": "거북이 경주 게임",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "8장",
+     "code": "프로젝트",
+     "file": "anim.py",
+     "title": "애니메이션 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "8장",
+     "code": "프로젝트",
+     "file": "angry.py",
+     "title": "앵그리 터틀 게임",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "8장",
+     "code": "프로젝트",
+     "file": "ball_anim.py",
+     "title": "공 애니메이션",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "8장",
+     "code": "프로젝트",
+     "file": "cookie.py",
+     "title": "과자 먹기 게임",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "8장",
+     "code": "프로젝트",
+     "file": "encrypt.py",
+     "title": "암호화",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "8장",
+     "code": "프로젝트",
+     "file": "decrypt.py",
+     "title": "복호화",
+     "topic": ""
+    },
+    {
+     "stage": 19,
+     "chapter": "8장",
+     "code": "프로젝트",
+     "file": "draw_tree.py",
+     "title": "크리스마스 카드 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "9장",
+     "code": "본문",
+     "file": "list1.py",
+     "title": "리스트 선언·항목 접근·길이",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "9장",
+     "code": "본문",
+     "file": "list2.py",
+     "title": "리스트 항목 추가·삭제",
+     "topic": "리스트 항목 삭제"
+    },
+    {
+     "stage": 13,
+     "chapter": "9장",
+     "code": "본문",
+     "file": "list3.py",
+     "title": "리스트 합치기·반복·슬라이싱",
+     "topic": "리스트 +, * 연산"
+    },
+    {
+     "stage": 12,
+     "chapter": "9장",
+     "code": "본문",
+     "file": "list4.py",
+     "title": "리스트 정렬·min·max·sum",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "plot.py",
+     "title": "리스트로 그래프 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "graph.py",
+     "title": "2차 함수 그래프 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "stats.py",
+     "title": "통계치 계산하기",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "remove_words.py",
+     "title": "비속어 삭제하기",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "olympic.py",
+     "title": "오륜기 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장",
+     "code": "본문",
+     "file": "dict1.py",
+     "title": "딕셔너리 생성과 항목 추가",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장",
+     "code": "본문",
+     "file": "dict2.py",
+     "title": "딕셔너리 방문 연산",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장",
+     "code": "본문",
+     "file": "dict3.py",
+     "title": "딕셔너리 삭제 연산·메소드",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "stocks.py",
+     "title": "편의점 재고 관리",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "eng_dict.py",
+     "title": "영한 사전",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "schedule.py",
+     "title": "일정 애플리케이션 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "9장",
+     "code": "Lab",
+     "file": "cookie2.py",
+     "title": "과자 먹기 게임 업그레이드",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "window1.py",
+     "title": "버튼이 있는 윈도우 생성",
+     "topic": "tkinter 기본 창"
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "temp1.py",
+     "title": "레이블 위젯(화씨·섭씨 #1)",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "temp2.py",
+     "title": "격자 배치 관리자(화씨·섭씨 #2)",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "event1.py",
+     "title": "버튼 이벤트 처리 #1",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "temp3.py",
+     "title": "버튼 이벤트 처리 #2(화씨·섭씨 #3)",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "temp4.py",
+     "title": "버튼 이벤트 처리 #3(화씨·섭씨 #4)",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "temp5.py",
+     "title": "위젯의 색상과 폰트 변경(화씨·섭씨 #5)",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "absolute.py",
+     "title": "절대 위치 배치 관리자",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "image.py",
+     "title": "이미지 표시 프로그램",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "mypaint.py",
+     "title": "MyPaint 프로그램 #1",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "mypaint1.py",
+     "title": "MyPaint 프로그램 #2",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "본문",
+     "file": "mypaint2.py",
+     "title": "MyPaint 프로그램 #3",
+     "topic": ""
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "심화",
+     "file": "calc1.py",
+     "title": "계산기 프로그램(화면 배치)",
+     "topic": "tkinter 계산기"
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "심화",
+     "file": "calc2.py",
+     "title": "계산기 프로그램(버튼 생성)",
+     "topic": "tkinter 계산기"
+    },
+    {
+     "stage": 24,
+     "chapter": "10장",
+     "code": "심화",
+     "file": "calc3.py",
+     "title": "계산기 프로그램(완성)",
+     "topic": "tkinter 계산기"
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "file1.py",
+     "title": "파일에서 전체 데이터 읽기",
+     "topic": "파일 읽기"
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "file2.py",
+     "title": "파일에서 줄 단위로 모두 읽기 readlines()",
+     "topic": "파일 읽기"
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "readline.py",
+     "title": "파일에서 한 줄씩 읽기",
+     "topic": "파일 읽기"
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "fwrite.py",
+     "title": "파일에 데이터 쓰기",
+     "topic": "파일 쓰기"
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "file6.py",
+     "title": "파일에 데이터 쓰기(여러 줄)",
+     "topic": "파일 쓰기"
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "fappend.py",
+     "title": "파일에 데이터 추가하기",
+     "topic": "파일 추가(append)"
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "split.py",
+     "title": "파일에서 단어 찾기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "Lab",
+     "file": "fcopy.py",
+     "title": "파일 복사하기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "Lab",
+     "file": "grep.py",
+     "title": "디렉토리 안의 파일 처리",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "csv1.py",
+     "title": "CSV 파일 처리하기 #1",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "csv2.py",
+     "title": "CSV 파일 처리하기 #2",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "csv3.py",
+     "title": "CSV 파일 처리하기 #3",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "Lab",
+     "file": "hangman.py",
+     "title": "행맨",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "본문",
+     "file": "filename.py",
+     "title": "파일 대화 상자",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "Lab",
+     "file": "memo.py",
+     "title": "메모장",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "Lab",
+     "file": "fzip.py",
+     "title": "파일 압축하기",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "Lab",
+     "file": "encrypt.py",
+     "title": "파일 암호화",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "11장",
+     "code": "Lab",
+     "file": "cipher.py",
+     "title": "파일 암호화 Solution",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "plot1.py",
+     "title": "Matplotlib로 그래프 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "plot2.py",
+     "title": "레이블·레전드·제목 표시",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "plot3.py",
+     "title": "2차 함수 그래프 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "plot4.py",
+     "title": "3차 함수 그래프 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "bar.py",
+     "title": "막대 그래프",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "pie.py",
+     "title": "파이 차트",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "pillow1.py",
+     "title": "필로우로 영상 표시",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "pillow2.py",
+     "title": "영상 처리: 영상 회전",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "pillow3.py",
+     "title": "영상 처리: 영상 흐리게 하기",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "pillow4.py",
+     "title": "메뉴 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "pillow5.py",
+     "title": "영상 처리 기능을 메뉴로 연결",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "opencv1.py",
+     "title": "그림을 만화처럼 만들기(OpenCV)",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "12장",
+     "code": "본문",
+     "file": "opencv2.py",
+     "title": "CCTV 프로그램 작성하기(OpenCV)",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "13장",
+     "code": "본문",
+     "file": "car1.py",
+     "title": "클래스 정의와 객체 생성(Car)",
+     "topic": "클래스·객체 생성"
+    },
+    {
+     "stage": 22,
+     "chapter": "13장",
+     "code": "본문",
+     "file": "car2.py",
+     "title": "화면에 Car 객체 그리기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "13장",
+     "code": "본문",
+     "file": "car4.py",
+     "title": "2개의 객체 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "13장",
+     "code": "본문",
+     "file": "car5.py",
+     "title": "10개의 객체 생성·자동차 애니메이션",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "14장",
+     "code": "프로젝트",
+     "file": "pygame1.py",
+     "title": "pygame 윈도우 생성",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "14장",
+     "code": "프로젝트",
+     "file": "pygame2.py",
+     "title": "우주선 움직이기 #1",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "14장",
+     "code": "프로젝트",
+     "file": "pygame21.py",
+     "title": "우주선 움직이기 #2",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "14장",
+     "code": "프로젝트",
+     "file": "pygame3.py",
+     "title": "외계인 우주선 생성 #1",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "14장",
+     "code": "프로젝트",
+     "file": "pygame31.py",
+     "title": "외계인 우주선 생성 #2",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "14장",
+     "code": "프로젝트",
+     "file": "pygame4.py",
+     "title": "미사일 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "14장",
+     "code": "프로젝트",
+     "file": "pygame5.py",
+     "title": "충돌 감지",
+     "topic": ""
+    },
+    {
+     "stage": 25,
+     "chapter": "14장",
+     "code": "프로젝트",
+     "file": "pygame6.py",
+     "title": "외계인 우주선 많이 생성하기",
+     "topic": ""
+    }
+   ]
+  },
+  {
+   "name": "자기주도파이썬",
+   "unit": "장",
+   "items": [
+    {
+     "stage": 2,
+     "chapter": "1장",
+     "code": "Chapter 01",
+     "file": "",
+     "title": "출력",
+     "topic": ""
+    },
+    {
+     "stage": 3,
+     "chapter": "2장",
+     "code": "Chapter 02",
+     "file": "",
+     "title": "변수와 입력",
+     "topic": ""
+    },
+    {
+     "stage": 4,
+     "chapter": "3장",
+     "code": "Chapter 03",
+     "file": "",
+     "title": "연산자",
+     "topic": ""
+    },
+    {
+     "stage": 5,
+     "chapter": "4장",
+     "code": "Chapter 04",
+     "file": "",
+     "title": "문자열1",
+     "topic": ""
+    },
+    {
+     "stage": 7,
+     "chapter": "5장",
+     "code": "Chapter 05",
+     "file": "",
+     "title": "리스트1",
+     "topic": ""
+    },
+    {
+     "stage": 8,
+     "chapter": "6장",
+     "code": "Chapter 06",
+     "file": "",
+     "title": "선택제어문",
+     "topic": ""
+    },
+    {
+     "stage": 6,
+     "chapter": "7장",
+     "code": "Chapter 07",
+     "file": "",
+     "title": "주석문과 디버깅",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "8장",
+     "code": "Chapter 08",
+     "file": "",
+     "title": "반복제어문1",
+     "topic": ""
+    },
+    {
+     "stage": 9,
+     "chapter": "9장",
+     "code": "Chapter 09",
+     "file": "",
+     "title": "반복제어문2",
+     "topic": ""
+    },
+    {
+     "stage": 10,
+     "chapter": "10장",
+     "code": "Chapter 10",
+     "file": "",
+     "title": "반복제어문3",
+     "topic": ""
+    },
+    {
+     "stage": 11,
+     "chapter": "11장",
+     "code": "Chapter 11",
+     "file": "",
+     "title": "문자열2",
+     "topic": ""
+    },
+    {
+     "stage": 12,
+     "chapter": "12장",
+     "code": "Chapter 12",
+     "file": "",
+     "title": "리스트2",
+     "topic": ""
+    },
+    {
+     "stage": 13,
+     "chapter": "13장",
+     "code": "Chapter 13",
+     "file": "",
+     "title": "리스트3",
+     "topic": ""
+    },
+    {
+     "stage": 14,
+     "chapter": "14장",
+     "code": "Chapter 14",
+     "file": "",
+     "title": "기타 자료형",
+     "topic": ""
+    },
+    {
+     "stage": 16,
+     "chapter": "15장",
+     "code": "Chapter 15",
+     "file": "",
+     "title": "함수1",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "16장",
+     "code": "Chapter 16",
+     "file": "",
+     "title": "함수2",
+     "topic": ""
+    },
+    {
+     "stage": 17,
+     "chapter": "17장",
+     "code": "Chapter 17",
+     "file": "",
+     "title": "함수3",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "18장",
+     "code": "Chapter 18",
+     "file": "",
+     "title": "클래스",
+     "topic": ""
+    },
+    {
+     "stage": 21,
+     "chapter": "19장",
+     "code": "Chapter 19",
+     "file": "",
+     "title": "파일입출력",
+     "topic": ""
+    }
+   ]
+  }
+ ]
+}
