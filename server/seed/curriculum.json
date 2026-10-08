@@ -3513,7 +3513,7 @@
    "name": "C언어 Express",
    "subject": "C언어",
    "unit": "항목",
-   "version": 6,
+   "version": 7,
    "upgrade": "merge",
    "items": [
     {
@@ -6311,6 +6311,14 @@
     {
      "stage": 22,
      "chapter": "16장 전처리 및 다중 소스 파일",
+     "code": "예제",
+     "file": "define1.c",
+     "title": "단순 매크로로 AND·OR·IS 같은 연산자 이름 만들기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "16장 전처리 및 다중 소스 파일",
      "code": "16.3",
      "file": "",
      "title": "함수 매크로",
@@ -6319,8 +6327,24 @@
     {
      "stage": 22,
      "chapter": "16장 전처리 및 다중 소스 파일",
+     "code": "예제",
+     "file": "macro1.c",
+     "title": "SQUARE(x) 함수 매크로와 주의할 점",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "16장 전처리 및 다중 소스 파일",
+     "code": "예제",
+     "file": "macro2.c",
+     "title": "매크로로 식의 값 출력하기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "16장 전처리 및 다중 소스 파일",
      "code": "LAB",
-     "file": "",
+     "file": "macro4.c",
      "title": "ASSERT 매크로",
      "topic": ""
     },
@@ -6328,7 +6352,7 @@
      "stage": 22,
      "chapter": "16장 전처리 및 다중 소스 파일",
      "code": "LAB",
-     "file": "",
+     "file": "bit_shift_ex1.c",
      "title": "비트 매크로 작성",
      "topic": ""
     },
@@ -6344,7 +6368,7 @@
      "stage": 22,
      "chapter": "16장 전처리 및 다중 소스 파일",
      "code": "LAB",
-     "file": "",
+     "file": "ifdef1.c",
      "title": "여러 가지 버전 정의하기",
      "topic": ""
     },
@@ -6352,7 +6376,7 @@
      "stage": 22,
      "chapter": "16장 전처리 및 다중 소스 파일",
      "code": "LAB",
-     "file": "",
+     "file": "ifdef2.c",
      "title": "리눅스 버전과 윈도우 버전 분리",
      "topic": ""
     },
@@ -6375,8 +6399,24 @@
     {
      "stage": 22,
      "chapter": "16장 전처리 및 다중 소스 파일",
+     "code": "예제",
+     "file": "main.c, power.c, power.h",
+     "title": "거듭제곱 함수를 다른 소스 파일로 나누기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "16장 전처리 및 다중 소스 파일",
+     "code": "예제",
+     "file": "main.c, rect.c, rect.h",
+     "title": "사각형 함수를 헤더 파일과 소스 파일로 나누기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "16장 전처리 및 다중 소스 파일",
      "code": "LAB",
-     "file": "",
+     "file": "main.c, student.h",
      "title": "헤더 파일 중복 포함 막기",
      "topic": ""
     },
@@ -6391,6 +6431,14 @@
     {
      "stage": 22,
      "chapter": "16장 전처리 및 다중 소스 파일",
+     "code": "예제",
+     "file": "bit_field.c",
+     "title": "비트 필드 구조체로 제품 정보 저장하기",
+     "topic": ""
+    },
+    {
+     "stage": 22,
+     "chapter": "16장 전처리 및 다중 소스 파일",
      "code": "LAB",
      "file": "",
      "title": "비트 필드와 공용체를 이용한 하드웨어 제어",
@@ -6400,7 +6448,7 @@
      "stage": 22,
      "chapter": "16장 전처리 및 다중 소스 파일",
      "code": "Mini",
-     "file": "",
+     "file": "rle.c",
      "title": "전처리기 사용하기",
      "topic": ""
     },
