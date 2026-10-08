@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.08-21';
+const APP_VERSION = '2026.10.08-22';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -586,6 +586,7 @@ async function renderStudent() {
       <div class="hero">
         <div class="avatar">${initial(s.name)}</div>
         <div><h1>${esc(s.name)}</h1><div class="muted">${esc(s.course) || '수강 과정 미정'}</div></div>
+        <span class="spacer"></span><button type="button" class="btn" data-report="${s.id}">📄 학습 리포트 PDF</button>
       </div>
       <div class="cards">${progressCard(s)}${assignmentCard(s)}</div>
       <div style="height:16px"></div>
@@ -642,6 +643,7 @@ async function renderParent() {
       <div class="hero">
         <div class="avatar">${initial(s.name)}</div>
         <div><div class="muted small">우리 아이</div><h1>${esc(s.name)}</h1><div class="muted">${esc(s.course) || ''}</div></div>
+        <span class="spacer"></span><button type="button" class="btn" data-report="${s.id}">📄 학습 리포트 PDF</button>
       </div>
       <section class="card" id="msg-card">
         <div class="card-head"><h2>💬 선생님께 메시지</h2>
@@ -1128,6 +1130,7 @@ async function renderAdminDetail() {
       <div><h1 style="font-size:20px">${esc(s.name)}</h1>
         <div class="muted small">🕒 ${esc(scheduleText(d.schedule) || '수업 시간 미등록')} ${weeklyBadge(d.schedule)}</div>
         <div class="muted small">${s.username ? esc(s.username) : '로그인 계정 없음'} · 담당 ${esc(s.teacher_name || '없음')}${listItem.parent_name ? ` · 학부모: ${esc(listItem.parent_name)}` : ' · 학부모 계정 없음'}</div></div>
+      <span class="spacer"></span><button type="button" class="btn small" data-report="${id}">📄 PDF 다운로드</button>
     </div>
     <div class="overview">
       <div class="card" id="ov-pct"><div class="label">진도율${listItem.course_count ? ' <span class="badge common">교재 자동</span>' : ''}</div><div class="value">${Number(s.progress_percent) || 0}%</div>${progressBar(s.progress_percent)}</div>

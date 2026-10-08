@@ -1,6 +1,6 @@
 // 앱 화면(정적 파일)만 캐시합니다. API 데이터는 항상 서버에서 새로 받아옵니다.
-const CACHE = 'academy-v18';
-const ASSETS = ['/', '/index.html', '/app.css', '/app.js', '/icon.svg', '/manifest.webmanifest'];
+const CACHE = 'academy-v19';
+const ASSETS = ['/', '/index.html', '/app.css', '/app.js', '/report.js', '/icon.svg', '/manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));

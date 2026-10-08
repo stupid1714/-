@@ -372,6 +372,8 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
   .overview { grid-template-columns: 1fr 1fr; gap: 8px; }
   .card { padding: 14px; border-radius: 12px; }
   .hero h1 { font-size: 19px; }
+  .hero { flex-wrap: wrap; }
+  .hero [data-report] { width: 100%; }
   .att-summary b { font-size: 17px; }
   .sched-row { position: relative; gap: 6px; padding: 8px; }
   .sched-row input[type=time] { padding: 6px; font-size: 14px; }
@@ -379,3 +381,56 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
   .sched-count { position: absolute; top: -9px; right: 10px; width: auto; padding: 0 6px; background: var(--surface); font-size: 12px; }
   .sched-count:empty { display: none; }
 }
+
+/* ---------- 학습 리포트 PDF ---------- */
+#rp-custom[hidden] { display: none; }
+.rp-checks { display: grid; gap: 6px; margin-top: 4px; }
+.rp-check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--text); }
+.rp-check input { width: 18px; height: 18px; }
+/* PDF용 페이지: 화면 밖에서 A4 크기로 그림 (다크 모드와 상관없이 흰 바탕) */
+.rp-host { position: fixed; left: -20000px; top: 0; width: 794px; }
+.rp-page {
+  position: relative; width: 794px; min-height: 1122px; padding: 44px 44px 72px; box-sizing: border-box;
+  background: #fff; color: #1f2330; font-size: 13px; line-height: 1.55;
+  font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+.rp-block { padding-bottom: 12px; }
+.rp-block.tight { padding-bottom: 0; }
+.rp-block > * { margin: 0; }
+.rp-foot { position: absolute; left: 44px; right: 44px; bottom: 26px; text-align: center; font-size: 11px; color: #9ca3af; }
+.rp-head { border-bottom: 3px solid #4f46e5; padding-bottom: 12px; }
+.rp-kicker { color: #4f46e5; font-weight: 700; font-size: 13px; letter-spacing: 1px; }
+.rp-name { font-size: 26px; font-weight: 800; margin: 2px 0 6px; }
+.rp-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; color: #6b7280; font-size: 12px; }
+.rp-meta b { color: #1f2330; font-weight: 600; }
+.rp-summary { display: grid; grid-template-columns: 1fr 1.3fr 1.3fr; gap: 10px; }
+.rp-box { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
+.rp-label { color: #6b7280; font-size: 11px; }
+.rp-val { font-weight: 600; font-size: 13px; }
+.rp-big { font-size: 26px; font-weight: 800; color: #4f46e5; margin: 2px 0 6px; }
+.rp-bar { height: 8px; background: #eef2ff; border-radius: 99px; overflow: hidden; }
+.rp-bar i { display: block; height: 100%; background: #4f46e5; }
+.rp-h2 { font-size: 16px; font-weight: 800; padding: 8px 0 6px; border-bottom: 1px solid #e5e7eb; margin-bottom: 8px !important; }
+.rp-h2 span { font-size: 12px; font-weight: 400; color: #6b7280; margin-left: 6px; }
+.rp-text { white-space: pre-wrap; word-break: break-word; }
+.rp-memo { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 10px; }
+.rp-empty { color: #9ca3af; }
+.rp-course { border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; }
+.rp-course-head { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.rp-course-head span { color: #4f46e5; font-weight: 700; white-space: nowrap; }
+.rp-chapters { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 18px; margin-top: 8px; font-size: 11.5px; }
+.rp-chapters div { display: flex; justify-content: space-between; gap: 8px; color: #9ca3af; }
+.rp-chapters div.part { color: #1f2330; }
+.rp-chapters div.full { color: #16a34a; font-weight: 600; }
+.rp-chapters em { font-style: normal; white-space: nowrap; }
+.rp-sub { font-weight: 700; font-size: 12px; color: #6b7280; }
+.rp-row { display: flex; gap: 10px; padding: 4px 2px; border-bottom: 1px solid #f1f2f6; font-size: 12px; }
+.rp-date { width: 78px; flex: none; color: #6b7280; }
+.rp-ch { width: 170px; flex: none; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rp-item { flex: 1; min-width: 0; }
+.rp-att { width: 40px; flex: none; font-weight: 700; }
+.rp-att.present { color: #16a34a; } .rp-att.late { color: #d97706; } .rp-att.absent { color: #dc2626; } .rp-att.excused { color: #2563eb; }
+.rp-log, .rp-comment { border-left: 3px solid #c7d2fe; padding: 2px 0 2px 12px; }
+.rp-log-date, .rp-comment-meta { font-weight: 700; font-size: 12px; color: #4f46e5; margin-bottom: 2px; }
+.rp-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+.rp-ph { height: 170px; border-radius: 6px; background: #f3f4f6 center / cover no-repeat; }

@@ -204,7 +204,7 @@ function getSchedule(studentId) {
   ).all(studentId);
 }
 
-function studentDetail(studentId) {
+function studentDetail(studentId, fullAttendance = false) {
   const student = getStudent(studentId);
   if (!student) return null;
   const comments = db.prepare(
@@ -212,7 +212,7 @@ function studentDetail(studentId) {
      LEFT JOIN users u ON u.id = c.author_id WHERE c.student_id = ? ORDER BY c.created_at DESC, c.id DESC`
   ).all(studentId);
   const attendance = db.prepare(
-    'SELECT id, date, status, note FROM attendance WHERE student_id = ? ORDER BY date DESC LIMIT 60'
+    `SELECT id, date, status, note FROM attendance WHERE student_id = ? ORDER BY date DESC${fullAttendance ? '' : ' LIMIT 60'}`
   ).all(studentId);
   const logs = db.prepare(
     'SELECT id, date, content FROM progress_logs WHERE student_id = ? ORDER BY date DESC, id DESC'
@@ -239,7 +239,7 @@ function studentDetail(studentId) {
 app.get('/api/students/:id', requireAuth, (req, res) => {
   const id = Number(req.params.id);
   if (!canViewStudent(req.user, id)) return res.status(403).json({ error: '권한이 없습니다.' });
-  const detail = studentDetail(id);
+  const detail = studentDetail(id, req.query.full === '1'); // full=1: 리포트용으로 출석 기록 전체
   if (!detail) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
   if (!isStaff(req.user)) {
     delete detail.student.memo; // 선생님 전용 메모
