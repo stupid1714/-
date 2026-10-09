@@ -397,6 +397,7 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
 .rp-block { padding-bottom: 12px; }
 .rp-block.tight { padding-bottom: 0; }
 .rp-block > * { margin: 0; }
+.rp-block > .rp-course { margin-top: 10px; }
 .rp-foot { position: absolute; left: 44px; right: 44px; bottom: 26px; text-align: center; font-size: 11px; color: #9ca3af; }
 .rp-head { border-bottom: 3px solid #4f46e5; padding-bottom: 12px; }
 .rp-kicker { color: #4f46e5; font-weight: 700; font-size: 13px; letter-spacing: 1px; }
@@ -434,3 +435,30 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
 .rp-log-date, .rp-comment-meta { font-weight: 700; font-size: 12px; color: #4f46e5; margin-bottom: 2px; }
 .rp-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
 .rp-ph { height: 170px; border-radius: 6px; background: #f3f4f6 center / cover no-repeat; }
+
+/* 과목 진도: 단계 체크리스트 */
+.subject-card .band-sums { margin-top: 10px; }
+.stage-list { margin-top: 12px; }
+.stage-band { padding: 10px 0 4px; }
+.stage-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 6px 8px; border-radius: 10px; border-bottom: 1px solid var(--border); }
+.stage-row.next { background: #fff7ed; }
+.stage-main { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; }
+.stage-main input { width: 18px; height: 18px; flex: none; }
+.stage-no { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--primary-weak); color: var(--primary); font-weight: 700; font-size: 13px; }
+.stage-row.done .stage-no { background: var(--ok); color: #fff; }
+.stage-row.done .stage-name { color: var(--muted); }
+.stage-name { flex: 1; min-width: 0; }
+.stage-date { flex: none; }
+.stage-ex { width: 100%; padding: 6px 0 4px 38px; }
+.ex-book { margin-bottom: 8px; font-size: 13px; }
+.ex-book ul { margin: 4px 0 0; padding-left: 18px; }
+.ex-book li { margin: 2px 0; }
+.rp-stage { align-items: center; }
+.rp-stage .rp-mark { width: 14px; flex: none; color: #9ca3af; }
+.rp-stage.done .rp-mark { color: #16a34a; font-weight: 700; }
+.rp-stage .rp-no { width: 52px; flex: none; color: #6b7280; }
+.rp-stage .rp-band { width: 34px; flex: none; color: #9ca3af; font-size: 11px; }
+.rp-stage .rp-date { width: 78px; text-align: right; }
+.rp-stage:not(.done) .rp-item { color: #9ca3af; }
+.rp-stage.in .rp-item, .rp-stage.in .rp-date { font-weight: 700; color: #1f2330; }
+.rp-next { color: #d97706; font-size: 11px; }

@@ -304,7 +304,7 @@ app.get('/api/admin/students', requireStaff, (req, res) => {
   const today = todayStr();
   const rows = db.prepare(
     `SELECT u.id, u.username, u.name, p.course, p.current_lesson, p.progress_percent, u.username IS NOT NULL AS has_account,
-            (SELECT COUNT(*) FROM student_courses sc WHERE sc.student_id = u.id) AS course_count,
+            (SELECT COUNT(*) FROM student_subjects ss WHERE ss.student_id = u.id) AS course_count,
             (SELECT status FROM attendance a WHERE a.student_id = u.id AND a.date = ?) AS today_status,
             (SELECT COUNT(*) FROM files f WHERE f.kind = 'submission' AND f.student_id = u.id) AS submission_count,
             (SELECT COUNT(*) FROM messages m WHERE m.student_id = u.id AND m.from_staff = 0 AND m.read_by_staff = 0) AS unread_messages,
@@ -515,8 +515,43 @@ function progressState(studentId) {
   return { courses, items, done, last, next };
 }
 
-// 체크한 목차로 진도율·현재 진도·다음 진도를 다시 계산해 저장 (교재가 없으면 손대지 않음 = 슬라이드바 방식)
+// ---------- 과목 진도 (파이썬 1~25단계, C언어 1~22단계 …) ----------
+
+function studentSubjects(studentId) {
+  return db.prepare('SELECT subject FROM student_subjects WHERE student_id = ? ORDER BY sort, subject').all(studentId).map((r) => r.subject);
+}
+
+function stageLabel(st) { return `${st.subject} ${st.no}단계 · ${st.name}`; }
+
+// 과목 순서대로 단계 목록과 '마지막으로 한 단계', '다음 단계'
+//  다음 = 마지막으로 체크한 단계 뒤의 첫 미완료 단계 (없으면 같은 과목의 첫 미완료, 그것도 없으면 다음 과목)
+function subjectState(studentId) {
+  const subjects = studentSubjects(studentId);
+  if (!subjects.length) return null;
+  const stages = subjects.flatMap((subject) => db.prepare(
+    `SELECT st.subject, st.no, st.band, st.name, sp.done_date, sp.updated_at FROM stages st
+     LEFT JOIN stage_progress sp ON sp.student_id = ? AND sp.subject = st.subject AND sp.stage_no = st.no
+     WHERE st.subject = ? ORDER BY st.no`
+  ).all(studentId, subject));
+  const done = stages.filter((st) => st.done_date);
+  const last = [...done].sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || '') || subjects.indexOf(b.subject) - subjects.indexOf(a.subject) || b.no - a.no)[0] || null;
+  let next = null;
+  if (last) next = stages.find((st) => st.subject === last.subject && st.no > last.no && !st.done_date);
+  if (!next) next = stages.find((st) => (!last || st.subject === last.subject) && !st.done_date) || stages.find((st) => !st.done_date) || null;
+  return { subjects, stages, done, last, next };
+}
+
+// 체크한 단계(또는 예전 방식의 교재 목차)로 진도율·현재 진도·다음 진도를 다시 계산해 저장
+//  과목도 교재도 없으면 손대지 않음 = 슬라이드바 방식
 function recomputeProgress(studentId) {
+  const ss = subjectState(studentId);
+  if (ss) {
+    const total = ss.stages.length;
+    const pct = !total ? 0 : ss.done.length === total ? 100 : Math.floor((ss.done.length / total) * 100);
+    db.prepare('UPDATE student_profiles SET progress_percent = ?, current_lesson = ?, next_lesson = ?, course = ? WHERE user_id = ?')
+      .run(pct, ss.last ? stageLabel(ss.last) : '', ss.next ? stageLabel(ss.next) : (total ? '모든 단계 완료 🎉' : ''), ss.subjects.join(' + '), studentId);
+    return;
+  }
   const st = progressState(studentId);
   if (!st) return;
   const name = (it) => st.courses.find((c) => c.id === it.course_id).name;
@@ -532,6 +567,21 @@ function stagesFor(subjects) {
   return db.prepare(`SELECT subject, no, band, name FROM stages WHERE subject IN (${list.map(() => '?').join(',')}) ORDER BY subject, no`).all(...list);
 }
 
+// 학생의 과목 진도: 과목별 단계 목록(완료 날짜, 단계에 해당하는 교재 예제 수)과 다음 단계
+function subjectProgressFor(studentId) {
+  const ss = subjectState(studentId);
+  const subjects = (ss ? ss.subjects : []).map((subject) => {
+    const counts = new Map(db.prepare(
+      `SELECT ci.stage, COUNT(*) AS n FROM course_items ci JOIN courses c ON c.id = ci.course_id
+       WHERE c.subject = ? AND ci.stage IS NOT NULL GROUP BY ci.stage`
+    ).all(subject).map((r) => [r.stage, r.n]));
+    const stages = ss.stages.filter((st) => st.subject === subject)
+      .map(({ updated_at, ...st }) => ({ ...st, examples: counts.get(st.no) || 0 }));
+    return { subject, total: stages.length, done: stages.filter((st) => st.done_date).length, stages };
+  });
+  return { subjects, next_stage: ss && ss.next ? { subject: ss.next.subject, no: ss.next.no } : null };
+}
+
 function curriculumFor(studentId) {
   const courses = studentCourses(studentId).map((c) => {
     const items = db.prepare(
@@ -544,6 +594,80 @@ function curriculumFor(studentId) {
   const st = progressState(studentId);
   return { stages: stagesFor(courses.map((c) => c.subject)), courses, next_item_id: st && st.next ? st.next.id : null };
 }
+
+app.get('/api/students/:id/subjects', requireAuth, (req, res) => {
+  const id = Number(req.params.id);
+  if (!canViewStudent(req.user, id) || !getStudent(id)) return res.status(403).json({ error: '권한이 없습니다.' });
+  res.json(subjectProgressFor(id));
+});
+
+// 한 단계에 해당하는 교재 예제 (수업 준비용 참고 자료)
+app.get('/api/stage-examples', requireAuth, (req, res) => {
+  const subject = String(req.query.subject || '');
+  const no = Number(req.query.no);
+  const rows = db.prepare(
+    `SELECT c.name AS course, ci.chapter, ci.code, ci.file, ci.title FROM course_items ci JOIN courses c ON c.id = ci.course_id
+     WHERE c.subject = ? AND ci.stage = ? ORDER BY c.sort, c.id, ci.seq`
+  ).all(subject, no);
+  const books = [];
+  rows.forEach(({ course, ...it }) => {
+    let b = books.find((x) => x.course === course);
+    if (!b) books.push((b = { course, items: [] }));
+    b.items.push(it);
+  });
+  res.json(books);
+});
+
+// 학생에게 과목 지정 (여러 과목 가능, 순서대로)
+app.put('/api/admin/students/:id/subjects', requireStaff, (req, res) => {
+  const id = Number(req.params.id);
+  if (!getStudent(id)) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
+  const list = [...new Set((Array.isArray((req.body || {}).subjects) ? req.body.subjects : []).map((x) => String(x)))]
+    .filter((subject) => db.prepare('SELECT 1 FROM stages WHERE subject = ?').get(subject));
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM student_subjects WHERE student_id = ?').run(id);
+    list.forEach((subject, i) => db.prepare('INSERT INTO student_subjects (student_id, subject, sort) VALUES (?, ?, ?)').run(id, subject, i));
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  if (!list.length) db.prepare("UPDATE student_profiles SET current_lesson = '', next_lesson = '' WHERE user_id = ?").run(id);
+  recomputeProgress(id);
+  res.json({ ok: true, student: getStudent(id) });
+});
+
+// 단계 완료 체크/해제: { subject, nos: [..], done: true|false, date: 'YYYY-MM-DD' }
+app.post('/api/admin/students/:id/stages', requireStaff, (req, res) => {
+  const id = Number(req.params.id);
+  const b = req.body || {};
+  const subject = String(b.subject || '');
+  if (!getStudent(id) || !studentSubjects(id).includes(subject)) return res.status(400).json({ error: '학생에게 지정된 과목이 아닙니다.' });
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(b.date || '')) ? String(b.date) : todayStr();
+  const nos = (Array.isArray(b.nos) ? b.nos : []).map(Number)
+    .filter((no) => db.prepare('SELECT 1 FROM stages WHERE subject = ? AND no = ?').get(subject, no));
+  if (!nos.length) return res.status(400).json({ error: '체크할 단계를 찾을 수 없습니다.' });
+  db.exec('BEGIN');
+  try {
+    nos.forEach((no) => {
+      if (b.done) {
+        db.prepare(`INSERT INTO stage_progress (student_id, subject, stage_no, done_date) VALUES (?, ?, ?, ?)
+                    ON CONFLICT(student_id, subject, stage_no) DO UPDATE SET done_date = excluded.done_date, updated_at = datetime('now','localtime')`)
+          .run(id, subject, no, date);
+      } else {
+        db.prepare('DELETE FROM stage_progress WHERE student_id = ? AND subject = ? AND stage_no = ?').run(id, subject, no);
+      }
+    });
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  recomputeProgress(id);
+  const ss = subjectState(id);
+  res.json({ ok: true, student: getStudent(id), next_stage: ss && ss.next ? { subject: ss.next.subject, no: ss.next.no } : null });
+});
 
 app.get('/api/students/:id/curriculum', requireAuth, (req, res) => {
   const id = Number(req.params.id);
@@ -1053,7 +1177,7 @@ function lanAddresses() {
 }
 
 // 교재 목차가 갱신됐을 수 있으니 서버를 켤 때 교재를 쓰는 학생들의 진도율을 다시 계산
-db.prepare('SELECT DISTINCT student_id FROM student_courses').all().forEach((r) => recomputeProgress(r.student_id));
+db.prepare('SELECT student_id FROM student_courses UNION SELECT student_id FROM student_subjects').all().forEach((r) => recomputeProgress(r.student_id));
 
 app.listen(PORT, () => {
   console.log(`서버 실행 중: http://localhost:${PORT}`);

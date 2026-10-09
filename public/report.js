@@ -31,7 +31,7 @@ function monthsAgo(n) {
 }
 
 const REPORT_PARTS = [
-  ['curriculum', '교재 진도 (체크한 항목)'],
+  ['curriculum', '과목 진도 (단계별 완료)'],
   ['logs', '진도 기록'],
   ['photos', '진도 기록 사진'],
   ['comments', '선생님 코멘트'],
@@ -142,31 +142,29 @@ function reportBlocks(d, cur, opts) {
     blocks.push({ html: `<div class="rp-text rp-memo">${esc(s.memo)}</div>` });
   }
 
-  if (opts.curriculum && cur && cur.courses.length) {
-    blocks.push(rpHeading('교재 진도'));
-    cur.courses.forEach((c) => {
-      const chapters = groupChapters(c.items);
+  if (opts.curriculum && cur && cur.subjects.length) {
+    blocks.push(rpHeading('과목 진도', '굵은 글씨 = 이 기간에 완료한 단계'));
+    cur.subjects.forEach((sub) => {
+      const p = pctOf(sub.done, sub.total);
+      const inPeriod = sub.stages.filter((st) => st.done_date && inRange(st.done_date)).length;
       blocks.push({ keepNext: true, html: `
         <div class="rp-course">
-          <div class="rp-course-head"><b>${esc(c.name)}</b><span>${c.done} / ${c.total} 완료 · ${pctOf(c.done, c.total)}%</span></div>
-          <div class="rp-bar"><i style="width:${pctOf(c.done, c.total)}%"></i></div>
-          <div class="rp-chapters">${chapters.map((ch) => {
-            const done = ch.items.filter((it) => it.done_date).length;
-            return `<div class="${done === ch.items.length ? 'full' : done ? 'part' : ''}"><span>${esc(ch.chapter)}</span><em>${done}/${ch.items.length}</em></div>`;
-          }).join('')}</div>
+          <div class="rp-course-head"><b>${esc(sub.subject)}</b><span>${sub.done} / ${sub.total}단계 완료 · ${p}%</span></div>
+          <div class="rp-bar"><i style="width:${p}%"></i></div>
+          <div class="rp-chapters">${['기초', '중급', '심화'].map((band) => {
+            const list = sub.stages.filter((st) => st.band === band);
+            if (!list.length) return '';
+            const done = list.filter((st) => st.done_date).length;
+            return `<div class="${done === list.length ? 'full' : done ? 'part' : ''}"><span>${band}</span><em>${done}/${list.length}단계</em></div>`;
+          }).join('')}<div class="part"><span>이 기간에 완료</span><em>${inPeriod}단계</em></div></div>
         </div>` });
-      const doneItems = c.items.filter((it) => it.done_date && inRange(it.done_date))
-        .sort((a, b) => (a.done_date < b.done_date ? -1 : a.done_date > b.done_date ? 1 : a.seq - b.seq));
-      if (!doneItems.length) {
-        blocks.push({ html: '<div class="rp-empty">이 기간에 체크한 항목이 없습니다.</div>' });
-        return;
-      }
-      blocks.push({ keepNext: true, html: `<div class="rp-sub">이 기간에 완료한 항목 (${doneItems.length}개)</div>` });
-      doneItems.forEach((it) => {
-        const code = itemCode(it);
+      sub.stages.forEach((st) => {
+        const isNext = Boolean(cur.next_stage && cur.next_stage.subject === sub.subject && cur.next_stage.no === st.no);
         blocks.push({ tight: true, html: `
-          <div class="rp-row"><span class="rp-date">${esc(it.done_date)}</span><span class="rp-ch">${esc(it.chapter)}</span>
-            <span class="rp-item">${code ? `<b>${esc(code)}</b> ` : ''}${esc(it.title)}</span></div>` });
+          <div class="rp-row rp-stage ${st.done_date ? 'done' : ''} ${st.done_date && inRange(st.done_date) ? 'in' : ''}">
+            <span class="rp-mark">${st.done_date ? '✓' : '○'}</span><span class="rp-no">${st.no}단계</span>
+            <span class="rp-item">${esc(st.name)}${isNext ? ' <b class="rp-next">다음</b>' : ''}</span>
+            <span class="rp-band">${esc(st.band)}</span><span class="rp-date">${esc(st.done_date || '')}</span></div>` });
       });
     });
   }
@@ -256,7 +254,7 @@ async function downloadReport(studentId, opts, onStatus) {
   await loadPdfLib();
   const [d, cur] = await Promise.all([
     api(`/api/students/${studentId}?full=1`),
-    opts.curriculum ? api(`/api/students/${studentId}/curriculum`).catch(() => null) : null,
+    opts.curriculum ? api(`/api/students/${studentId}/subjects`).catch(() => null) : null,
   ]);
   const host = document.createElement('div');
   host.className = 'rp-host';

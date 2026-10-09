@@ -118,6 +118,21 @@ CREATE TABLE IF NOT EXISTS student_courses (
   sort INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (student_id, course_id)
 );
+-- 과목 진도: 학생이 배우는 과목(파이썬, C언어 …)과 단계별 완료 기록
+CREATE TABLE IF NOT EXISTS student_subjects (
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subject TEXT NOT NULL,
+  sort INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (student_id, subject)
+);
+CREATE TABLE IF NOT EXISTS stage_progress (
+  student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  subject TEXT NOT NULL,
+  stage_no INTEGER NOT NULL,
+  done_date TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+  PRIMARY KEY (student_id, subject, stage_no)
+);
 CREATE TABLE IF NOT EXISTS item_progress (
   student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   item_id INTEGER NOT NULL REFERENCES course_items(id) ON DELETE CASCADE,
@@ -354,5 +369,42 @@ function seedCurriculum() {
   if (added.length) console.log('[seed] 교재 목차를 넣었습니다:', added.join(', '));
 }
 seedCurriculum();
+
+// 교재로 진도를 관리하던 학생을 과목(단계) 진도로 한 번만 옮김
+//  과목 = 지정했던 교재의 과목, 단계 완료 = 그 단계의 교재 항목을 모두 체크한 경우
+function migrateStageProgress() {
+  if (db.prepare("SELECT 1 FROM seed_log WHERE name = 'migrate:stage_progress'").get()) return;
+  db.exec('BEGIN');
+  try {
+    const students = db.prepare('SELECT DISTINCT student_id FROM student_courses').all().map((r) => r.student_id);
+    students.forEach((sid) => {
+      if (db.prepare('SELECT 1 FROM student_subjects WHERE student_id = ?').get(sid)) return;
+      const subjects = db.prepare(
+        `SELECT c.subject, MIN(sc.sort) AS s FROM student_courses sc JOIN courses c ON c.id = sc.course_id
+         WHERE sc.student_id = ? AND c.subject != '' GROUP BY c.subject ORDER BY s`
+      ).all(sid).map((r) => r.subject);
+      subjects.forEach((subject, i) => {
+        db.prepare('INSERT OR IGNORE INTO student_subjects (student_id, subject, sort) VALUES (?, ?, ?)').run(sid, subject, i);
+        db.prepare(
+          `SELECT ci.stage, COUNT(*) AS total, COUNT(ip.item_id) AS done, MAX(ip.done_date) AS last_date
+           FROM course_items ci JOIN student_courses sc ON sc.course_id = ci.course_id AND sc.student_id = ?
+           JOIN courses c ON c.id = ci.course_id AND c.subject = ?
+           LEFT JOIN item_progress ip ON ip.item_id = ci.id AND ip.student_id = sc.student_id
+           WHERE ci.stage IS NOT NULL GROUP BY ci.stage`
+        ).all(sid, subject).forEach((r) => {
+          if (r.total && r.done === r.total) {
+            db.prepare('INSERT OR IGNORE INTO stage_progress (student_id, subject, stage_no, done_date) VALUES (?, ?, ?, ?)').run(sid, subject, r.stage, r.last_date);
+          }
+        });
+      });
+    });
+    db.prepare("INSERT INTO seed_log (name, version) VALUES ('migrate:stage_progress', 1)").run();
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+}
+migrateStageProgress();
 
 module.exports = { db, UPLOAD_DIR, hashPassword, verifyPassword };
