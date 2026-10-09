@@ -449,10 +449,11 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
 .stage-row.done .stage-name { color: var(--muted); }
 .stage-name { flex: 1; min-width: 0; }
 .stage-date { flex: none; }
-.stage-ex { width: 100%; padding: 6px 0 4px 38px; }
-.ex-book { margin-bottom: 8px; font-size: 13px; }
-.ex-book ul { margin: 4px 0 0; padding-left: 18px; }
-.ex-book li { margin: 2px 0; }
+.ex-list { width: 100%; margin: 2px 0 6px; padding-left: 70px; font-size: 13px; color: var(--text); }
+.ex-list li { margin: 3px 0; }
+.ex-list li::marker { color: var(--muted); font-size: 12px; }
+.ex-tag { display: inline-block; padding: 0 6px; border-radius: 6px; background: var(--primary-weak); color: var(--primary); font-size: 11px; font-weight: 700; }
+@media (max-width: 560px) { .ex-list { padding-left: 40px; } }
 .rp-stage { align-items: center; }
 .rp-stage .rp-mark { width: 14px; flex: none; color: #9ca3af; }
 .rp-stage.done .rp-mark { color: #16a34a; font-weight: 700; }

@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.09-1';
+const APP_VERSION = '2026.10.09-2';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -701,7 +701,7 @@ function groupBySubject(list) {
 // ---------- 과목 진도 (파이썬 1~25단계, C언어 1~22단계 …) ----------
 
 const SUBJECT_ICON = { 파이썬: '🐍', C언어: '💻' };
-const stageUi = { date: '', open: new Set(), examples: new Map() };
+const stageUi = { date: '', closed: new Set(), examples: new Map() }; // examples: 과목 → { 단계: [예제] }
 
 function nosText(nos) {
   // [1,2,3,5] → "1~3, 5"
@@ -713,20 +713,34 @@ function nosText(nos) {
   return out.map(([a, b]) => (a === b ? `${a}` : `${a}~${b}`)).join(', ');
 }
 
-// 과목 한 개의 단계 카드 (editable이면 체크박스와 예제 보기, 아니면 ✓ 표시만)
+// 예제 앞에 붙일 짧은 표시 (책마다 다른 번호 대신 LAB·Mini만)
+function exTag(it) {
+  if (/^(LAB|Lab)\b/.test(it.code)) return 'LAB';
+  if (it.code === 'Mini') return 'Mini';
+  if (it.code === 'REAL') return '프로젝트';
+  return '';
+}
+
+// 과목 한 개의 단계 카드 (editable이면 체크박스와 단계별 예제 목록, 아니면 ✓ 표시만)
 function subjectCardHtml(sub, editable, next) {
   const p = pctOf(sub.done, sub.total);
+  const exMap = editable ? stageUi.examples.get(sub.subject) || {} : {};
   const bands = ['기초', '중급', '심화'].map((band) => {
     const list = sub.stages.filter((st) => st.band === band);
     if (!list.length) return '';
     const d = list.filter((st) => st.done_date).length;
     return `<div class="band-sum"><span class="badge band-${band}">${band}</span>${progressBar(pctOf(d, list.length))}<span class="small">${d}/${list.length}</span></div>`;
   }).join('');
-  const rows = sub.stages.map((st) => {
+  let lastBand = '';
+  const list = sub.stages.map((st) => {
     const isNext = Boolean(next && next.subject === sub.subject && next.no === st.no);
     const key = `${sub.subject}|${st.no}`;
-    const open = editable && stageUi.open.has(key) && stageUi.examples.has(key);
-    return `
+    const ex = exMap[st.no] || [];
+    const open = !stageUi.closed.has(key);
+    // 구간(기초·중급·심화)이 바뀌는 곳에 제목
+    const head = st.band !== lastBand ? `<div class="stage-band"><span class="badge band-${esc(st.band)}">${esc(st.band)}</span></div>` : '';
+    lastBand = st.band;
+    return `${head}
       <div class="stage-row ${st.done_date ? 'done' : ''} ${isNext ? 'next' : ''}">
         <label class="stage-main">
           ${editable ? `<input type="checkbox" data-stage="${st.no}" ${st.done_date ? 'checked' : ''}>` : `<span class="cur-mark">${st.done_date ? '✓' : '○'}</span>`}
@@ -734,16 +748,9 @@ function subjectCardHtml(sub, editable, next) {
           <span class="stage-name">${esc(st.name)}${isNext ? ' <span class="badge late">다음</span>' : ''}</span>
           ${st.done_date ? `<span class="muted small stage-date">${esc(st.done_date.slice(5).replace('-', '/'))}</span>` : ''}
         </label>
-        ${editable && st.examples ? `<button type="button" class="btn small ghost" data-examples="${esc(key)}">${open ? '예제 닫기' : `예제 ${st.examples}`}</button>` : ''}
-        ${editable ? `<div class="stage-ex" ${open ? '' : 'hidden'}>${open ? stageUi.examples.get(key) : ''}</div>` : ''}
+        ${ex.length ? `<button type="button" class="btn small ghost" data-toggle-ex="${esc(key)}">예제 ${ex.length}개 ${open ? '▴' : '▾'}</button>` : ''}
+        ${ex.length && open ? `<ol class="ex-list">${ex.map((it) => `<li>${exTag(it) ? `<span class="ex-tag">${exTag(it)}</span> ` : ''}${esc(it.title)}${it.file ? ` <span class="muted small">${esc(it.file)}</span>` : ''}</li>`).join('')}</ol>` : ''}
       </div>`;
-  });
-  // 구간(기초·중급·심화)이 바뀌는 곳에 제목
-  let lastBand = '';
-  const list = sub.stages.map((st, i) => {
-    const head = st.band !== lastBand ? `<div class="stage-band"><span class="badge band-${esc(st.band)}">${esc(st.band)}</span></div>` : '';
-    lastBand = st.band;
-    return head + rows[i];
   }).join('');
   return `
     <section class="card subject-card" data-subject="${esc(sub.subject)}">
@@ -753,14 +760,6 @@ function subjectCardHtml(sub, editable, next) {
       <div class="band-sums">${bands}</div>
       <div class="stage-list">${list}</div>
     </section>`;
-}
-
-function examplesHtml(books) {
-  if (!books.length) return '<div class="muted small">이 단계에 연결된 교재 예제가 없습니다.</div>';
-  return books.map((b) => `
-    <div class="ex-book"><b>${esc(b.course)}</b>
-      <ul>${b.items.map((it) => `<li>${itemCode(it) ? `<span class="cur-code">${esc(itemCode(it))}</span> ` : ''}${esc(it.title)}${it.file ? ` <span class="muted small">${esc(it.file)}</span>` : ''}</li>`).join('')}</ul>
-    </div>`).join('');
 }
 
 // 학생·학부모 화면: 읽기 전용
@@ -786,7 +785,8 @@ async function renderCurriculumTab(body, id, onProgress) {
     ${sp.subjects.length ? `
       <section class="card cur-toolbar">
         <label class="row small" style="gap:6px">완료 날짜 <input type="date" id="cur-date" value="${esc(stageUi.date)}" style="width:auto"></label>
-        <span class="muted small">단계를 체크하면 이 날짜로 기록됩니다. <b>예제</b> 버튼으로 그 단계에서 쓸 수 있는 교재 예제를 볼 수 있습니다.</span>
+        <span class="muted small" style="flex:1">단계를 체크하면 이 날짜로 기록됩니다. 단계 아래에 그 단계에서 할 예제가 순서대로 나옵니다.</span>
+        <button type="button" class="btn small" id="ex-all"></button>
       </section>
       <div id="subject-cards"></div>`
       : '<p class="muted" style="margin-left:4px">위에서 과목을 선택하면 단계 체크리스트(파이썬 1~25단계, C언어 1~22단계)가 나타납니다. 과목을 선택하지 않으면 슬라이드바로 진도율을 정합니다.</p>'}`;
@@ -804,8 +804,21 @@ async function renderCurriculumTab(body, id, onProgress) {
   });
   if (!sp.subjects.length) return;
 
+  await Promise.all(sp.subjects.filter((sub) => !stageUi.examples.has(sub.subject)).map(async (sub) => {
+    stageUi.examples.set(sub.subject, await api(`/api/subject-examples?subject=${encodeURIComponent(sub.subject)}`).catch(() => ({})));
+  }));
   const box = body.querySelector('#subject-cards');
-  const draw = () => { box.innerHTML = sp.subjects.map((sub) => subjectCardHtml(sub, true, sp.next_stage)).join(''); };
+  const allBtn = body.querySelector('#ex-all');
+  const allKeys = () => sp.subjects.flatMap((sub) => sub.stages.map((st) => `${sub.subject}|${st.no}`));
+  const draw = () => {
+    box.innerHTML = sp.subjects.map((sub) => subjectCardHtml(sub, true, sp.next_stage)).join('');
+    allBtn.textContent = allKeys().every((k) => stageUi.closed.has(k)) ? '예제 모두 펼치기' : '예제 모두 접기';
+  };
+  allBtn.onclick = () => {
+    const closeAll = !allKeys().every((k) => stageUi.closed.has(k));
+    allKeys().forEach((k) => (closeAll ? stageUi.closed.add(k) : stageUi.closed.delete(k)));
+    draw();
+  };
   box.addEventListener('change', async (e) => {
     const cb = e.target.closest('[data-stage]');
     if (!cb) return;
@@ -829,19 +842,12 @@ async function renderCurriculumTab(body, id, onProgress) {
       toast(err.message, true);
     }
   });
-  box.addEventListener('click', async (e) => {
-    const btn = e.target.closest('[data-examples]');
+  box.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-toggle-ex]');
     if (!btn) return;
     e.preventDefault();
-    const key = btn.dataset.examples;
-    if (stageUi.open.has(key)) { stageUi.open.delete(key); draw(); return; }
-    if (!stageUi.examples.has(key)) {
-      const [subject, no] = key.split('|');
-      try {
-        stageUi.examples.set(key, examplesHtml(await api(`/api/stage-examples?subject=${encodeURIComponent(subject)}&no=${no}`)));
-      } catch (err) { toast(err.message, true); return; }
-    }
-    stageUi.open.add(key);
+    const key = btn.dataset.toggleEx;
+    if (stageUi.closed.has(key)) stageUi.closed.delete(key); else stageUi.closed.add(key);
     draw();
   });
   body.querySelector('#cur-date').onchange = (e) => { stageUi.date = e.target.value || today(); };

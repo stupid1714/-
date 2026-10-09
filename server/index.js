@@ -601,21 +601,15 @@ app.get('/api/students/:id/subjects', requireAuth, (req, res) => {
   res.json(subjectProgressFor(id));
 });
 
-// 한 단계에 해당하는 교재 예제 (수업 준비용 참고 자료)
-app.get('/api/stage-examples', requireAuth, (req, res) => {
-  const subject = String(req.query.subject || '');
-  const no = Number(req.query.no);
+// 과목의 단계별 예제 목록 (책 구분 없이 단계 순서대로 한 줄로) — 수업 준비용
+app.get('/api/subject-examples', requireStaff, (req, res) => {
   const rows = db.prepare(
-    `SELECT c.name AS course, ci.chapter, ci.code, ci.file, ci.title FROM course_items ci JOIN courses c ON c.id = ci.course_id
-     WHERE c.subject = ? AND ci.stage = ? ORDER BY c.sort, c.id, ci.seq`
-  ).all(subject, no);
-  const books = [];
-  rows.forEach(({ course, ...it }) => {
-    let b = books.find((x) => x.course === course);
-    if (!b) books.push((b = { course, items: [] }));
-    b.items.push(it);
-  });
-  res.json(books);
+    `SELECT ci.stage, ci.code, ci.file, ci.title FROM course_items ci JOIN courses c ON c.id = ci.course_id
+     WHERE c.subject = ? AND ci.stage IS NOT NULL ORDER BY ci.stage, c.sort, c.id, ci.seq`
+  ).all(String(req.query.subject || ''));
+  const byStage = {};
+  rows.forEach(({ stage, ...it }) => { (byStage[stage] = byStage[stage] || []).push(it); });
+  res.json(byStage);
 });
 
 // 학생에게 과목 지정 (여러 과목 가능, 순서대로)
