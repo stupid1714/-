@@ -151,9 +151,8 @@ function reportBlocks(d, cur, opts) {
         <div class="rp-course">
           <div class="rp-course-head"><b>${esc(sub.subject)}</b><span>${sub.done} / ${sub.total}단계 완료 · ${p}%</span></div>
           <div class="rp-bar"><i style="width:${p}%"></i></div>
-          <div class="rp-chapters">${['기초', '중급', '심화'].map((band) => {
+          <div class="rp-chapters">${bandsOf(sub.stages).map((band) => {
             const list = sub.stages.filter((st) => st.band === band);
-            if (!list.length) return '';
             const done = list.filter((st) => st.done_date).length;
             return `<div class="${done === list.length ? 'full' : done ? 'part' : ''}"><span>${band}</span><em>${done}/${list.length}단계</em></div>`;
           }).join('')}<div class="part"><span>이 기간에 완료</span><em>${inPeriod}단계</em></div></div>

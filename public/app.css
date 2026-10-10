@@ -458,8 +458,13 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
 .rp-stage .rp-mark { width: 14px; flex: none; color: #9ca3af; }
 .rp-stage.done .rp-mark { color: #16a34a; font-weight: 700; }
 .rp-stage .rp-no { width: 52px; flex: none; color: #6b7280; }
-.rp-stage .rp-band { width: 34px; flex: none; color: #9ca3af; font-size: 11px; }
+.rp-stage .rp-band { width: 64px; flex: none; color: #9ca3af; font-size: 11px; }
 .rp-stage .rp-date { width: 78px; text-align: right; }
 .rp-stage:not(.done) .rp-item { color: #9ca3af; }
 .rp-stage.in .rp-item, .rp-stage.in .rp-date { font-weight: 700; color: #1f2330; }
 .rp-next { color: #d97706; font-size: 11px; }
+
+/* 과목·단계 관리 */
+.subject-item { text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.subject-item .title { font-weight: 700; margin-bottom: 4px; }
+.pick-subject { width: 64px; }

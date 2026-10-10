@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.09-2';
+const APP_VERSION = '2026.10.10-1';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -700,7 +700,11 @@ function groupBySubject(list) {
 
 // ---------- 과목 진도 (파이썬 1~25단계, C언어 1~22단계 …) ----------
 
-const SUBJECT_ICON = { 파이썬: '🐍', C언어: '💻' };
+const SUBJECT_ICON = { 파이썬: '🐍' };
+const CATEGORY_ICON = { 코딩: '💻', 오피스: '📄', 자격증: '🏅' };
+function subjectIcon(name, category) { return SUBJECT_ICON[name] || CATEGORY_ICON[category] || '📘'; }
+// 단계표에 나오는 구간(기초·중급·심화, 필기·실기 …)을 나온 순서대로
+function bandsOf(stages) { return [...new Set(stages.map((st) => st.band).filter(Boolean))]; }
 const stageUi = { date: '', closed: new Set(), examples: new Map() }; // examples: 과목 → { 단계: [예제] }
 
 function nosText(nos) {
@@ -725,9 +729,8 @@ function exTag(it) {
 function subjectCardHtml(sub, editable, next) {
   const p = pctOf(sub.done, sub.total);
   const exMap = editable ? stageUi.examples.get(sub.subject) || {} : {};
-  const bands = ['기초', '중급', '심화'].map((band) => {
+  const bands = bandsOf(sub.stages).map((band) => {
     const list = sub.stages.filter((st) => st.band === band);
-    if (!list.length) return '';
     const d = list.filter((st) => st.done_date).length;
     return `<div class="band-sum"><span class="badge band-${band}">${band}</span>${progressBar(pctOf(d, list.length))}<span class="small">${d}/${list.length}</span></div>`;
   }).join('');
@@ -738,7 +741,7 @@ function subjectCardHtml(sub, editable, next) {
     const ex = exMap[st.no] || [];
     const open = !stageUi.closed.has(key);
     // 구간(기초·중급·심화)이 바뀌는 곳에 제목
-    const head = st.band !== lastBand ? `<div class="stage-band"><span class="badge band-${esc(st.band)}">${esc(st.band)}</span></div>` : '';
+    const head = st.band && st.band !== lastBand ? `<div class="stage-band"><span class="badge band-${esc(st.band)}">${esc(st.band)}</span></div>` : '';
     lastBand = st.band;
     return `${head}
       <div class="stage-row ${st.done_date ? 'done' : ''} ${isNext ? 'next' : ''}">
@@ -754,7 +757,7 @@ function subjectCardHtml(sub, editable, next) {
   }).join('');
   return `
     <section class="card subject-card" data-subject="${esc(sub.subject)}">
-      <div class="card-head"><h2>${SUBJECT_ICON[sub.subject] || '📘'} ${esc(sub.subject)}</h2><span class="big-pct" style="font-size:22px">${p}%</span></div>
+      <div class="card-head"><h2>${subjectIcon(sub.subject, sub.category)} ${esc(sub.subject)}</h2><span class="big-pct" style="font-size:22px">${p}%</span></div>
       ${progressBar(p)}
       <div class="progress-label"><span>완료 ${sub.done} / 전체 ${sub.total}단계</span><span>${sub.total - sub.done}단계 남음</span></div>
       <div class="band-sums">${bands}</div>
@@ -772,15 +775,21 @@ async function loadCurriculumView(studentId, el) {
 
 // 선생님 화면: 과목 지정 + 단계 체크
 async function renderCurriculumTab(body, id, onProgress) {
-  const [sp, all] = await Promise.all([api(`/api/students/${id}/subjects`), api('/api/subjects')]);
+  const [sp, all] = await Promise.all([api(`/api/students/${id}/subjects`), api('/api/subject-list')]);
   const assigned = sp.subjects.map((x) => x.subject);
-  const choices = [...assigned, ...all.filter((x) => !assigned.includes(x))];
+  const groups = new Map();
+  all.subjects.filter((x) => x.stage_count > 0 || assigned.includes(x.name)).forEach((x) => {
+    if (!groups.has(x.category)) groups.set(x.category, []);
+    groups.get(x.category).push(x);
+  });
   if (!stageUi.date) stageUi.date = today();
   body.innerHTML = `
     <section class="card">
       <div class="card-head"><h2>배우는 과목</h2><span class="muted small">여러 과목 선택 가능 · 단계를 체크하면 진도율·현재/다음 진도가 자동으로 바뀝니다</span></div>
-      <div class="course-picks">${choices.map((sj) => `
-        <label class="chip-check"><input type="checkbox" value="${esc(sj)}" ${assigned.includes(sj) ? 'checked' : ''}><span>${SUBJECT_ICON[sj] || '📘'} ${esc(sj)}</span></label>`).join('')}</div>
+      ${[...groups].map(([cat, list]) => `
+        <div class="pick-group"><span class="pick-subject">${esc(cat)}</span><div class="course-picks">${list.map((x) => `
+          <label class="chip-check"><input type="checkbox" value="${esc(x.name)}" ${assigned.includes(x.name) ? 'checked' : ''}><span>${subjectIcon(x.name, x.category)} ${esc(x.name)}</span></label>`).join('')}</div></div>`).join('')}
+      ${isAdmin(state.me) ? '<p class="muted small" style="margin:6px 0 0">과목이나 단계를 고치려면 왼쪽 아래 <a href="#/subjects">🧩 과목·단계</a>로 가세요.</p>' : ''}
     </section>
     ${sp.subjects.length ? `
       <section class="card cur-toolbar">
@@ -789,7 +798,7 @@ async function renderCurriculumTab(body, id, onProgress) {
         <button type="button" class="btn small" id="ex-all"></button>
       </section>
       <div id="subject-cards"></div>`
-      : '<p class="muted" style="margin-left:4px">위에서 과목을 선택하면 단계 체크리스트(파이썬 1~25단계, C언어 1~22단계)가 나타납니다. 과목을 선택하지 않으면 슬라이드바로 진도율을 정합니다.</p>'}`;
+      : '<p class="muted" style="margin-left:4px">위에서 과목을 선택하면 그 과목의 단계 체크리스트가 나타납니다. 과목을 선택하지 않으면 슬라이드바로 진도율을 정합니다.</p>'}`;
 
   body.querySelectorAll('.course-picks input').forEach((cb) => {
     cb.onchange = async () => {
@@ -946,6 +955,7 @@ async function renderAdmin() {
           <a class="btn small" href="#/timetable">🗓 시간표</a>
           <a class="btn small" href="#/accounts">👥 계정 목록</a>
           <a class="btn small" href="#/common">📁 공통 자료</a>
+          <a class="btn small" href="#/subjects">🧩 과목·단계</a>
           <a class="btn small" href="#/courses">📚 교재·목차</a>
         </div>
         ${isAdmin(state.me) ? `
@@ -969,7 +979,7 @@ async function renderAdmin() {
 // 주소(#/...)에 따라 오른쪽 영역을 그림
 async function showAdminMain() {
   const m = /^#\/student\/(\d+)/.exec(location.hash);
-  const page = m ? 'student' : (/^#\/(common|timetable|accounts|signups|teachers|inbox|courses)/.exec(location.hash) || [])[1] || '';
+  const page = m ? 'student' : (/^#\/(common|timetable|accounts|signups|teachers|inbox|courses|subjects)/.exec(location.hash) || [])[1] || '';
   state.selectedId = m ? Number(m[1]) : null;
   $app.querySelector('.admin').classList.toggle('detail-open', Boolean(page));
   renderStudentList();
@@ -978,6 +988,7 @@ async function showAdminMain() {
   else if (page === 'accounts') await renderAccounts();
   else if (page === 'inbox') await renderInbox();
   else if (page === 'courses') await renderCourses();
+  else if (page === 'subjects') await renderSubjects();
   else if (page === 'signups' && isAdmin(state.me)) await renderSignups();
   else if (page === 'teachers' && isAdmin(state.me)) await renderTeachers();
   else if (page === 'student') await renderAdminDetail();
@@ -1709,6 +1720,89 @@ async function renderTeachers() {
 const PASTE_HELP = `<p class="muted small" style="margin:0 0 6px">
   <b>방법 1 (엑셀):</b> 엑셀에서 <b>머리글 줄(No, 단계, 교재 장, 코드 번호, 예제 제목 …)부터</b> 표를 복사해 붙여넣으면 칸이 자동으로 맞춰집니다.<br>
   <b>방법 2 (직접):</b> 한 줄에 하나씩 쓰세요. <code>#</code>으로 시작하는 줄은 장 이름이 됩니다. 예) <code># 4장 반복문</code></p>`;
+
+// ---------- 과목·단계 관리 ----------
+
+function stagesToText(stages) {
+  let band = null;
+  return stages.map((st) => {
+    const head = st.band && st.band !== band ? `# ${st.band}\n` : '';
+    band = st.band;
+    return head + st.name;
+  }).join('\n');
+}
+
+async function renderSubjects() {
+  const main = $app.querySelector('#main');
+  const admin = isAdmin(state.me);
+  const data = await api('/api/subject-list');
+  const groups = new Map(data.categories.map((c) => [c, []]));
+  data.subjects.forEach((x) => { if (!groups.has(x.category)) groups.set(x.category, []); groups.get(x.category).push(x); });
+  main.innerHTML = `
+    <div class="row" style="margin-bottom:8px"><a class="btn small back-btn" href="#/">← 목록</a><h2>과목·단계</h2>
+      <span class="spacer"></span>${admin ? '<button class="btn primary small" id="add-subject">+ 과목 추가</button>' : ''}</div>
+    <p class="muted small" style="margin-top:0">학원에서 가르치는 과목과 과목별 단계 순서입니다. 학생 화면의 <b>📚 과목 진도</b> 탭에서 과목을 고르고 단계를 체크합니다.
+      ${admin ? '과목을 누르면 이름·분류·단계를 고칠 수 있습니다.' : '(과목 추가·수정은 관리자만 할 수 있습니다)'}</p>
+    ${[...groups].filter(([, list]) => list.length).map(([cat, list]) => `
+      <h3 class="subject-title">${CATEGORY_ICON[cat] || '📘'} ${esc(cat)} <span class="muted small">${list.length}과목</span></h3>
+      <div class="course-list">${list.map((x) => `
+        <button type="button" class="card course-card subject-item" data-subject-edit="${esc(x.name)}">
+          <div class="title">${subjectIcon(x.name, x.category)} ${esc(x.name)}</div>
+          <div class="muted small">${x.stage_count ? `${x.stage_count}단계` : '단계 없음'}${x.student_count ? ` · 학생 ${x.student_count}명` : ''}</div>
+        </button>`).join('')}</div>`).join('')}`;
+  main.querySelectorAll('[data-subject-edit]').forEach((b) => { b.onclick = () => openSubjectModal(b.dataset.subjectEdit, data.categories); });
+  const add = main.querySelector('#add-subject');
+  if (add) add.onclick = () => openSubjectModal(null, data.categories);
+}
+
+async function openSubjectModal(name, categories) {
+  const admin = isAdmin(state.me);
+  const sub = name ? await api(`/api/admin/subjects/${encodeURIComponent(name)}`) : { name: '', category: '코딩', stages: [], student_count: 0 };
+  const cats = categories.includes(sub.category) ? categories : [...categories, sub.category];
+  modal(`
+    <form id="subject-form">
+      <h2>${name ? `${subjectIcon(sub.name, sub.category)} ${esc(sub.name)}` : '새 과목'}</h2>
+      <div class="grid2">
+        <label class="field"><span>과목 이름</span><input type="text" name="name" value="${esc(sub.name)}" required maxlength="40" placeholder="예: 스크래치" ${admin ? '' : 'readonly'}></label>
+        <label class="field"><span>분류</span><select name="category" ${admin ? '' : 'disabled'}>${cats.map((c) => `<option ${c === sub.category ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+      </div>
+      <label class="field"><span>단계 (한 줄에 한 단계, 순서대로 · <b># 기초</b>처럼 #으로 시작하는 줄은 구간 이름)</span>
+        <textarea name="stages" rows="16" style="font-family:inherit" ${admin ? '' : 'readonly'} placeholder="# 기초\n화면 구성\n기본 기능\n# 중급\n...">${esc(stagesToText(sub.stages))}</textarea></label>
+      <p class="muted small" style="margin:0 0 10px">단계 이름을 그대로 두면 순서를 바꾸거나 단계를 끼워 넣어도 학생들의 체크 기록이 따라갑니다.${sub.student_count ? ` 지금 <b>${sub.student_count}명</b>이 이 과목을 배우고 있습니다.` : ''}</p>
+      <div class="row">
+        ${name && admin ? '<button type="button" class="btn ghost danger" id="subject-del">과목 삭제</button>' : ''}
+        <span class="spacer"></span>
+        <button type="button" class="btn" data-close>${admin ? '취소' : '닫기'}</button>
+        ${admin ? `<button type="submit" class="btn primary">${name ? '저장' : '추가'}</button>` : ''}
+      </div>
+    </form>`, (bg, close) => {
+    bg.querySelector('.modal').classList.add('modal-wide');
+    const form = bg.querySelector('#subject-form');
+    if (!admin) return;
+    onSubmit(form, async (fd) => {
+      const body = Object.fromEntries(fd);
+      const r = name
+        ? await api(`/api/admin/subjects/${encodeURIComponent(name)}`, { method: 'PUT', body })
+        : await api('/api/admin/subjects', { method: 'POST', body });
+      if (r.lost && r.lost.length) alert(`다음 단계는 새 단계 목록에 없어서 체크 기록이 지워졌습니다:\n${r.lost.join(', ')}`);
+      toast(name ? '저장되었습니다.' : '과목이 추가되었습니다.');
+      close();
+      renderSubjects();
+    });
+    const del = bg.querySelector('#subject-del');
+    if (del) {
+      del.onclick = async () => {
+        if (!confirm(`'${name}' 과목을 삭제할까요? 단계표와 체크 기록이 모두 지워집니다.`)) return;
+        try {
+          await api(`/api/admin/subjects/${encodeURIComponent(name)}`, { method: 'DELETE' });
+          toast('삭제되었습니다.');
+          close();
+          renderSubjects();
+        } catch (e) { toast(e.message, true); }
+      };
+    }
+  });
+}
 
 async function renderCourses() {
   const main = $app.querySelector('#main');

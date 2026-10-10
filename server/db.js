@@ -118,6 +118,12 @@ CREATE TABLE IF NOT EXISTS student_courses (
   sort INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (student_id, course_id)
 );
+-- 과목 목록 (분류: 코딩·오피스·자격증 …, 화면에 보이는 순서)
+CREATE TABLE IF NOT EXISTS subject_meta (
+  name TEXT PRIMARY KEY,
+  category TEXT NOT NULL DEFAULT '기타',
+  sort INTEGER NOT NULL DEFAULT 0
+);
 -- 과목 진도: 학생이 배우는 과목(파이썬, C언어 …)과 단계별 완료 기록
 CREATE TABLE IF NOT EXISTS student_subjects (
   student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -294,6 +300,35 @@ seed();
 // 새로 추가된 기본 교재만 넣고, 한 번 넣은 교재는 기록해 두어 관리자가 지워도 다시 생기지 않음
 // 교재에 version이 올라가면(예: C언어 마스터 절 단위 → 예제 단위) 체크 기록이 없을 때만 목차를 바꾸고,
 // 이미 체크한 학생이 있으면 기존 교재는 그대로 두고 '(예제)' 교재를 따로 추가함
+// 과목 단계표 기본값: 한 번 넣은 과목은 기록해 두어, 관리자가 단계를 고치거나 지워도 다시 덮어쓰지 않음
+function seedSubjectStages(sub) {
+  const key = `subject:${sub.name}`;
+  if (db.prepare('SELECT 1 FROM seed_log WHERE name = ?').get(key)) return;
+  db.prepare('INSERT INTO seed_log (name, version) VALUES (?, 1)').run(key);
+  if (db.prepare('SELECT 1 FROM stages WHERE subject = ?').get(sub.name)) return; // 예전 버전에서 이미 넣은 단계표
+  const st = db.prepare('INSERT INTO stages (subject, no, band, name) VALUES (?, ?, ?, ?)');
+  (sub.stages || []).forEach((x) => st.run(sub.name, x.no, x.band, x.name));
+}
+
+// 과목 목록 기본값 (server/seed/subjects.json: 코딩·오피스·자격증 과목과 기본 단계표)
+function seedSubjects() {
+  const file = path.join(__dirname, 'seed', 'subjects.json');
+  if (!fs.existsSync(file)) return;
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  db.exec('BEGIN');
+  try {
+    data.subjects.forEach((sub, i) => {
+      const fresh = !db.prepare('SELECT 1 FROM seed_log WHERE name = ?').get(`subject:${sub.name}`);
+      if (fresh) db.prepare('INSERT OR IGNORE INTO subject_meta (name, category, sort) VALUES (?, ?, ?)').run(sub.name, sub.category, i + 1);
+      if (sub.stages) seedSubjectStages(sub);
+    });
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+}
+
 function seedCurriculum() {
   const file = path.join(__dirname, 'seed', 'curriculum.json');
   if (!fs.existsSync(file)) return;
@@ -302,8 +337,7 @@ function seedCurriculum() {
   const added = [];
   db.exec('BEGIN');
   try {
-    const st = db.prepare('INSERT OR IGNORE INTO stages (subject, no, band, name) VALUES (?, ?, ?, ?)');
-    subjects.forEach((sub) => sub.stages.forEach((x) => st.run(sub.name, x.no, x.band, x.name)));
+    subjects.forEach((sub) => seedSubjectStages(sub));
     const ins = db.prepare(
       'INSERT INTO course_items (course_id, seq, stage, chapter, code, file, title, topic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     );
@@ -368,6 +402,7 @@ function seedCurriculum() {
   }
   if (added.length) console.log('[seed] 교재 목차를 넣었습니다:', added.join(', '));
 }
+seedSubjects();
 seedCurriculum();
 
 // 교재로 진도를 관리하던 학생을 과목(단계) 진도로 한 번만 옮김

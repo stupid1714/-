@@ -577,7 +577,8 @@ function subjectProgressFor(studentId) {
     ).all(subject).map((r) => [r.stage, r.n]));
     const stages = ss.stages.filter((st) => st.subject === subject)
       .map(({ updated_at, ...st }) => ({ ...st, examples: counts.get(st.no) || 0 }));
-    return { subject, total: stages.length, done: stages.filter((st) => st.done_date).length, stages };
+    const meta = db.prepare('SELECT category FROM subject_meta WHERE name = ?').get(subject);
+    return { subject, category: meta ? meta.category : '기타', total: stages.length, done: stages.filter((st) => st.done_date).length, stages };
   });
   return { subjects, next_stage: ss && ss.next ? { subject: ss.next.subject, no: ss.next.no } : null };
 }
@@ -736,8 +737,156 @@ app.get('/api/courses', requireStaff, (req, res) => {
   ).all());
 });
 
+// ---------- 과목 관리 (코딩·오피스·자격증 …) ----------
+
+const SUBJECT_CATEGORIES = ['코딩', '오피스', '자격증', '기타'];
+
+// 과목 목록: 분류 순서 → 정한 순서. 단계표가 있는 과목 + 교재만 있는 과목
+function subjectList() {
+  const rows = db.prepare(
+    `SELECT n.name, COALESCE(m.category, '기타') AS category, COALESCE(m.sort, 9999) AS sort,
+            (SELECT COUNT(*) FROM stages st WHERE st.subject = n.name) AS stage_count,
+            (SELECT COUNT(*) FROM student_subjects ss JOIN users u ON u.id = ss.student_id WHERE ss.subject = n.name) AS student_count
+     FROM (SELECT name FROM subject_meta UNION SELECT DISTINCT subject FROM stages WHERE subject != ''
+           UNION SELECT DISTINCT subject FROM courses WHERE subject != '') n
+     LEFT JOIN subject_meta m ON m.name = n.name`
+  ).all();
+  const catOrder = (c) => { const i = SUBJECT_CATEGORIES.indexOf(c); return i < 0 ? SUBJECT_CATEGORIES.length : i; };
+  return rows.sort((a, b) => catOrder(a.category) - catOrder(b.category) || a.category.localeCompare(b.category) || a.sort - b.sort || a.name.localeCompare(b.name));
+}
+
 app.get('/api/subjects', requireStaff, (req, res) => {
-  res.json(db.prepare("SELECT DISTINCT subject FROM stages WHERE subject != '' UNION SELECT DISTINCT subject FROM courses WHERE subject != '' ORDER BY 1").all().map((r) => r.subject));
+  res.json(subjectList().map((r) => r.name));
+});
+
+app.get('/api/subject-list', requireStaff, (req, res) => {
+  res.json({ categories: SUBJECT_CATEGORIES, subjects: subjectList() });
+});
+
+app.get('/api/admin/subjects/:name', requireStaff, (req, res) => {
+  const name = String(req.params.name);
+  const sub = subjectList().find((x) => x.name === name);
+  if (!sub) return res.status(404).json({ error: '과목을 찾을 수 없습니다.' });
+  sub.stages = db.prepare('SELECT no, band, name FROM stages WHERE subject = ? ORDER BY no').all(name);
+  res.json(sub);
+});
+
+// 단계 목록 글 → [{no, band, name}]. '# 기초'처럼 #으로 시작하는 줄은 구간 이름, 나머지 한 줄이 한 단계
+function parseStages(text) {
+  let band = '';
+  const out = [];
+  String(text || '').split(/\r?\n/).forEach((raw) => {
+    const line = raw.trim();
+    if (!line) return;
+    if (line.startsWith('#')) { band = line.replace(/^#+/, '').trim().slice(0, 20); return; }
+    const name = line.replace(/^\d+\s*(?:[.)]|단계\s*[.:)]?)\s*/, '').trim() || line; // 앞에 붙은 번호는 지움
+    out.push({ no: out.length + 1, band, name: name.slice(0, 100) });
+  });
+  return out;
+}
+
+function cleanSubjectInput(body) {
+  const name = String(body.name || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+  const category = String(body.category || '기타').trim().slice(0, 20) || '기타';
+  const stages = parseStages(body.stages);
+  if (!name) throw Object.assign(new Error('과목 이름을 입력하세요.'), { status: 400 });
+  if (/[|]/.test(name)) throw Object.assign(new Error('과목 이름에 | 기호는 쓸 수 없습니다.'), { status: 400 });
+  if (!stages.length) throw Object.assign(new Error('단계를 한 줄에 하나씩 1개 이상 입력하세요.'), { status: 400 });
+  return { name, category, stages };
+}
+
+function sendError(res, e) {
+  if (e.status) return res.status(e.status).json({ error: e.message });
+  throw e;
+}
+
+app.post('/api/admin/subjects', requireAdmin, (req, res) => {
+  let input;
+  try { input = cleanSubjectInput(req.body || {}); } catch (e) { return sendError(res, e); }
+  if (subjectList().some((x) => x.name === input.name)) return res.status(400).json({ error: '같은 이름의 과목이 이미 있습니다.' });
+  db.exec('BEGIN');
+  try {
+    const sort = db.prepare('SELECT COALESCE(MAX(sort), 0) + 1 AS s FROM subject_meta WHERE category = ?').get(input.category).s;
+    db.prepare('INSERT INTO subject_meta (name, category, sort) VALUES (?, ?, ?)').run(input.name, input.category, sort);
+    const ins = db.prepare('INSERT INTO stages (subject, no, band, name) VALUES (?, ?, ?, ?)');
+    input.stages.forEach((st) => ins.run(input.name, st.no, st.band, st.name));
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  res.json({ ok: true, name: input.name });
+});
+
+// 과목 수정: 이름·분류·단계 목록. 단계가 바뀌어도 같은 이름의 단계는 체크 기록을 그대로 옮김
+app.put('/api/admin/subjects/:name', requireAdmin, (req, res) => {
+  const old = String(req.params.name);
+  if (!subjectList().some((x) => x.name === old)) return res.status(404).json({ error: '과목을 찾을 수 없습니다.' });
+  let input;
+  try { input = cleanSubjectInput(req.body || {}); } catch (e) { return sendError(res, e); }
+  if (input.name !== old && subjectList().some((x) => x.name === input.name)) return res.status(400).json({ error: '같은 이름의 과목이 이미 있습니다.' });
+  const oldStages = db.prepare('SELECT no, name FROM stages WHERE subject = ? ORDER BY no').all(old);
+  // 예전 단계 번호 → 새 단계 번호 (이름이 같은 단계끼리, 이름이 바뀌었으면 같은 번호끼리)
+  const used = new Set();
+  const remap = new Map();
+  oldStages.forEach((o) => {
+    const hit = input.stages.find((n) => n.name === o.name && !used.has(n.no));
+    if (hit) { remap.set(o.no, hit.no); used.add(hit.no); }
+  });
+  oldStages.forEach((o) => {
+    if (remap.has(o.no)) return;
+    const same = input.stages.find((n) => n.no === o.no && !used.has(n.no) && !oldStages.some((x) => x.name === n.name));
+    if (same) { remap.set(o.no, same.no); used.add(same.no); }
+  });
+  const affected = db.prepare('SELECT DISTINCT student_id FROM student_subjects WHERE subject = ?').all(old).map((r) => r.student_id);
+  db.exec('BEGIN');
+  try {
+    const progress = db.prepare('SELECT student_id, stage_no, done_date, updated_at FROM stage_progress WHERE subject = ?').all(old);
+    db.prepare('DELETE FROM stage_progress WHERE subject = ?').run(old);
+    const insP = db.prepare('INSERT OR IGNORE INTO stage_progress (student_id, subject, stage_no, done_date, updated_at) VALUES (?, ?, ?, ?, ?)');
+    progress.forEach((pr) => { if (remap.has(pr.stage_no)) insP.run(pr.student_id, input.name, remap.get(pr.stage_no), pr.done_date, pr.updated_at); });
+    db.prepare('DELETE FROM stages WHERE subject = ?').run(old);
+    const ins = db.prepare('INSERT INTO stages (subject, no, band, name) VALUES (?, ?, ?, ?)');
+    input.stages.forEach((st) => ins.run(input.name, st.no, st.band, st.name));
+    const meta = db.prepare('SELECT sort, category FROM subject_meta WHERE name = ?').get(old);
+    db.prepare('DELETE FROM subject_meta WHERE name = ?').run(old);
+    const sort = meta && meta.category === input.category ? meta.sort
+      : db.prepare('SELECT COALESCE(MAX(sort), 0) + 1 AS s FROM subject_meta WHERE category = ?').get(input.category).s;
+    db.prepare('INSERT INTO subject_meta (name, category, sort) VALUES (?, ?, ?)').run(input.name, input.category, sort);
+    if (input.name !== old) {
+      db.prepare('UPDATE student_subjects SET subject = ? WHERE subject = ?').run(input.name, old);
+      db.prepare('UPDATE courses SET subject = ? WHERE subject = ?').run(input.name, old);
+    }
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  affected.forEach((sid) => recomputeProgress(sid));
+  const lost = progressLost(oldStages, remap);
+  res.json({ ok: true, name: input.name, lost });
+});
+
+function progressLost(oldStages, remap) {
+  return oldStages.filter((o) => !remap.has(o.no)).map((o) => o.name);
+}
+
+// 과목 삭제: 배우는 학생이 있으면 막음
+app.delete('/api/admin/subjects/:name', requireAdmin, (req, res) => {
+  const name = String(req.params.name);
+  const n = db.prepare('SELECT COUNT(*) AS c FROM student_subjects WHERE subject = ?').get(name).c;
+  if (n) return res.status(400).json({ error: `이 과목을 배우는 학생이 ${n}명 있습니다. 학생의 과목 진도 탭에서 먼저 과목을 빼 주세요.` });
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM stage_progress WHERE subject = ?').run(name);
+    db.prepare('DELETE FROM stages WHERE subject = ?').run(name);
+    db.prepare('DELETE FROM subject_meta WHERE name = ?').run(name);
+    db.exec('COMMIT');
+  } catch (e) {
+    db.exec('ROLLBACK');
+    throw e;
+  }
+  res.json({ ok: true });
 });
 
 app.get('/api/courses/:id', requireStaff, (req, res) => {
