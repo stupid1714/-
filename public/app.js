@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.31-1';
+const APP_VERSION = '2026.10.31-2';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -99,6 +99,7 @@ function topbar() {
       <button class="btn small" data-act="password">${isStaff(me) ? '내 정보' : '비밀번호'}</button>
       <button class="btn small" data-act="logout">로그아웃</button>
     </header>
+    ${me.fresh_db ? `<div class="warn-bar">📁 이번에 <b>새 데이터 폴더</b>로 시작했습니다. 예전에 등록한 학생·파일이 안 보이면 서버 창을 닫고, <b>예전 프로그램 폴더의 data 폴더</b>를 지금 프로그램 폴더(<code>${esc(me.data_dir.replace(/[\\/]data$/, ''))}</code>)에 복사(덮어쓰기)한 뒤 다시 실행하세요.</div>` : ''}
     ${me.weak_password ? `<div class="warn-bar">⚠️ 테스트용 기본 비밀번호를 사용 중입니다. 오른쪽 위 <b>${isStaff(me) ? '내 정보' : '비밀번호'}</b>에서 꼭 바꿔 주세요.</div>` : ''}`;
 }
 
@@ -1778,6 +1779,7 @@ async function openAcademyModal() {
       <p class="muted small" style="margin-top:0">수업 진도 기록지 PDF의 머리글과 아래쪽에 들어갑니다.</p>
       <label class="field"><span>학원 이름</span><input type="text" name="academy_name" value="${esc(st.academy_name || '')}" required maxlength="40"></label>
       <label class="field"><span>전화번호</span><input type="text" name="academy_phone" value="${esc(st.academy_phone || '')}" maxlength="30"></label>
+      ${st.data_dir ? `<p class="muted small">데이터 저장 위치: <code>${esc(st.data_dir)}</code><br>학생 정보와 올린 파일이 모두 이 폴더에 있습니다. 새 버전으로 바꿀 때는 이 <b>data</b> 폴더를 새 프로그램 폴더로 옮기세요(백업도 이 폴더만 복사하면 됩니다).</p>` : ''}
       <div class="row end"><button type="button" class="btn" data-close>취소</button><button type="submit" class="btn primary">저장</button></div>
     </form>`, (bg, close) => {
     onSubmit(bg.querySelector('form'), async (fd) => {

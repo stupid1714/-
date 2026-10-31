@@ -7,7 +7,10 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const UPLOAD_DIR = path.join(DATA_DIR, 'uploads');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const db = new DatabaseSync(path.join(DATA_DIR, 'academy.db'));
+const DB_FILE = path.join(DATA_DIR, 'academy.db');
+// 이번에 처음 만든 DB인지 (새 폴더에 프로그램을 풀면 예전 학생 정보가 없는 새 DB로 시작함)
+const FRESH_DB = !fs.existsSync(DB_FILE);
+const db = new DatabaseSync(DB_FILE);
 db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;');
 
 // role: admin(관리자) / teacher(선생님) / student(학생) / parent(학부모)
@@ -455,4 +458,4 @@ function migrateStageProgress() {
 }
 migrateStageProgress();
 
-module.exports = { db, UPLOAD_DIR, hashPassword, verifyPassword };
+module.exports = { db, UPLOAD_DIR, DATA_DIR: path.resolve(DATA_DIR), FRESH_DB, hashPassword, verifyPassword };

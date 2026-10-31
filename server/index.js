@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 const express = require('express');
 const multer = require('multer');
-const { db, UPLOAD_DIR, hashPassword, verifyPassword } = require('./db');
+const { db, UPLOAD_DIR, DATA_DIR, FRESH_DB, hashPassword, verifyPassword } = require('./db');
 
 const PORT = process.env.PORT || 3000;
 const SESSION_DAYS = 14;
@@ -169,6 +169,10 @@ app.get('/api/me', requireAuth, (req, res) => {
   const own = db.prepare('SELECT initial_password FROM users WHERE id = ?').get(me.id);
   me.weak_password = Boolean(own && ['1234', 'admin1234'].includes(own.initial_password));
   if (me.role === 'admin') me.pending_signups = db.prepare("SELECT COUNT(*) AS c FROM users WHERE status = 'pending'").get().c;
+  if (me.role === 'admin') {
+    me.data_dir = DATA_DIR;
+    me.fresh_db = FRESH_DB; // 이번에 새로 만든 데이터로 시작함 → 예전 data 폴더를 옮기라는 안내
+  }
   if (me.role === 'parent' && me.child_id) {
     const child = getStudent(me.child_id);
     me.child_name = child ? child.name : null;
@@ -748,7 +752,7 @@ function getSettings() {
   return out;
 }
 
-app.get('/api/settings', requireAuth, (req, res) => res.json(getSettings()));
+app.get('/api/settings', requireAuth, (req, res) => res.json({ ...getSettings(), ...(req.user.role === 'admin' ? { data_dir: DATA_DIR } : {}) }));
 
 app.put('/api/admin/settings', requireAdmin, (req, res) => {
   const b = req.body || {};
@@ -1356,6 +1360,16 @@ db.prepare('SELECT student_id FROM student_courses UNION SELECT student_id FROM 
 
 app.listen(PORT, () => {
   console.log(`서버 실행 중: http://localhost:${PORT}`);
+  const studentCount = db.prepare("SELECT COUNT(*) AS c FROM users WHERE role = 'student'").get().c;
+  console.log(`데이터 저장 위치: ${DATA_DIR}  (학생 ${studentCount}명)`);
+  if (FRESH_DB) {
+    console.log('');
+    console.log('==================================================================');
+    console.log(' ※ 데이터 폴더가 없어서 새로 만들었습니다 (테스트 학생만 들어 있음).');
+    console.log('   예전에 쓰던 학생 정보가 안 보이면: 이 창을 닫고, 예전 프로그램 폴더의');
+    console.log('   "data" 폴더를 이 프로그램 폴더에 복사(덮어쓰기)한 뒤 다시 실행하세요.');
+    console.log('==================================================================');
+  }
   const ips = lanAddresses();
   if (!ips.length) return;
   console.log('');
