@@ -230,6 +230,19 @@ if (!db.prepare('PRAGMA table_info(courses)').all().some((c) => c.name === 'subj
   db.exec("ALTER TABLE courses ADD COLUMN subject TEXT NOT NULL DEFAULT ''");
 }
 
+// 진도 기록에 과목(여러 개면 | 로 구분)과 이해도 칸 추가 (월간 수업 진도 기록지용)
+['subjects', 'understanding'].forEach((col) => {
+  if (!db.prepare('PRAGMA table_info(progress_logs)').all().some((c) => c.name === col)) {
+    db.exec(`ALTER TABLE progress_logs ADD COLUMN ${col} TEXT NOT NULL DEFAULT ''`);
+  }
+});
+
+// 학원 정보 (기록지·리포트 머리글에 들어감)
+db.exec('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)');
+[['academy_name', '스마트라이프연구학원'], ['academy_phone', '063-237-1112']].forEach(([k, v]) => {
+  db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').run(k, v);
+});
+
 // 예전 DB에 담당 선생님 칸 추가
 if (!db.prepare('PRAGMA table_info(student_profiles)').all().some((c) => c.name === 'teacher_id')) {
   db.exec('ALTER TABLE student_profiles ADD COLUMN teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL');

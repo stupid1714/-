@@ -468,3 +468,45 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
 .subject-item { text-align: left; font: inherit; color: inherit; cursor: pointer; }
 .subject-item .title { font-weight: 700; margin-bottom: 4px; }
 .pick-subject { width: 64px; }
+
+/* 진도 기록: 과목·이해도 */
+.log-extras { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin: 8px 0; }
+.log-subjects { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.log-subjects > .muted { margin-right: 2px; }
+
+/* 월간 수업 진도 기록지 (PDF) */
+.rp-kind { display: flex; margin-bottom: 14px; }
+.rp-kind button { flex: 1; }
+.sh-page { --sh: #1e5aa8; --sh-weak: #eef3fa; --sh-line: #c9d6e8; padding: 52px 50px 40px; display: flex; flex-direction: column; }
+.sh-head { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 14px; border-bottom: 2px solid var(--sh); }
+.sh-title { font-size: 26px; font-weight: 800; color: var(--sh); letter-spacing: 1px; }
+.sh-sub { font-size: 12px; color: #6b7280; margin-top: 4px; }
+.sh-academy { text-align: right; }
+.sh-badge { display: inline-block; background: var(--sh); color: #fff; font-weight: 700; font-size: 14px; padding: 6px 14px; border-radius: 8px; }
+.sh-phone { font-size: 11px; color: #6b7280; margin-top: 6px; }
+.sh-info { display: grid; grid-template-columns: 1fr 1.2fr 0.9fr 1fr; margin: 14px 0; border: 1px solid var(--sh-line); border-radius: 8px; background: var(--sh-weak); }
+.sh-info div { padding: 9px 12px; font-size: 12px; border-left: 1px solid var(--sh-line); display: flex; gap: 8px; min-width: 0; }
+.sh-info div:first-child { border-left: 0; }
+.sh-info b { color: var(--sh); white-space: nowrap; }
+.sh-info span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-table { width: 100%; border-collapse: collapse; font-size: 11.5px; table-layout: fixed; }
+.sh-table th { background: var(--sh); color: #fff; font-weight: 700; padding: 8px 4px; border: 1px solid var(--sh); }
+.sh-table td { border: 1px solid var(--sh-line); padding: 6px 7px; vertical-align: top; height: 62px; }
+.sh-week { background: var(--sh-weak); color: var(--sh); font-weight: 700; text-align: center; vertical-align: middle !important; }
+.sh-date { text-align: center; }
+.sh-date b { display: block; color: var(--sh); padding-bottom: 4px; border-bottom: 1px dashed var(--sh-line); margin-bottom: 4px; }
+.sh-date span { color: #6b7280; font-size: 11px; }
+.sh-subj { font-size: 11px; line-height: 1.9; }
+.sh-opt { display: inline-flex; align-items: center; gap: 3px; margin-right: 8px; white-space: nowrap; }
+.sh-box { width: 12px; height: 12px; border: 1px solid #9ca3af; border-radius: 2px; display: inline-grid; place-items: center; font-size: 10px; line-height: 1; }
+.sh-box.on { background: var(--sh); border-color: var(--sh); color: #fff; font-weight: 700; }
+.sh-content { white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
+.sh-stages { color: var(--sh); font-size: 10.5px; margin-top: 3px; white-space: normal; }
+.sh-att { color: #dc2626; font-weight: 700; }
+.sh-und { text-align: center; font-weight: 700; color: var(--sh); vertical-align: middle !important; }
+.sh-note { margin-top: 14px; border: 1px solid var(--sh-line); border-radius: 8px; overflow: hidden; }
+.sh-note-h { background: var(--sh); color: #fff; font-weight: 700; font-size: 12px; padding: 7px 12px; }
+.sh-note-b { padding: 10px 12px; min-height: 84px; font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+.sh-sign { margin-top: auto; padding-top: 20px; display: flex; justify-content: flex-end; gap: 30px; font-size: 12px; }
+.sh-sign i { display: inline-block; min-width: 100px; border-bottom: 1px solid #9ca3af; font-style: normal; text-align: center; margin: 0 4px; }
+.sh-foot { margin-top: 12px; padding-top: 10px; border-top: 2px solid var(--sh); text-align: center; font-size: 11px; color: var(--sh); font-weight: 700; }

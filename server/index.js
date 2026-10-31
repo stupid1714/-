@@ -215,13 +215,16 @@ function studentDetail(studentId, fullAttendance = false) {
     `SELECT id, date, status, note FROM attendance WHERE student_id = ? ORDER BY date DESC${fullAttendance ? '' : ' LIMIT 60'}`
   ).all(studentId);
   const logs = db.prepare(
-    'SELECT id, date, content FROM progress_logs WHERE student_id = ? ORDER BY date DESC, id DESC'
+    'SELECT id, date, content, subjects, understanding FROM progress_logs WHERE student_id = ? ORDER BY date DESC, id DESC'
   ).all(studentId);
   const photos = db.prepare(
     `SELECT lp.id, lp.log_id, lp.original_name FROM log_photos lp JOIN progress_logs l ON l.id = lp.log_id
      WHERE l.student_id = ? ORDER BY lp.id`
   ).all(studentId);
-  logs.forEach((l) => { l.photos = photos.filter((ph) => ph.log_id === l.id).map(({ log_id, ...rest }) => rest); });
+  logs.forEach((l) => {
+    l.photos = photos.filter((ph) => ph.log_id === l.id).map(({ log_id, ...rest }) => rest);
+    l.subjects = l.subjects ? l.subjects.split('|') : [];
+  });
   const materials = db.prepare(
     `SELECT id, original_name, size, lesson, description, created_at, student_id IS NULL AS is_common
      FROM files WHERE kind = 'material' AND (student_id = ? OR student_id IS NULL) ORDER BY created_at DESC, id DESC`
@@ -737,6 +740,25 @@ app.get('/api/courses', requireStaff, (req, res) => {
   ).all());
 });
 
+// ---------- 학원 정보 ----------
+
+function getSettings() {
+  const out = {};
+  db.prepare('SELECT key, value FROM settings').all().forEach((r) => { out[r.key] = r.value; });
+  return out;
+}
+
+app.get('/api/settings', requireAuth, (req, res) => res.json(getSettings()));
+
+app.put('/api/admin/settings', requireAdmin, (req, res) => {
+  const b = req.body || {};
+  const name = String(b.academy_name || '').trim().slice(0, 40);
+  if (!name) return res.status(400).json({ error: '학원 이름을 입력하세요.' });
+  db.prepare("UPDATE settings SET value = ? WHERE key = 'academy_name'").run(name);
+  db.prepare("UPDATE settings SET value = ? WHERE key = 'academy_phone'").run(String(b.academy_phone || '').trim().slice(0, 30));
+  res.json(getSettings());
+});
+
 // ---------- 과목 관리 (코딩·오피스·자격증 …) ----------
 
 const SUBJECT_CATEGORIES = ['코딩', '오피스', '자격증', '기타'];
@@ -1061,6 +1083,13 @@ function deletePhotos(rows) {
   });
 }
 
+// 진도 기록의 과목(여러 개는 | 로 구분해서 받음)과 이해도
+function logExtras(body) {
+  const b = body || {};
+  const subjects = [...new Set(String(b.subjects || '').split('|').map((x) => x.trim()).filter(Boolean))].slice(0, 10).join('|');
+  return { subjects, understanding: String(b.understanding || '').trim().slice(0, 20) };
+}
+
 app.post('/api/admin/students/:id/logs', requireStaff, photoUpload.array('photos', MAX_LOG_PHOTOS), (req, res) => {
   const id = Number(req.params.id);
   const date = String((req.body || {}).date || '');
@@ -1069,7 +1098,9 @@ app.post('/api/admin/students/:id/logs', requireStaff, photoUpload.array('photos
     removeUploaded(req.files);
     return res.status(400).json({ error: '날짜와 내용(또는 사진)을 입력하세요.' });
   }
-  const logId = db.prepare('INSERT INTO progress_logs (student_id, date, content) VALUES (?, ?, ?)').run(id, date, content).lastInsertRowid;
+  const { subjects, understanding } = logExtras(req.body);
+  const logId = db.prepare('INSERT INTO progress_logs (student_id, date, content, subjects, understanding) VALUES (?, ?, ?, ?, ?)')
+    .run(id, date, content, subjects, understanding).lastInsertRowid;
   savePhotos(logId, req.files);
   res.json({ ok: true, id: Number(logId) });
 });
@@ -1087,7 +1118,8 @@ app.put('/api/admin/logs/:id', requireStaff, photoUpload.array('photos', MAX_LOG
     removeUploaded(req.files);
     return res.status(400).json({ error: `사진은 한 기록에 ${MAX_LOG_PHOTOS}장까지 올릴 수 있습니다.` });
   }
-  db.prepare('UPDATE progress_logs SET date = ?, content = ? WHERE id = ?').run(date, content, log.id);
+  const { subjects, understanding } = logExtras(req.body);
+  db.prepare('UPDATE progress_logs SET date = ?, content = ?, subjects = ?, understanding = ? WHERE id = ?').run(date, content, subjects, understanding, log.id);
   deletePhotos(current.filter((p) => removeIds.includes(p.id)));
   savePhotos(log.id, req.files);
   res.json({ ok: true });

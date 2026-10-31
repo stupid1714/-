@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.10-1';
+const APP_VERSION = '2026.10.31-1';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -340,6 +340,8 @@ function logsList(logs, editable = false) {
   return `<div class="logs">${logs.map((l) => `
     <article class="log-item">
       <div class="log-head"><span class="badge">${esc(l.date)}</span>
+        ${(l.subjects || []).map((x) => `<span class="badge common">${esc(x)}</span>`).join('')}
+        ${l.understanding ? `<span class="muted small">이해도 <b>${esc(l.understanding)}</b></span>` : ''}
         ${l.photos && l.photos.length ? `<span class="muted small">📷 ${l.photos.length}</span>` : ''}
         <span class="spacer"></span>
         ${editable ? `<button class="btn small ghost" data-edit-log="${l.id}">수정</button>
@@ -403,6 +405,35 @@ function photoPicker(container) {
   return { getFiles: () => files, clear: () => { files = []; draw(); } };
 }
 
+// 진도 기록의 과목·이해도 (월간 수업 진도 기록지에 들어감)
+const UNDERSTANDING = ['매우 우수', '우수', '보통', '노력 필요'];
+const DEFAULT_LOG_SUBJECTS = ['코딩', '한글', '엑셀', 'PPT'];
+
+// 기록에서 고를 과목: 학생이 배우는 과목 (없으면 코딩·한글·엑셀·PPT)
+async function logSubjectChoices(studentId) {
+  const sp = await api(`/api/students/${studentId}/subjects`).catch(() => null);
+  const list = sp && sp.subjects.length ? sp.subjects.map((x) => x.subject) : DEFAULT_LOG_SUBJECTS;
+  return list;
+}
+
+function logExtrasHtml(choices, selected = [], understanding = '') {
+  const all = [...choices, ...selected.filter((x) => !choices.includes(x))];
+  return `
+    <div class="log-extras">
+      <div class="log-subjects"><span class="muted small">과목</span>${all.map((x) => `
+        <label class="chip-check"><input type="checkbox" name="subj" value="${esc(x)}" ${selected.includes(x) ? 'checked' : ''}><span>${esc(x)}</span></label>`).join('')}</div>
+      <label class="row small" style="gap:6px"><span class="muted">이해도</span>
+        <select name="understanding" style="width:auto">${['', ...UNDERSTANDING, ...(understanding && !UNDERSTANDING.includes(understanding) ? [understanding] : [])].map((u) => `<option value="${esc(u)}" ${u === understanding ? 'selected' : ''}>${u ? esc(u) : '선택 안 함'}</option>`).join('')}</select></label>
+    </div>`;
+}
+
+function logExtrasValue(form) {
+  return {
+    subjects: [...form.querySelectorAll('[name=subj]:checked')].map((x) => x.value).join('|'),
+    understanding: form.querySelector('[name=understanding]').value,
+  };
+}
+
 async function logFormData(date, content, files, extra = {}) {
   const fd = new FormData();
   fd.append('date', date);
@@ -412,11 +443,12 @@ async function logFormData(date, content, files, extra = {}) {
   return fd;
 }
 
-function openEditLog(log, reload) {
+function openEditLog(log, reload, choices = DEFAULT_LOG_SUBJECTS) {
   modal(`
     <h2>진도 기록 수정</h2>
     <form>
       <label class="field"><span>날짜</span><input type="date" name="date" value="${esc(log.date)}" required style="max-width:200px"></label>
+      <div id="edit-extras"></div>
       <label class="field"><span>내용</span><textarea name="content" rows="6">${esc(log.content)}</textarea></label>
       ${log.photos.length ? `<div class="field"><span class="muted small" style="font-weight:600">올린 사진 (누르면 삭제 표시)</span>
         <div class="photo-grid">${log.photos.map((ph) => `
@@ -424,11 +456,12 @@ function openEditLog(log, reload) {
       <div class="field" id="edit-picker"></div>
       <div class="row end"><button type="button" class="btn" data-close>취소</button><button class="btn primary" type="submit">저장</button></div>
     </form>`, (el, close) => {
+    el.querySelector('#edit-extras').innerHTML = logExtrasHtml(choices, log.subjects || [], log.understanding || '');
     const picker = photoPicker(el.querySelector('#edit-picker'));
     el.querySelectorAll('.removable').forEach((t) => { t.onclick = () => t.classList.toggle('marked'); });
     onSubmit(el.querySelector('form'), async (fd) => {
       const remove = [...el.querySelectorAll('.removable.marked')].map((t) => t.dataset.pid).join(',');
-      const body = await logFormData(fd.get('date'), fd.get('content'), picker.getFiles(), { remove_photo_ids: remove });
+      const body = await logFormData(fd.get('date'), fd.get('content'), picker.getFiles(), { remove_photo_ids: remove, ...logExtrasValue(el.querySelector('form')) });
       await api(`/api/admin/logs/${log.id}`, { method: 'PUT', form: body });
       toast('수정되었습니다.');
       close();
@@ -586,7 +619,7 @@ async function renderStudent() {
       <div class="hero">
         <div class="avatar">${initial(s.name)}</div>
         <div><h1>${esc(s.name)}</h1><div class="muted">${esc(s.course) || '수강 과정 미정'}</div></div>
-        <span class="spacer"></span><button type="button" class="btn" data-report="${s.id}">📄 학습 리포트 PDF</button>
+        <span class="spacer"></span><button type="button" class="btn" data-report="${s.id}">📄 수업 진도 PDF</button>
       </div>
       <div class="cards">${progressCard(s)}${assignmentCard(s)}</div>
       <div style="height:16px"></div>
@@ -643,7 +676,7 @@ async function renderParent() {
       <div class="hero">
         <div class="avatar">${initial(s.name)}</div>
         <div><div class="muted small">우리 아이</div><h1>${esc(s.name)}</h1><div class="muted">${esc(s.course) || ''}</div></div>
-        <span class="spacer"></span><button type="button" class="btn" data-report="${s.id}">📄 학습 리포트 PDF</button>
+        <span class="spacer"></span><button type="button" class="btn" data-report="${s.id}">📄 수업 진도 PDF</button>
       </div>
       <section class="card" id="msg-card">
         <div class="card-head"><h2>💬 선생님께 메시지</h2>
@@ -963,6 +996,7 @@ async function renderAdmin() {
           <span class="admin-nav-label">관리자 메뉴</span>
           <a class="btn small" href="#/signups">✅ 가입 승인${pending ? ` <span class="count">${pending}</span>` : ''}</a>
           <a class="btn small" href="#/teachers">🧑‍🏫 선생님 관리</a>
+          <button type="button" class="btn small" data-act="academy">🏫 학원 정보</button>
         </div>` : ''}
       </aside>
       <section class="main" id="main"></section>
@@ -1105,7 +1139,7 @@ async function renderAdminDetail() {
       <div><h1 style="font-size:20px">${esc(s.name)}</h1>
         <div class="muted small">🕒 ${esc(scheduleText(d.schedule) || '수업 시간 미등록')} ${weeklyBadge(d.schedule)}</div>
         <div class="muted small">${s.username ? esc(s.username) : '로그인 계정 없음'} · 담당 ${esc(s.teacher_name || '없음')}${listItem.parent_name ? ` · 학부모: ${esc(listItem.parent_name)}` : ' · 학부모 계정 없음'}</div></div>
-      <span class="spacer"></span><button type="button" class="btn small" data-report="${id}">📄 PDF 다운로드</button>
+      <span class="spacer"></span><button type="button" class="btn small" data-report="${id}">📄 수업 진도 PDF</button>
     </div>
     <div class="overview">
       <div class="card" id="ov-pct"><div class="label">진도율${listItem.course_count ? ' <span class="badge common">자동</span>' : ''}</div><div class="value">${Number(s.progress_percent) || 0}%</div>${progressBar(s.progress_percent)}</div>
@@ -1147,6 +1181,7 @@ async function renderAdminDetail() {
         <div class="card-head"><h2>진도 기록</h2></div>
         <form id="log" class="log-form">
           <input type="date" name="date" value="${today()}" required style="max-width:200px">
+          <div id="log-extras"></div>
           <textarea name="content" rows="4" placeholder="오늘 수업 내용과 아이의 상황을 적어 주세요. (Enter로 줄 바꿈)"></textarea>
           <div id="log-picker" class="row"></div>
           <div class="row end"><button class="btn primary" type="submit">기록 추가</button></div>
@@ -1160,17 +1195,19 @@ async function renderAdminDetail() {
       toast('저장되었습니다.');
       reload();
     });
+    const logChoices = await logSubjectChoices(id);
+    body.querySelector('#log-extras').innerHTML = logExtrasHtml(logChoices);
     const picker = photoPicker(body.querySelector('#log-picker'));
     onSubmit(body.querySelector('#log'), async (fd) => {
       const files = picker.getFiles();
       if (!String(fd.get('content')).trim() && !files.length) throw new Error('내용을 쓰거나 사진을 추가해 주세요.');
       if (files.length) toast('사진을 올리는 중...');
-      await api(`/api/admin/students/${id}/logs`, { method: 'POST', form: await logFormData(fd.get('date'), fd.get('content'), files) });
+      await api(`/api/admin/students/${id}/logs`, { method: 'POST', form: await logFormData(fd.get('date'), fd.get('content'), files, logExtrasValue(body.querySelector('#log'))) });
       toast('진도 기록이 추가되었습니다.');
       reload();
     });
     body.querySelectorAll('[data-edit-log]').forEach((btn) => {
-      btn.onclick = () => openEditLog(d.logs.find((l) => l.id === Number(btn.dataset.editLog)), reload);
+      btn.onclick = () => openEditLog(d.logs.find((l) => l.id === Number(btn.dataset.editLog)), reload, logChoices);
     });
   }
 
@@ -1731,6 +1768,28 @@ function stagesToText(stages) {
     return head + st.name;
   }).join('\n');
 }
+
+// 학원 정보 (기록지·리포트 머리글)
+async function openAcademyModal() {
+  const st = await api('/api/settings');
+  modal(`
+    <form>
+      <h2>🏫 학원 정보</h2>
+      <p class="muted small" style="margin-top:0">수업 진도 기록지 PDF의 머리글과 아래쪽에 들어갑니다.</p>
+      <label class="field"><span>학원 이름</span><input type="text" name="academy_name" value="${esc(st.academy_name || '')}" required maxlength="40"></label>
+      <label class="field"><span>전화번호</span><input type="text" name="academy_phone" value="${esc(st.academy_phone || '')}" maxlength="30"></label>
+      <div class="row end"><button type="button" class="btn" data-close>취소</button><button type="submit" class="btn primary">저장</button></div>
+    </form>`, (bg, close) => {
+    onSubmit(bg.querySelector('form'), async (fd) => {
+      await api('/api/admin/settings', { method: 'PUT', body: Object.fromEntries(fd) });
+      toast('저장되었습니다.');
+      close();
+    });
+  });
+}
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-act="academy"]')) openAcademyModal().catch((err) => toast(err.message, true));
+});
 
 async function renderSubjects() {
   const main = $app.querySelector('#main');

@@ -1,6 +1,6 @@
 'use strict';
 
-// ---------- 학습 리포트 PDF ----------
+// ---------- 수업 진도 PDF (월간 기록지 · 상세 학습 리포트) ----------
 // 리포트를 A4 크기 페이지로 나눠 그린 뒤, 페이지마다 이미지로 바꿔 PDF로 저장합니다.
 // (한글 글꼴이 깨지지 않도록 화면에 보이는 그대로 저장하는 방식)
 
@@ -39,55 +39,252 @@ const REPORT_PARTS = [
   ['assignment', '과제'],
 ];
 
+function thisMonth() { return today().slice(0, 7); }
+
 function openReportModal(studentId) {
   const staff = isStaff(state.me);
   const parts = staff ? [...REPORT_PARTS, ['memo', '선생님 메모 (학생·학부모에게 보이지 않는 메모)']] : REPORT_PARTS;
+  const canShareFiles = (() => {
+    try { return Boolean(navigator.canShare && navigator.canShare({ files: [new File(['x'], 'a.pdf', { type: 'application/pdf' })] })); } catch { return false; }
+  })();
   modal(`
     <form id="rp-form">
-      <h2>📄 학습 리포트 PDF</h2>
-      <label class="field"><span>기간</span>
-        <select name="period">
-          <option value="1">최근 1개월</option><option value="3">최근 3개월</option><option value="6">최근 6개월</option>
-          <option value="all">전체</option><option value="custom">직접 지정</option>
-        </select></label>
-      <div class="grid2" id="rp-custom" hidden>
-        <label class="field"><span>시작일</span><input type="date" name="from" value="${monthsAgo(1)}"></label>
-        <label class="field"><span>종료일</span><input type="date" name="to" value="${today()}"></label>
+      <h2>📄 수업 진도 PDF</h2>
+      <div class="seg rp-kind">
+        <button type="button" data-kind="sheet" class="on">월간 수업 진도 기록지</button>
+        <button type="button" data-kind="report">상세 학습 리포트</button>
       </div>
-      <div class="field"><span>넣을 내용</span>
-        <div class="rp-checks">${parts.map(([k, l]) => `<label class="rp-check"><input type="checkbox" name="${k}" checked> ${l}</label>`).join('')}</div>
+      <div id="rp-sheet">
+        <label class="field"><span>달</span><input type="month" name="month" value="${thisMonth()}" required style="max-width:220px"></label>
+        <label class="field"><span>특이사항 · 종합 코멘트 <small class="muted">(그 달의 선생님 코멘트가 자동으로 들어갑니다. 고쳐 써도 됩니다)</small></span>
+          <textarea name="note" rows="4" placeholder="이번 달 학습 태도, 성취한 점, 보완할 점, 학부모 안내사항"></textarea></label>
+        <p class="muted small" style="margin:0 0 12px">A4 한 장에 그 달의 수업(날짜·과목·수업 내용·이해도)이 들어갑니다. 수업 내용은 <b>진도 기록</b>에서, 완료한 단계는 <b>과목 진도</b>에서 가져옵니다.</p>
       </div>
-      ${staff ? '<p class="muted small" style="margin:0 0 12px">학부모님께 보낼 PDF라면 <b>선생님 메모</b> 체크를 빼 주세요.</p>' : ''}
-      <div class="row end"><button type="button" class="btn" data-close>취소</button><button type="submit" class="btn primary">PDF 다운로드</button></div>
+      <div id="rp-report" hidden>
+        <label class="field"><span>기간</span>
+          <select name="period">
+            <option value="1">최근 1개월</option><option value="3">최근 3개월</option><option value="6">최근 6개월</option>
+            <option value="all">전체</option><option value="custom">직접 지정</option>
+          </select></label>
+        <div class="grid2" id="rp-custom" hidden>
+          <label class="field"><span>시작일</span><input type="date" name="from" value="${monthsAgo(1)}"></label>
+          <label class="field"><span>종료일</span><input type="date" name="to" value="${today()}"></label>
+        </div>
+        <div class="field"><span>넣을 내용</span>
+          <div class="rp-checks">${parts.map(([k, l]) => `<label class="rp-check"><input type="checkbox" name="${k}" checked> ${l}</label>`).join('')}</div>
+        </div>
+        ${staff ? '<p class="muted small" style="margin:0 0 12px">학부모님께 보낼 PDF라면 <b>선생님 메모</b> 체크를 빼 주세요.</p>' : ''}
+      </div>
+      <div class="row end">
+        <button type="button" class="btn" data-close>닫기</button>
+        ${canShareFiles ? '<button type="button" class="btn" id="rp-share">📤 공유하기</button>' : ''}
+        <button type="submit" class="btn primary">PDF 다운로드</button>
+      </div>
+      ${canShareFiles ? '' : '<p class="muted small" style="margin:10px 0 0">💡 휴대폰에서 https 주소(인터넷주소만들기)로 접속하면 <b>공유하기</b> 버튼으로 카카오톡 등에 바로 보낼 수 있습니다. 지금은 PDF를 내려받은 뒤 보내 주세요.</p>'}
     </form>`, (bg, close) => {
     const form = bg.querySelector('#rp-form');
+    let kind = 'sheet';
+    let prepared = null; // 공유 버튼: 만들어 둔 PDF (처음 공유가 막히면 한 번 더 눌러 공유)
+    const noteBox = form.querySelector('[name=note]');
+    let noteTouched = false;
+    noteBox.addEventListener('input', () => { noteTouched = true; });
+    const fillNote = async () => {
+      if (noteTouched) return;
+      const m = form.querySelector('[name=month]').value;
+      const d = await api(`/api/students/${studentId}`).catch(() => null);
+      if (!d || noteTouched) return;
+      noteBox.value = d.comments.filter((c) => String(c.created_at).slice(0, 7) === m).reverse().map((c) => c.content).join('\n');
+    };
+    fillNote();
+    form.querySelector('[name=month]').onchange = () => { prepared = null; noteTouched = false; fillNote(); };
+    form.querySelectorAll('[data-kind]').forEach((b) => {
+      b.onclick = () => {
+        kind = b.dataset.kind;
+        prepared = null;
+        form.querySelectorAll('[data-kind]').forEach((x) => x.classList.toggle('on', x === b));
+        form.querySelector('#rp-sheet').hidden = kind !== 'sheet';
+        form.querySelector('#rp-report').hidden = kind !== 'report';
+      };
+    });
+    form.addEventListener('input', (e) => { if (e.target !== noteBox) prepared = null; });
+    noteBox.addEventListener('input', () => { prepared = null; });
     const period = form.querySelector('[name=period]');
-    period.onchange = () => { form.querySelector('#rp-custom').hidden = period.value !== 'custom'; };
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = form.querySelector('[type=submit]');
+    period.onchange = () => { form.querySelector('#rp-custom').hidden = period.value !== 'custom'; prepared = null; };
+
+    const build = async (onStatus) => {
+      if (kind === 'sheet') {
+        const month = form.querySelector('[name=month]').value;
+        if (!month) throw new Error('달을 고르세요.');
+        return buildMonthlySheet(studentId, month, noteBox.value, onStatus);
+      }
       const opts = {};
       parts.forEach(([k]) => { opts[k] = form.querySelector(`[name=${k}]`).checked; });
       if (period.value === 'custom') {
         opts.from = form.querySelector('[name=from]').value;
         opts.to = form.querySelector('[name=to]').value;
-        if (opts.from && opts.to && opts.from > opts.to) { toast('시작일이 종료일보다 늦습니다.', true); return; }
+        if (opts.from && opts.to && opts.from > opts.to) throw new Error('시작일이 종료일보다 늦습니다.');
       } else if (period.value !== 'all') {
         opts.from = monthsAgo(Number(period.value));
         opts.to = today();
       }
+      return buildReport(studentId, opts, onStatus);
+    };
+    const run = async (btn, label, finish) => {
       btn.disabled = true;
       try {
-        await downloadReport(studentId, opts, (msg) => { btn.textContent = msg; });
-        toast('PDF를 저장했습니다.');
-        close();
+        await finish(btn);
       } catch (err) {
-        toast(err.message, true);
+        if (err && err.name === 'AbortError') { /* 공유 창을 닫음 */ } else toast(err.message || String(err), true);
+      } finally {
         btn.disabled = false;
-        btn.textContent = 'PDF 다운로드';
+        if (btn.dataset.keep !== '1') btn.textContent = label;
       }
+    };
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('[type=submit]');
+      run(btn, 'PDF 다운로드', async () => {
+        const r = await build((msg) => { btn.textContent = msg; });
+        savePdf(r.blob, r.name);
+        toast('PDF를 저장했습니다.');
+      });
     });
+    const shareBtn = form.querySelector('#rp-share');
+    if (shareBtn) {
+      shareBtn.onclick = () => run(shareBtn, '📤 공유하기', async () => {
+        shareBtn.dataset.keep = '';
+        if (!prepared) prepared = await build((msg) => { shareBtn.textContent = msg; });
+        const file = new File([prepared.blob], prepared.name, { type: 'application/pdf' });
+        try {
+          await navigator.share({ files: [file], title: prepared.name.replace(/\.pdf$/, '') });
+        } catch (err) {
+          // PDF를 만드는 동안 시간이 지나 공유가 막힌 경우: 한 번 더 누르면 바로 공유
+          if (err && err.name === 'NotAllowedError') {
+            shareBtn.dataset.keep = '1';
+            shareBtn.textContent = '📤 준비 완료 · 눌러서 공유';
+            return;
+          }
+          throw err;
+        }
+      });
+    }
   });
+}
+
+function savePdf(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+}
+
+function safeFileName(name) { return name.replace(/[\\/:*?"<>|]/g, '_'); }
+
+// 페이지 요소들을 PDF로 (페이지마다 이미지로 바꿔 A4에 붙임)
+async function pagesToPdf(pageEls, onStatus, fitOnePage = false) {
+  const opt = { margin: 0, image: { type: 'jpeg', quality: 0.9 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+  let pdf = null;
+  for (let i = 0; i < pageEls.length; i += 1) {
+    onStatus(`PDF 만드는 중... (${i + 1}/${pageEls.length}쪽)`);
+    const canvas = await window.html2pdf().set(opt).from(pageEls[i]).toCanvas().get('canvas');
+    if (!pdf) pdf = await window.html2pdf().set(opt).from(document.createElement('div')).toPdf().get('pdf').then((p) => { p.deletePage(1); return p; });
+    addCanvasPages(pdf, canvas, fitOnePage);
+  }
+  return pdf.output('blob');
+}
+
+// ----- 월간 수업 진도 기록지 (A4 한 장) -----
+
+const SHEET_ROWS = 8; // 주 2회 × 4주
+
+async function buildMonthlySheet(studentId, month, note, onStatus) {
+  onStatus('불러오는 중...');
+  await loadPdfLib();
+  const [d, sp, settings] = await Promise.all([
+    api(`/api/students/${studentId}?full=1`),
+    api(`/api/students/${studentId}/subjects`).catch(() => null),
+    api('/api/settings').catch(() => ({})),
+  ]);
+  const s = d.student;
+  const inMonth = (date) => String(date || '').slice(0, 7) === month;
+  // 수업한 날: 진도 기록 + 출석 + 단계 완료한 날
+  const days = new Map();
+  const day = (date) => {
+    if (!days.has(date)) days.set(date, { date, subjects: new Set(), contents: [], stages: [], understanding: '', att: '' });
+    return days.get(date);
+  };
+  [...d.logs].reverse().filter((l) => inMonth(l.date)).forEach((l) => {
+    const x = day(l.date);
+    (l.subjects || []).forEach((sj) => x.subjects.add(sj));
+    if (l.content) x.contents.push(l.content);
+    if (l.understanding) x.understanding = l.understanding;
+  });
+  (sp ? sp.subjects : []).forEach((sub) => sub.stages.forEach((st) => {
+    if (st.done_date && inMonth(st.done_date)) {
+      const x = day(st.done_date);
+      x.subjects.add(sub.subject);
+      x.stages.push(`${sub.subject} ${st.no}단계 · ${st.name}`);
+    }
+  }));
+  d.attendance.filter((a) => inMonth(a.date)).forEach((a) => {
+    const x = day(a.date);
+    if (a.status !== 'present') x.att = ATT_LABEL[a.status] + (a.note ? ` (${a.note})` : '');
+  });
+  const sessions = [...days.values()].sort((a, b) => a.date.localeCompare(b.date));
+  const subjectCols = sp && sp.subjects.length ? sp.subjects.map((x) => x.subject) : [...DEFAULT_LOG_SUBJECTS];
+  sessions.forEach((x) => x.subjects.forEach((sj) => { if (!subjectCols.includes(sj)) subjectCols.push(sj); }));
+  const rows = [...sessions];
+  while (rows.length < SHEET_ROWS) rows.push(null);
+
+  const [y, m] = month.split('-').map(Number);
+  const academy = settings.academy_name || '';
+  const phone = settings.academy_phone || '';
+  const box = (on) => `<span class="sh-box ${on ? 'on' : ''}">${on ? '✓' : ''}</span>`;
+  const html = `
+    <div class="sh-head">
+      <div><div class="sh-title">수업 진도 기록지</div>
+        <div class="sh-sub">${esc(subjectCols.length ? `${s.course || subjectCols.join(' · ')}` : '')} 월간 학습 기록 &nbsp;|&nbsp; 주 ${WEEKLY_SESSIONS}회</div></div>
+      <div class="sh-academy">${academy ? `<span class="sh-badge">${esc(academy)}</span>` : ''}${phone ? `<div class="sh-phone">${esc(phone)}</div>` : ''}</div>
+    </div>
+    <div class="sh-info">
+      <div><b>학생명</b><span>${esc(s.name)}</span></div>
+      <div><b>과정·반</b><span>${esc(s.course || '-')}</span></div>
+      <div><b>기간</b><span>${y}년 ${m}월</span></div>
+      <div><b>담당 강사</b><span>${esc(s.teacher_name || '')}</span></div>
+    </div>
+    <table class="sh-table">
+      <thead><tr><th style="width:44px">주차</th><th style="width:66px">회차·날짜</th><th style="width:${subjectCols.length > 4 ? 150 : 130}px">과목</th><th>수업 내용 및 진도</th><th style="width:76px">이해도</th></tr></thead>
+      <tbody>${rows.map((x, i) => {
+        const dt = x ? new Date(`${x.date}T00:00:00`) : null;
+        return `<tr>
+          <td class="sh-week">${Math.floor(i / WEEKLY_SESSIONS) + 1}주</td>
+          <td class="sh-date"><b>${i + 1}회</b><span>${dt ? `${dt.getMonth() + 1}/${dt.getDate()} (${DAY_LABEL[dt.getDay()]})` : '월/일'}</span></td>
+          <td class="sh-subj">${subjectCols.map((sj) => `<span class="sh-opt">${box(x && x.subjects.has(sj))}${esc(sj)}</span>`).join('')}</td>
+          <td class="sh-content">${x ? `${x.att ? `<span class="sh-att">${esc(x.att)}</span> ` : ''}${esc(x.contents.join('\n'))}${x.stages.length ? `<div class="sh-stages">✔ ${x.stages.map(esc).join('<br>✔ ')}</div>` : ''}` : ''}</td>
+          <td class="sh-und">${x ? esc(x.understanding) : ''}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+    <div class="sh-note"><div class="sh-note-h">특이사항 · 종합 코멘트</div><div class="sh-note-b">${esc(note || '')}</div></div>
+    <div class="sh-sign"><span>담당 강사 <i>${esc(s.teacher_name || '')}</i> (인)</span><span>학부모 확인 <i></i> (인)</span></div>
+    <div class="sh-foot">${esc(academy)}${academy && phone ? ' · ' : ''}${esc(phone)}</div>`;
+
+  const host = document.createElement('div');
+  host.className = 'rp-host';
+  document.body.appendChild(host);
+  try {
+    const page = document.createElement('div');
+    page.className = 'rp-page sh-page';
+    page.innerHTML = html;
+    host.appendChild(page);
+    const blob = await pagesToPdf([page], onStatus, true);
+    return { blob, name: safeFileName(`${s.name}_수업진도기록지_${y}년${m}월.pdf`) };
+  } finally {
+    host.remove();
+  }
 }
 
 // ----- 리포트 내용 (블록 단위: 블록은 페이지 사이에서 잘리지 않음) -----
@@ -248,7 +445,7 @@ function layoutPages(blocks, host) {
   return pages.filter((p) => p.length);
 }
 
-async function downloadReport(studentId, opts, onStatus) {
+async function buildReport(studentId, opts, onStatus) {
   onStatus('불러오는 중...');
   await loadPdfLib();
   const [d, cur] = await Promise.all([
@@ -273,30 +470,24 @@ async function downloadReport(studentId, opts, onStatus) {
     });
     await waitImages(host);
 
-    const opt = { margin: 0, image: { type: 'jpeg', quality: 0.9 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
-    let pdf = null;
-    for (let i = 0; i < pageEls.length; i += 1) {
-      onStatus(`PDF 만드는 중... (${i + 1}/${pageEls.length}쪽)`);
-      const canvas = await window.html2pdf().set(opt).from(pageEls[i]).toCanvas().get('canvas');
-      if (!pdf) pdf = await window.html2pdf().set(opt).from(document.createElement('div')).toPdf().get('pdf').then((p) => { p.deletePage(1); return p; });
-      addCanvasPages(pdf, canvas);
-    }
+    const blob = await pagesToPdf(pageEls, onStatus);
     const name = `${d.student.name}_학습리포트_${opts.from ? `${opts.from}~${opts.to}` : `전체_${today()}`}.pdf`;
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(pdf.output('blob'));
-    a.download = name.replace(/[\\/:*?"<>|]/g, '_');
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    return { blob, name: safeFileName(name) };
   } finally {
     host.remove();
   }
 }
 
 // 캔버스를 A4 페이지에 붙임 (한 페이지보다 길면 여러 장으로 나눔)
-function addCanvasPages(pdf, canvas) {
+//  fitOnePage: 한 장보다 조금(30% 이내) 길면 잘라 넘기지 않고 줄여서 한 장에 넣음
+function addCanvasPages(pdf, canvas, fitOnePage = false) {
   const pageH = Math.round(canvas.width * (297 / 210));
+  if (fitOnePage && canvas.height > pageH && canvas.height <= pageH * 1.3) {
+    const k = pageH / canvas.height;
+    pdf.addPage('a4', 'portrait');
+    pdf.addImage(canvas.toDataURL('image/jpeg', 0.9), 'JPEG', (210 - 210 * k) / 2, 0, 210 * k, 297);
+    return;
+  }
   for (let y = 0; y < canvas.height; y += pageH) {
     const h = Math.min(pageH, canvas.height - y);
     if (y > 0 && h < canvas.width * 0.02) break; // 반올림으로 생긴 아주 얇은 나머지는 버림
