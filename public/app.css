@@ -15,6 +15,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; } /* display를 정한 요소도 hidden이면 숨김 */
 html, body { margin: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
@@ -510,3 +511,7 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
 .sh-sign { margin-top: auto; padding-top: 20px; display: flex; justify-content: flex-end; gap: 30px; font-size: 12px; }
 .sh-sign i { display: inline-block; min-width: 100px; border-bottom: 1px solid #9ca3af; font-style: normal; text-align: center; margin: 0 4px; }
 .sh-foot { margin-top: 12px; padding-top: 10px; border-top: 2px solid var(--sh); text-align: center; font-size: 11px; color: var(--sh); font-weight: 700; }
+
+/* 퇴원한 학생 */
+.stu-item.left { opacity: .7; }
+.left-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 14px; }

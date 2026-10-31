@@ -94,7 +94,7 @@ function canViewStudent(user, studentId) {
 function getStudent(id) {
   return db.prepare(
     `SELECT u.id, u.username, u.name, u.phone, u.initial_password, p.course, p.current_lesson, p.progress_percent,
-            p.next_lesson, p.assignment, p.assignment_due, p.memo, p.teacher_id,
+            p.next_lesson, p.assignment, p.assignment_due, p.memo, p.teacher_id, COALESCE(p.left_at, '') AS left_at,
             (SELECT name FROM users t WHERE t.id = p.teacher_id) AS teacher_name
      FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id
      WHERE u.id = ? AND u.role = 'student'`
@@ -316,7 +316,7 @@ app.get('/api/admin/students', requireStaff, (req, res) => {
             (SELECT COUNT(*) FROM files f WHERE f.kind = 'submission' AND f.student_id = u.id) AS submission_count,
             (SELECT COUNT(*) FROM messages m WHERE m.student_id = u.id AND m.from_staff = 0 AND m.read_by_staff = 0) AS unread_messages,
             (SELECT name FROM users pr WHERE pr.role = 'parent' AND pr.child_id = u.id AND pr.status = 'active' LIMIT 1) AS parent_name,
-            p.teacher_id, (SELECT name FROM users t WHERE t.id = p.teacher_id) AS teacher_name
+            p.teacher_id, (SELECT name FROM users t WHERE t.id = p.teacher_id) AS teacher_name, COALESCE(p.left_at, '') AS left_at
      FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id
      WHERE u.role = 'student' AND u.status = 'active' ORDER BY u.name`
   ).all(today);
@@ -373,6 +373,15 @@ app.put('/api/admin/students/:id/account', requireStaff, (req, res) => {
   res.json({ ok: true, username, password: password || null });
 });
 
+// 퇴원 처리 / 복귀: { left: true|false }. 기록은 그대로 두고 목록·시간표에서만 뺌
+app.post('/api/admin/students/:id/leave', requireStaff, (req, res) => {
+  const id = Number(req.params.id);
+  if (!getStudent(id)) return res.status(404).json({ error: '학생을 찾을 수 없습니다.' });
+  db.prepare('INSERT OR IGNORE INTO student_profiles (user_id) VALUES (?)').run(id);
+  db.prepare('UPDATE student_profiles SET left_at = ? WHERE user_id = ?').run((req.body || {}).left ? todayStr() : '', id);
+  res.json({ ok: true, student: getStudent(id) });
+});
+
 app.delete('/api/admin/students/:id', requireAdmin, (req, res) => {
   const id = Number(req.params.id);
   const files = db.prepare(
@@ -408,7 +417,7 @@ app.put('/api/admin/students/:id/profile', requireStaff, (req, res) => {
 app.get('/api/admin/accounts', requireStaff, (req, res) => {
   const students = db.prepare(
     `SELECT u.id, u.name, u.username, u.phone, u.initial_password, p.course FROM users u LEFT JOIN student_profiles p ON p.user_id = u.id
-     WHERE u.role = 'student' AND u.status = 'active' ORDER BY u.name`
+     WHERE u.role = 'student' AND u.status = 'active' AND COALESCE(p.left_at, '') = '' ORDER BY u.name`
   ).all();
   const parents = db.prepare("SELECT id, child_id, username, name, phone, initial_password FROM users WHERE role = 'parent' AND status = 'active' ORDER BY id").all();
   students.forEach((st) => { st.parents = parents.filter((x) => x.child_id === st.id).map(({ child_id, ...rest }) => rest); });
@@ -478,7 +487,7 @@ app.get('/api/admin/timetable', requireStaff, (req, res) => {
   res.json(db.prepare(
     `SELECT s.weekday, s.start_time, s.end_time, u.id AS student_id, u.name, p.course
      FROM schedules s JOIN users u ON u.id = s.student_id LEFT JOIN student_profiles p ON p.user_id = u.id
-     WHERE u.status = 'active'
+     WHERE u.status = 'active' AND COALESCE(p.left_at, '') = ''
      ORDER BY s.weekday, s.start_time, u.name`
   ).all());
 });

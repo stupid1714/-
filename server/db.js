@@ -246,6 +246,11 @@ db.exec('CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT N
   db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').run(k, v);
 });
 
+// 퇴원일 (비어 있으면 다니는 학생). 퇴원한 학생은 목록에서 숨기지만 기록은 남김
+if (!db.prepare('PRAGMA table_info(student_profiles)').all().some((c) => c.name === 'left_at')) {
+  db.exec("ALTER TABLE student_profiles ADD COLUMN left_at TEXT NOT NULL DEFAULT ''");
+}
+
 // 예전 DB에 담당 선생님 칸 추가
 if (!db.prepare('PRAGMA table_info(student_profiles)').all().some((c) => c.name === 'teacher_id')) {
   db.exec('ALTER TABLE student_profiles ADD COLUMN teacher_id INTEGER REFERENCES users(id) ON DELETE SET NULL');

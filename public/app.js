@@ -1,10 +1,10 @@
 'use strict';
 
 const $app = document.getElementById('app');
-const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false };
+const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false, showLeft: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.10.31-2';
+const APP_VERSION = '2026.11.01-1';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -975,13 +975,15 @@ async function renderAdmin() {
     <div class="admin">
       <aside class="side">
         <div class="side-head">
-          <div class="row" style="margin-bottom:10px"><h2>학생 목록 <span class="muted small">${state.students.length}명</span></h2>
+          <div class="row" style="margin-bottom:10px"><h2>학생 목록 <span class="muted small" id="stu-count">${state.students.filter((x) => !x.left_at).length}명</span></h2>
             <span class="spacer"></span><button class="btn small primary" data-act="add">+ 학생 추가</button></div>
           <input type="search" placeholder="이름 검색" value="${esc(state.search)}" id="search">
           <label class="row small muted" style="margin-top:8px;cursor:pointer;gap:6px">
             <input type="checkbox" id="today-only" ${state.todayOnly ? 'checked' : ''}> 오늘(${DAY_LABEL[new Date().getDay()]}) 오는 학생만 보기</label>
           <label class="row small muted" style="margin-top:4px;cursor:pointer;gap:6px">
             <input type="checkbox" id="mine-only" ${state.mineOnly ? 'checked' : ''}> 내 담당 학생만 보기</label>
+          <label class="row small muted" id="left-toggle" style="margin-top:4px;cursor:pointer;gap:6px" ${state.students.some((x) => x.left_at) ? '' : 'hidden'}>
+            <input type="checkbox" id="show-left" ${state.showLeft ? 'checked' : ''}> 퇴원한 학생 보기 <span id="left-count">(${state.students.filter((x) => x.left_at).length}명)</span></label>
         </div>
         <div class="side-list" id="stu-list"></div>
         <div class="side-nav">
@@ -1008,6 +1010,7 @@ async function renderAdmin() {
   $app.querySelector('[data-act=add]').onclick = openAddStudentModal;
   $app.querySelector('#today-only').onchange = (e) => { state.todayOnly = e.target.checked; renderStudentList(); };
   $app.querySelector('#mine-only').onchange = (e) => { state.mineOnly = e.target.checked; renderStudentList(); };
+  $app.querySelector('#show-left').onchange = (e) => { state.showLeft = e.target.checked; renderStudentList(); };
   await showAdminMain();
 }
 
@@ -1036,19 +1039,26 @@ async function showAdminMain() {
 
 function renderStudentList() {
   const q = state.search.trim();
+  // 퇴원생 수·보기 칸 갱신 (퇴원 처리·복귀 후에도 맞도록)
+  const leftN = state.students.filter((s) => s.left_at).length;
+  const cnt = $app.querySelector('#stu-count');
+  if (cnt) cnt.textContent = `${state.students.length - leftN}명`;
+  const tg = $app.querySelector('#left-toggle');
+  if (tg) { tg.hidden = !leftN && !state.showLeft; tg.querySelector('#left-count').textContent = `(${leftN}명)`; }
   const list = state.students
+    .filter((s) => Boolean(s.left_at) === state.showLeft)
     .filter((s) => !q || s.name.includes(q) || (s.course || '').includes(q))
     .filter((s) => !state.todayOnly || todaySlot(s.schedule))
     .filter((s) => !state.mineOnly || s.teacher_id === state.me.id)
     .sort((a, b) => (state.todayOnly ? todaySlot(a.schedule).start_time.localeCompare(todaySlot(b.schedule).start_time) : 0));
   const el = $app.querySelector('#stu-list');
-  if (!list.length) { el.innerHTML = `<div class="empty">${state.todayOnly || state.mineOnly ? '조건에 맞는 학생이 없습니다.' : '학생이 없습니다.'}</div>`; return; }
+  if (!list.length) { el.innerHTML = `<div class="empty">${state.showLeft ? '퇴원한 학생이 없습니다.' : state.todayOnly || state.mineOnly ? '조건에 맞는 학생이 없습니다.' : '학생이 없습니다.'}</div>`; return; }
   el.innerHTML = list.map((s) => `
-    <button class="stu-item ${s.id === state.selectedId ? 'on' : ''}" data-id="${s.id}">
+    <button class="stu-item ${s.id === state.selectedId ? 'on' : ''} ${s.left_at ? 'left' : ''}" data-id="${s.id}">
       <span class="avatar sm">${initial(s.name)}</span>
       <span class="grow">
         <span class="row"><span class="name">${esc(s.name)}</span>
-          ${s.today_status ? `<span class="badge ${s.today_status}">${ATT_LABEL[s.today_status]}</span>` : '<span class="badge">미체크</span>'}
+          ${s.left_at ? `<span class="badge absent">퇴원 ${esc(s.left_at.slice(2).replace(/-/g, '.'))}</span>` : s.today_status ? `<span class="badge ${s.today_status}">${ATT_LABEL[s.today_status]}</span>` : '<span class="badge">미체크</span>'}
           ${s.unread_messages ? `<span class="badge late" title="안 읽은 학부모 메시지">💬 ${s.unread_messages}</span>` : ''}
           ${s.has_account ? '' : '<span class="badge" title="로그인 계정이 아직 없습니다">계정 없음</span>'}
           <span class="spacer"></span><span class="small muted">${Number(s.progress_percent) || 0}%</span></span>
@@ -1141,7 +1151,11 @@ async function renderAdminDetail() {
         <div class="muted small">🕒 ${esc(scheduleText(d.schedule) || '수업 시간 미등록')} ${weeklyBadge(d.schedule)}</div>
         <div class="muted small">${s.username ? esc(s.username) : '로그인 계정 없음'} · 담당 ${esc(s.teacher_name || '없음')}${listItem.parent_name ? ` · 학부모: ${esc(listItem.parent_name)}` : ' · 학부모 계정 없음'}</div></div>
       <span class="spacer"></span><button type="button" class="btn small" data-report="${id}">📄 수업 진도 PDF</button>
+      ${s.left_at ? '' : '<button type="button" class="btn small ghost danger" id="leave-btn">퇴원 처리</button>'}
     </div>
+    ${s.left_at ? `<div class="left-bar"><span>🚪 <b>${esc(s.left_at)}</b>에 퇴원한 학생입니다. 학생 목록과 시간표에는 나오지 않고, 기록은 그대로 남아 있습니다.</span>
+      <span class="spacer"></span><button type="button" class="btn small" id="return-btn">다시 다니기(복귀)</button>
+      ${isAdmin(state.me) ? '<button type="button" class="btn small danger" id="purge-btn">완전 삭제</button>' : ''}</div>` : ''}
     <div class="overview">
       <div class="card" id="ov-pct"><div class="label">진도율${listItem.course_count ? ' <span class="badge common">자동</span>' : ''}</div><div class="value">${Number(s.progress_percent) || 0}%</div>${progressBar(s.progress_percent)}</div>
       <div class="card"><div class="label">현재 진도</div><div class="value" id="ov-cur">${esc(s.current_lesson) || '-'}</div></div>
@@ -1152,6 +1166,38 @@ async function renderAdminDetail() {
     <div id="tab-body"></div>`;
 
   main.querySelectorAll('[data-tab]').forEach((b) => { b.onclick = () => { state.tab = b.dataset.tab; renderAdminDetail(); }; });
+  const setLeft = async (left) => {
+    const r = await api(`/api/admin/students/${id}/leave`, { method: 'POST', body: { left } });
+    const item = state.students.find((x) => x.id === id);
+    if (item) item.left_at = r.student.left_at;
+    state.showLeft = left;
+    const sl = $app.querySelector('#show-left');
+    if (sl) sl.checked = left;
+    toast(left ? `${s.name} 학생을 퇴원 처리했습니다. '퇴원한 학생 보기'에서 다시 볼 수 있습니다.` : `${s.name} 학생이 다시 학생 목록에 나옵니다.`);
+    reload();
+  };
+  const leaveBtn = main.querySelector('#leave-btn');
+  if (leaveBtn) {
+    leaveBtn.onclick = () => {
+      if (!confirm(`${s.name} 학생을 퇴원 처리할까요?\n\n학생 목록과 시간표에서 빠지고, 진도·코멘트·파일 기록은 그대로 남습니다.\n나중에 '다시 다니기'로 되돌릴 수 있습니다.`)) return;
+      setLeft(true).catch((e) => toast(e.message, true));
+    };
+  }
+  const returnBtn = main.querySelector('#return-btn');
+  if (returnBtn) returnBtn.onclick = () => setLeft(false).catch((e) => toast(e.message, true));
+  const purgeBtn = main.querySelector('#purge-btn');
+  if (purgeBtn) {
+    purgeBtn.onclick = async () => {
+      if (!confirm(`${s.name} 학생을 완전히 삭제할까요?\n\n진도·코멘트·출석·파일·사진과 학부모 계정까지 모두 지워지고 되돌릴 수 없습니다.`)) return;
+      if (prompt(`확인을 위해 학생 이름(${s.name})을 입력하세요.`) !== s.name) { toast('이름이 달라서 삭제하지 않았습니다.', true); return; }
+      try {
+        await api(`/api/admin/students/${id}`, { method: 'DELETE' });
+        toast('삭제되었습니다.');
+        location.hash = '#/';
+        refreshList();
+      } catch (e) { toast(e.message, true); }
+    };
+  }
   const body = main.querySelector('#tab-body');
 
   if (state.tab === 'progress') {
