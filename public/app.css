@@ -515,3 +515,15 @@ body:has(.warn-bar) .admin { height: calc(100vh - 98px); height: calc(100dvh - 9
 /* 퇴원한 학생 */
 .stu-item.left { opacity: .7; }
 .left-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; font-size: 14px; }
+
+/* 휴대폰 접속 QR */
+.pa-block { border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+.pa-block h3 { margin: 0 0 4px; font-size: 16px; }
+.pa-block p { margin: 0 0 10px; }
+.pa-none { background: var(--bg); }
+.pa-body { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.pa-qr { flex: none; }
+.pa-canvas { width: 200px; height: 200px; display: block; border: 1px solid var(--border); border-radius: 10px; image-rendering: pixelated; }
+.pa-side { flex: 1; min-width: 220px; }
+.pa-url { font-size: 18px; font-weight: 700; color: var(--primary); word-break: break-all; margin-bottom: 10px; }
+@media (max-width: 560px) { .pa-canvas { width: 170px; height: 170px; } .pa-url { font-size: 15px; } }

@@ -4,7 +4,7 @@ const $app = document.getElementById('app');
 const state = { me: null, students: [], staff: [], selectedId: null, tab: 'progress', search: '', todayOnly: false, mineOnly: false, showLeft: false };
 
 // 화면 아래에 표시되는 버전 (업데이트를 받았는지 확인용)
-const APP_VERSION = '2026.11.01-1';
+const APP_VERSION = '2026.11.01-2';
 const ROLE_LABEL = { admin: '관리자', teacher: '선생님', student: '학생', parent: '학부모' };
 const isStaff = (me) => Boolean(me) && (me.role === 'admin' || me.role === 'teacher');
 const isAdmin = (me) => Boolean(me) && me.role === 'admin';
@@ -991,6 +991,7 @@ async function renderAdmin() {
           <a class="btn small" href="#/timetable">🗓 시간표</a>
           <a class="btn small" href="#/accounts">👥 계정 목록</a>
           <a class="btn small" href="#/common">📁 공통 자료</a>
+          <button type="button" class="btn small" data-act="phone-access">📱 휴대폰 접속</button>
           <a class="btn small" href="#/subjects">🧩 과목·단계</a>
           <a class="btn small" href="#/courses">📚 교재·목차</a>
         </div>
@@ -1815,6 +1816,125 @@ function stagesToText(stages) {
     return head + st.name;
   }).join('\n');
 }
+
+// ---------- 휴대폰 접속 (QR코드·공유 링크) ----------
+
+let qrLibPromise = null;
+function loadQrLib() {
+  if (window.qrcode) return Promise.resolve();
+  if (!qrLibPromise) {
+    qrLibPromise = new Promise((resolve, reject) => {
+      const sc = document.createElement('script');
+      sc.src = '/vendor/qrcode.js';
+      sc.onload = resolve;
+      sc.onerror = () => { qrLibPromise = null; reject(new Error('QR코드 도구를 불러오지 못했습니다.')); };
+      document.head.appendChild(sc);
+    });
+  }
+  return qrLibPromise;
+}
+
+// QR코드를 캔버스에 그림 (caption이 있으면 아래에 글자도: 저장·인쇄용)
+function qrCanvas(text, size, caption = []) {
+  const qr = window.qrcode(0, 'M');
+  qr.addData(text);
+  qr.make();
+  const n = qr.getModuleCount();
+  const quiet = 4;
+  const cell = Math.max(2, Math.floor(size / (n + quiet * 2)));
+  const qrSize = cell * (n + quiet * 2);
+  const lineH = Math.round(qrSize * 0.065);
+  const c = document.createElement('canvas');
+  c.width = qrSize;
+  c.height = qrSize + (caption.length ? lineH * caption.length + lineH : 0);
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff';
+  g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = '#111';
+  for (let r = 0; r < n; r += 1) for (let col = 0; col < n; col += 1) if (qr.isDark(r, col)) g.fillRect((col + quiet) * cell, (r + quiet) * cell, cell, cell);
+  caption.forEach((t, i) => {
+    g.font = `${i === 0 ? '700 ' : ''}${Math.round(lineH * (i === 0 ? 0.62 : 0.5))}px "Malgun Gothic", sans-serif`;
+    g.textAlign = 'center';
+    g.fillStyle = i === 0 ? '#111' : '#4b5563';
+    g.fillText(t, qrSize / 2, qrSize + lineH * (i + 0.6), qrSize - 16);
+  });
+  return c;
+}
+
+function shareText(academy, url) {
+  return `${academy ? `${academy} ` : ''}학습관리 접속 주소입니다.\n${url}\n(아이디와 비밀번호는 학원에서 안내해 드립니다)`;
+}
+
+async function openPhoneAccess() {
+  await loadQrLib();
+  const info = await api('/api/access-info');
+  const lan = info.lan.filter((x) => !x.virtual);
+  const lanMain = lan[0] || info.lan[0] || null;
+  const block = (key, title, url, desc) => `
+    <section class="pa-block">
+      <h3>${title}</h3>
+      <p class="muted small">${desc}</p>
+      <div class="pa-body">
+        <div class="pa-qr" data-qr="${esc(url)}"></div>
+        <div class="pa-side">
+          <div class="pa-url">${esc(url)}</div>
+          <div class="row">
+            <button type="button" class="btn small" data-copy="${esc(url)}">📋 링크 복사</button>
+            ${navigator.share ? `<button type="button" class="btn small" data-share="${esc(url)}">📤 공유하기</button>` : ''}
+            <button type="button" class="btn small" data-save-qr="${esc(url)}" data-key="${key}">🖼 QR 이미지 저장</button>
+          </div>
+        </div>
+      </div>
+    </section>`;
+  modal(`
+    <h2>📱 휴대폰으로 접속하기</h2>
+    <p class="muted small" style="margin-top:0">휴대폰 카메라로 QR코드를 비추거나, 링크를 카카오톡·문자로 보내 주세요. 처음 들어가면 브라우저 메뉴의 <b>홈 화면에 추가</b>로 앱처럼 쓸 수 있습니다.</p>
+    ${info.tunnel ? block('internet', '🌐 어디서나 (LTE·집 와이파이)', info.tunnel, '학부모님께 보낼 주소입니다. <b>인터넷주소만들기</b> 창을 닫거나 다시 실행하면 주소가 바뀌니, 그때는 새 주소를 다시 보내 주세요.')
+      : `<section class="pa-block pa-none"><h3>🌐 어디서나 (LTE·집 와이파이)</h3>
+          <p class="small">지금은 인터넷 주소가 없습니다. 프로그램 폴더의 <b>인터넷주소만들기.bat</b>을 실행한 뒤 아래 버튼을 누르면 여기에 QR코드와 링크가 나옵니다.</p>
+          <button type="button" class="btn small" id="pa-refresh">🔄 다시 확인</button></section>`}
+    ${lanMain ? block('wifi', '🏫 학원 와이파이에서', lanMain.url, `PC와 <b>같은 와이파이</b>에 연결된 휴대폰에서만 열립니다. 안 열리면 <b>휴대폰접속허용.bat</b>을 한 번 실행하세요.${lan.length > 1 ? ` (다른 주소: ${lan.slice(1).map((x) => esc(x.url)).join(', ')})` : ''}`)
+      : '<section class="pa-block pa-none"><h3>🏫 학원 와이파이에서</h3><p class="small">PC가 네트워크에 연결되어 있지 않습니다.</p></section>'}
+    <div class="row end" style="margin-top:12px"><button type="button" class="btn primary" data-close>닫기</button></div>`, (bg, close) => {
+    bg.querySelector('.modal').classList.add('modal-wide');
+    bg.querySelectorAll('[data-qr]').forEach((el) => {
+      const cv = qrCanvas(el.dataset.qr, 360);
+      cv.className = 'pa-canvas';
+      el.appendChild(cv);
+    });
+    bg.querySelectorAll('[data-copy]').forEach((b) => {
+      b.onclick = async () => { await copyText(shareText(info.academy, b.dataset.copy)); toast('링크와 안내 문구를 복사했습니다. 카카오톡·문자에 붙여넣으세요.'); };
+    });
+    bg.querySelectorAll('[data-share]').forEach((b) => {
+      b.onclick = async () => {
+        try {
+          await navigator.share({ title: `${info.academy || ''} 학습관리`.trim(), text: shareText(info.academy, b.dataset.share).replace(b.dataset.share, '').trim(), url: b.dataset.share });
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;
+          await copyText(shareText(info.academy, b.dataset.share));
+          toast('공유할 수 없어서 대신 복사했습니다. 붙여넣어 보내 주세요.');
+        }
+      };
+    });
+    bg.querySelectorAll('[data-save-qr]').forEach((b) => {
+      b.onclick = () => {
+        const url = b.dataset.saveQr;
+        const cv = qrCanvas(url, 900, [`${info.academy || ''} 학습관리`.trim(), b.dataset.key === 'wifi' ? '학원 와이파이에 연결한 뒤 카메라로 비추세요' : '휴대폰 카메라로 비추세요', url]);
+        const a = document.createElement('a');
+        a.href = cv.toDataURL('image/png');
+        a.download = `학습관리_접속QR_${b.dataset.key === 'wifi' ? '학원와이파이' : '인터넷'}.png`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      };
+    });
+    const refresh = bg.querySelector('#pa-refresh');
+    if (refresh) refresh.onclick = () => { close(); openPhoneAccess().catch((e) => toast(e.message, true)); };
+  });
+}
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-act="phone-access"]')) openPhoneAccess().catch((err) => toast(err.message, true));
+});
 
 // 학원 정보 (기록지·리포트 머리글)
 async function openAcademyModal() {

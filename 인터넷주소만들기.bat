@@ -26,9 +26,11 @@ echo  잠시 후 아래에 https://....trycloudflare.com 주소가 나옵니다.
 echo  그 주소를 휴대폰 브라우저에 입력하세요. LTE에서도 열립니다.
 echo  - 이 창을 닫으면 주소가 사라집니다. 쓰는 동안 열어 두세요.
 echo  - 다시 실행하면 주소가 새로 바뀝니다.
+echo  - 학습관리 화면 왼쪽 아래 [휴대폰 접속]을 누르면 이 주소의 QR코드와
+echo    공유 링크가 나옵니다. 학부모님께 보내 주세요.
 echo ================================================================
 echo.
-cloudflared.exe tunnel --no-autoupdate --url http://localhost:3000 2>&1 | findstr /i "trycloudflare ERR failed"
+cloudflared.exe tunnel --no-autoupdate --metrics 127.0.0.1:20241 --url http://localhost:3000 2>&1 | findstr /i "trycloudflare ERR failed"
 pause
 exit /b
 

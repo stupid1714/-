@@ -18,6 +18,13 @@ function todayStr() {
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
+// 인터넷 주소(임시 터널)로 들어온 적이 있으면 그 주소를 기억 (휴대폰 접속 QR용)
+let seenTunnel = null;
+app.use((req, res, next) => {
+  const host = String(req.headers.host || '');
+  if (/^[a-z0-9-]+\.trycloudflare\.com$/i.test(host)) seenTunnel = { url: `https://${host}`, at: Date.now() };
+  next();
+});
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // ---------- 인증 ----------
@@ -1334,6 +1341,29 @@ app.delete('/api/admin/signups/:id', requireAdmin, (req, res) => {
 
 // ---------- 에러 처리 / SPA ----------
 
+// ---------- 휴대폰 접속 주소 (QR코드·공유 링크) ----------
+
+// 인터넷주소만들기.bat(cloudflared 임시 터널)이 켜져 있으면 그 https 주소를 알아냄
+//  1) cloudflared 상태 페이지(127.0.0.1:20241~20245/quicktunnel)에 물어봄
+//  2) 그 주소로 누가 접속한 적이 있으면 기억해 둔 주소 (30분 이내)
+
+async function findTunnel() {
+  for (let port = 20241; port <= 20245; port += 1) {
+    try {
+      const r = await fetch(`http://127.0.0.1:${port}/quicktunnel`, { signal: AbortSignal.timeout(400) });
+      if (!r.ok) continue;
+      const host = String((await r.json()).hostname || '');
+      if (/^[a-z0-9-]+\.trycloudflare\.com$/i.test(host)) return `https://${host}`;
+    } catch { /* 이 포트에는 없음 */ }
+  }
+  return seenTunnel && Date.now() - seenTunnel.at < 30 * 60 * 1000 ? seenTunnel.url : null;
+}
+
+app.get('/api/access-info', requireStaff, async (req, res) => {
+  const lan = lanAddresses().map((x) => ({ url: `http://${x.ip}:${PORT}`, ifName: x.ifName, virtual: x.score >= 10 }));
+  res.json({ tunnel: await findTunnel(), lan, academy: getSettings().academy_name || '' });
+});
+
 app.use('/api', (req, res) => res.status(404).json({ error: '요청한 API가 없습니다.' }));
 
 app.use((err, req, res, next) => {
@@ -1386,4 +1416,5 @@ app.listen(PORT, () => {
   console.log(`  ★ http://${ips[0].ip}:${PORT}   (${ips[0].ifName})`);
   ips.slice(1).forEach((x) => console.log(`    http://${x.ip}:${PORT}   (${x.ifName}${x.score >= 10 ? ' - 가상 어댑터, 보통 아님' : ''})`));
   console.log('  ※ 안 열리면 폴더의 "휴대폰접속허용.bat"을 한 번 실행하세요 (Windows 방화벽 허용).');
+  console.log('  ※ 관리자·선생님 화면 왼쪽 아래 [📱 휴대폰 접속]에서 QR코드와 공유 링크를 볼 수 있습니다.');
 });
