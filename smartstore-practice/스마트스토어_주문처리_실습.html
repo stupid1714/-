@@ -2,7 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#262a30">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>스토어 주문처리 실습</title>
 <style>
 :root{
@@ -197,11 +200,108 @@ td input.inv{width:9.5rem}
   .subrow{grid-template-columns:repeat(2,1fr);row-gap:.4rem}
   .statgrid{grid-template-columns:1fr}
 }
+
+/* ===== 모바일 (휴대폰) ===== */
+.mob-only{display:none!important}
+#bnav{display:none}
+#menuBg{display:none}
+@media (max-width:760px){
+  html{font-size:15px}
+  html.big{font-size:17.5px}
+  .mob-only{display:revert!important}
+  .side .mob-only{display:flex!important}
+  .side .grp.mob-only{display:block!important}
+  .pc-only{display:none!important}
+  input,select,textarea{font-size:16px!important}
+  /* 상단바 */
+  .top{padding:.45rem .75rem;gap:.5rem;flex-wrap:nowrap}
+  .logo{font-size:.95rem;gap:.35rem}
+  .logo .mk{width:1.5rem;height:1.5rem}
+  .logo .lt,.top .store,.top .tbtn:not(.g){display:none}
+  .daybox{padding:.2rem .25rem .2rem .55rem;gap:.35rem;margin-left:auto}
+  .daybox b{font-size:.88rem;white-space:nowrap}
+  .daybox .tbtn{padding:.45rem .65rem;white-space:nowrap}
+  /* 메뉴: 왼쪽에서 나오는 서랍 */
+  .wrap{display:block}
+  .side{position:fixed;top:0;bottom:0;left:0;width:min(17rem,82vw);z-index:70;transform:translateX(-105%);transition:transform .2s;overflow-y:auto;display:block;border:0;padding:.4rem 0 2rem;box-shadow:6px 0 24px rgba(0,0,0,.15)}
+  body.menu-on .side{transform:none}
+  body.menu-on #menuBg{display:block;position:fixed;inset:0;background:rgba(20,22,26,.45);z-index:65}
+  .side .grp{display:block}
+  .side button{width:100%;padding:.75rem 1.1rem;font-size:1rem}
+  .side button.on{box-shadow:inset 3px 0 0 var(--green)}
+  .side .mtitle{padding:.8rem 1.1rem;font-weight:700;border-bottom:1px solid var(--line);display:flex;align-items:center}
+  /* 아래쪽 탭 */
+  #bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:45;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  #bnav button{flex:1;border:0;background:none;padding:.4rem 0 .35rem;display:flex;flex-direction:column;align-items:center;font-size:1.25rem;color:#555;position:relative}
+  #bnav button span{font-size:.7rem;margin-top:.05rem}
+  #bnav button.on{color:var(--green-d);font-weight:700}
+  #bnav button i{position:absolute;top:.15rem;left:calc(50% + .45rem);background:var(--red);color:#fff;font-style:normal;font-size:.65rem;font-weight:700;border-radius:1rem;padding:0 .35rem;min-width:1.1rem}
+  main{padding:.8rem .75rem 9rem}
+  h1.pt{font-size:1.2rem}
+  /* 홈 */
+  .g-4,.g-top{grid-template-columns:1fr}
+  .pipe{display:grid;grid-template-columns:repeat(5,1fr);padding:.7rem 0;gap:0}
+  .pipe .arr{display:none}
+  .pipe .st{text-align:center;padding:.35rem 0}
+  .pipe .st span{font-size:.74rem;white-space:nowrap}
+  .pipe .st b{font-size:1.3rem}
+  .pipe .st b small{font-size:.8rem}
+  .subrow{grid-template-columns:repeat(2,1fr);row-gap:.4rem}
+  .subrow div:nth-child(2){border-right:0}
+  .ch{padding:.7rem .9rem}.cb{padding:.7rem .9rem}
+  .todo{padding:.8rem .85rem}
+  .todo li{gap:.4rem}
+  .todo li .btn{margin-left:auto;padding:.4rem .7rem}
+  #toasts .toast:nth-last-child(n+3){display:none}
+  .statgrid{grid-template-columns:1fr;gap:.5rem}
+  .stat{padding:.7rem .9rem}
+  /* 버튼 크게 (손가락으로 누르기 쉽게) */
+  .btn{padding:.55rem .85rem;font-size:.95rem}
+  .btn.s{padding:.45rem .7rem;font-size:.88rem}
+  .bar{gap:.4rem}
+  .bar>.btn{flex:1 1 auto}
+  .tabs button{padding:.65rem .8rem}
+  /* 표 → 카드 */
+  .tw{background:none;border:0;overflow:visible}
+  .tw table,.tw tbody,.tw tr,.tw td{display:block;width:100%}
+  .tw thead{display:none}
+  .tw tr{background:#fff;border:1px solid var(--line);border-radius:.6rem;margin-bottom:.6rem;padding:.5rem .85rem;position:relative}
+  .tw tr.hl{border-color:#f3b4bd;background:#fffafa}
+  .tw tr.hl td{background:none}
+  .tw td{border:0;padding:.32rem 0;display:flex;gap:.7rem;justify-content:space-between;align-items:flex-start;border-bottom:1px dashed var(--line2)}
+  .tw td:last-child{border-bottom:0}
+  .tw td::before{content:attr(data-l);color:var(--sub);font-size:.8rem;flex:none;max-width:6.5rem;padding-top:.1rem}
+  .tw td .tv{text-align:right;min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+  .tw td.num{text-align:inherit}
+  .tw td.ckc{position:absolute;top:.35rem;right:.6rem;width:auto;border:0;padding:0}
+  .tw td.ckc::before{content:none}
+  .tw td.ckc input,.selall input{width:1.4rem;height:1.4rem}
+  .tw td:nth-child(2):not(.ckc),.tw td.ckc+td{padding-right:2rem}
+  .tw td input.inv{width:8.5rem}
+  .tw td select,.tw td input{padding:.4rem .4rem}
+  .selall{align-items:center;gap:.45rem;font-size:.92rem;margin:.2rem 0 .5rem;padding:.2rem .1rem}
+  .selall:not(.x){display:flex!important}
+  .kv{grid-template-columns:5.8rem 1fr}
+  /* 팝업: 아래에서 올라오는 창 */
+  .mbg{place-items:end center;padding:0}
+  .modal,.modal.wide{width:100%;max-height:92vh;border-radius:1rem 1rem 0 0;padding-bottom:env(safe-area-inset-bottom)}
+  .mf .btn{flex:1;padding:.75rem}
+  /* 손님 역할 */
+  #simBtn{bottom:calc(4.2rem + env(safe-area-inset-bottom));right:.75rem;padding:.7rem 1rem;font-size:.92rem}
+  #simBtn .lg{display:none}
+  #sim{width:100%;z-index:75}
+  .simb{padding:.7rem .8rem}
+  #toasts{left:.75rem;right:.75rem;top:3.3rem;align-items:stretch}
+  .toast{max-width:none}
+  .rv{padding:.8rem .85rem}
+  .rv .bar .btn{flex:1 1 40%}
+  .mission{padding:.8rem .85rem;gap:.7rem}
+}
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="logo"><span class="mk">🧺</span>스토어 판매자센터 <span class="practice-tag">실습용</span></div>
+  <div class="logo"><span class="mk">🧺</span><span class="lt">스토어 판매자센터</span> <span class="practice-tag">실습용</span></div>
   <span class="store" id="storeName"></span>
   <span class="sp"></span>
   <div class="daybox" title="실습 속 날짜입니다. 실제 날짜와 상관없어요.">📅 <b id="dayLabel"></b>
@@ -214,7 +314,9 @@ td input.inv{width:9.5rem}
   <nav class="side" id="side"></nav>
   <main id="main"></main>
 </div>
-<button id="simBtn" onclick="toggleSim()">🧑‍🌾 손님 역할 / 상황 만들기</button>
+<div id="menuBg" onclick="menuOpen(false)"></div>
+<nav id="bnav"></nav>
+<button id="simBtn" onclick="toggleSim()">🧑‍🌾 손님 역할<span class="lg"> / 상황 만들기</span></button>
 <aside id="sim">
   <div class="sh"><b>🧑‍🌾 손님 역할 / 상황 만들기</b>
     <p>실제로는 손님이 하는 행동이에요. 버튼을 누르면 그 상황이 생기고, 여러분은 판매자로서 처리하면 됩니다.</p></div>
@@ -585,12 +687,31 @@ function menu(){
     ]],
   ];
   const doneN = MISSIONS.filter(m => S.done[m.key]).length;
-  $('#side').innerHTML = M.map(([g, items]) =>
+  $('#side').innerHTML = `<div class="mtitle mob-only">☰ 전체 메뉴 <button class="btn s" style="margin-left:auto;width:auto" onclick="menuOpen(false)">닫기 ✕</button></div>` + M.map(([g, items]) =>
     (g ? `<div class="grp">${g}</div>` : '') + items.map(([k,t,n]) =>
       `<button class="${page===k?'on':''}" onclick="go('${k}')">${t}${n===-1?`<span class="bd g">${doneN}/${MISSIONS.length}</span>`:(n?`<span class="bd">${n}</span>`:'')}</button>`).join('')
-  ).join('');
+  ).join('') + `<div class="grp mob-only">설정</div><button class="mob-only" onclick="toggleBig()">🔠 ${S.big?'글자 보통으로':'글자 크게'}</button><button class="mob-only" onclick="menuOpen(false);resetAll()">♻️ 처음부터 다시 하기</button>`;
+  const claimN = c.cancel + c.ret + c.exch;
+  const claimGo = c.cancel ? 'cancel' : c.ret ? 'return' : c.exch ? 'exchange' : 'cancel';
+  const B = [['home','🏠','홈',0,["home"]],['deliver','📦','발주/발송',c.NEW+c.READY,['deliver','shipping','confirmed','all']],[claimGo,'↩️','취소·반품',claimN,['cancel','return','exchange','delay']],['reviews','⭐','리뷰',c.rvNew,['reviews']]];
+  $('#bnav').innerHTML = B.map(([k,ic,t,n,grp]) => `<button class="${grp.includes(page)?'on':''}" onclick="go('${k}')">${ic}<span>${t}</span>${n?`<i>${n}</i>`:''}</button>`).join('')
+    + `<button class="${['products','settle','missions','glossary','logs'].includes(page)?'on':''}" onclick="menuOpen(true)">☰<span>전체메뉴</span></button>`;
 }
-function go(p, t){ page = p; tab = t || ''; q = ''; if (p==='deliver' && (tab==='NEW'||!tab)) done('viewNew'); render(); window.scrollTo(0,0); }
+function menuOpen(v){ document.body.classList.toggle('menu-on', !!v); }
+/* 휴대폰 화면: 표의 각 칸에 제목을 붙여서 카드 모양으로 보이게 함 */
+function cardify(){
+  document.querySelectorAll('#main .tw table').forEach(t => {
+    const hs = [...t.querySelectorAll('thead th')].map(th => th.textContent.trim());
+    t.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td,i) => {
+      td.dataset.l = hs[i] || '';
+      if (td.querySelector('input.ck')) td.classList.add('ckc');
+      const d = document.createElement('div'); d.className = 'tv';
+      while (td.firstChild) d.appendChild(td.firstChild);
+      td.appendChild(d);
+    }));
+  });
+}
+function go(p, t){ menuOpen(false); page = p; tab = t || ''; q = ''; if (p==='deliver' && (tab==='NEW'||!tab)) done('viewNew'); render(); window.scrollTo(0,0); }
 
 /* ---------- 렌더 ---------- */
 function render(){
@@ -601,6 +722,7 @@ function render(){
   menu();
   const P = {home, all:pAll, deliver:pDeliver, shipping:pShipping, confirmed:pConfirmed, cancel:pCancel, return:pReturn, exchange:pExchange, delay:pDelay, products:pProducts, settle:pSettle, reviews:pReviews, missions:pMissions, glossary:pGlossary, logs:pLogs};
   $('#main').innerHTML = (P[page] || home)();
+  cardify();
   renderSim();
   save();
 }
@@ -682,7 +804,7 @@ function home(){
 /* ---------- 주문 표 ---------- */
 function orderRows(list, cols, opts={}){
   if (!list.length) return `<div class="empty">${opts.empty || '해당하는 주문이 없어요.'}</div>`;
-  return `<div class="tw"><table><thead><tr>${opts.check?'<th><input type="checkbox" onclick="checkAll(this)"></th>':''}${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
+  return `${opts.check?'<label class="selall mob-only"><input type="checkbox" onclick="checkAll(this)"> 전체 선택</label>':''}<div class="tw"><table><thead><tr>${opts.check?'<th><input type="checkbox" onclick="checkAll(this)"></th>':''}${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
     ${list.map(o => `<tr class="${isOverdue(o)||activeClaim(o)?'hl':''}">${opts.check?`<td><input type="checkbox" class="ck" value="${o.no}"></td>`:''}${cols.map(c=>`<td class="${c[2]||''}">${c[1](o)}</td>`).join('')}</tr>`).join('')}
   </tbody></table></div>`;
 }
@@ -691,7 +813,7 @@ const COL = {
   status:['상태', o => stBadge(o)],
   oday:['주문일시', o => `${fmtD(o.oday)} <span class="small">${o.otime}</span>`],
   deadline:['발송기한', o => `<span style="${isOverdue(o)?'color:var(--red);font-weight:700':''}">${fmtD(o.deadline)}${o.deadline===S.day?' <span class="badge b-ylw">오늘</span>':''}</span>`],
-  buyer:['구매자 / 연락처', o => `${esc(o.buyer)}<div class="small">${o.phone}</div>`],
+  buyer:['구매자 / 연락처', o => `${esc(o.buyer)}<div class="small"><a href="tel:${o.phone}" title="휴대폰에서 누르면 전화가 걸려요">📞 ${o.phone}</a></div>`],
   prod:['상품명 / 옵션', o => `${esc(o.pname)}<div class="small">옵션: ${esc(o.option)}</div>`],
   qty:['수량', o => `${o.qty}개`, 'num'],
   pay:['결제금액', o => `${won(total(o))}${o.ship?`<div class="small">배송비 ${won(o.ship)} 포함</div>`:'<div class="small">무료배송</div>'}`, 'num'],
