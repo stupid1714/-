@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>스토어 주문처리 실습</title>
+<style>
+:root{
+  --bg:#eef0f4; --card:#fff; --line:#e3e6eb; --line2:#f0f2f5; --text:#1e2124; --sub:#6b7078; --muted:#9aa0a8;
+  --green:#03c75a; --green-d:#02a84b; --teal:#0b9aa8; --red:#e2364b; --orange:#f08a24; --blue:#2f6fed;
+  --soft:#f6f7fa; --head:#262a30; --yellow:#fff7d6;
+}
+*{box-sizing:border-box}
+html{font-size:15px}
+html.big{font-size:18px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR",sans-serif;line-height:1.5}
+button{font:inherit;cursor:pointer}
+input,select,textarea{font:inherit}
+a{color:inherit}
+/* 상단바 */
+.top{position:sticky;top:0;z-index:30;background:var(--head);color:#fff;display:flex;align-items:center;gap:.8rem;padding:.55rem 1rem;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:1.05rem}
+.logo .mk{width:1.7rem;height:1.7rem;border-radius:.4rem;background:var(--green);display:grid;place-items:center;font-size:1rem}
+.practice-tag{font-size:.72rem;background:#ffcf33;color:#3a2c00;border-radius:1rem;padding:.05rem .55rem;font-weight:700}
+.top .store{opacity:.85;font-size:.9rem}
+.top .sp{flex:1}
+.daybox{display:flex;align-items:center;gap:.5rem;background:#3a3f47;border-radius:.5rem;padding:.25rem .35rem .25rem .7rem}
+.daybox b{font-size:1rem}
+.tbtn{border:0;border-radius:.45rem;padding:.42rem .8rem;background:#4a515b;color:#fff;font-weight:600}
+.tbtn:hover{background:#59616d}
+.tbtn.g{background:var(--green)}
+.tbtn.g:hover{background:var(--green-d)}
+.tbtn.y{background:#ffcf33;color:#3a2c00}
+/* 레이아웃 */
+.wrap{display:flex;min-height:calc(100vh - 3rem)}
+.side{width:13.5rem;flex:none;background:#fff;border-right:1px solid var(--line);padding:.6rem 0}
+.side .grp{font-size:.75rem;color:var(--muted);padding:.8rem 1.1rem .25rem;font-weight:700}
+.side button{display:flex;width:100%;align-items:center;gap:.5rem;border:0;background:none;text-align:left;padding:.48rem 1.1rem;color:#333;font-size:.93rem}
+.side button:hover{background:var(--soft)}
+.side button.on{background:#e9f9f0;color:var(--green-d);font-weight:700;box-shadow:inset 3px 0 0 var(--green)}
+.side .bd{margin-left:auto;background:var(--red);color:#fff;border-radius:1rem;font-size:.72rem;padding:0 .45rem;min-width:1.3rem;text-align:center;font-weight:700}
+.side .bd.g{background:var(--teal)}
+main{flex:1;min-width:0;padding:1.1rem 1.2rem 6rem}
+h1.pt{font-size:1.35rem;margin:.1rem 0 .3rem}
+.pdesc{color:var(--sub);margin:0 0 1rem;font-size:.92rem}
+/* 카드 */
+.grid{display:grid;gap:.75rem}
+.g-top{grid-template-columns:3fr 1fr}
+.g-4{grid-template-columns:repeat(4,1fr)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:.5rem;min-width:0}
+.ch{display:flex;align-items:center;gap:.55rem;padding:.85rem 1.1rem;border-bottom:1px solid var(--line)}
+.ch .ic{width:1.85rem;height:1.85rem;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:.95rem;flex:none}
+.ch h3{margin:0;font-size:1.05rem}
+.ch .info{border:1px solid #aaa;color:#888;background:none;border-radius:50%;width:1.05rem;height:1.05rem;font-size:.68rem;line-height:1;padding:0;display:grid;place-items:center}
+.ch .rt{margin-left:auto;font-size:.78rem;color:var(--sub);display:flex;align-items:center;gap:.3rem}
+.ch .rt button{border:0;background:none;color:var(--sub);padding:0 .1rem;font-size:.9rem}
+.cb{padding:1rem 1.1rem}
+.pipe{display:flex;align-items:center;justify-content:space-between;padding:1.6rem .6rem 1.6rem}
+.pipe .st{cursor:pointer;border-radius:.4rem;padding:.3rem .5rem}
+.pipe .st:hover{background:var(--soft)}
+.pipe .st span{display:block;font-size:.9rem}
+.pipe .st b{font-size:1.55rem}
+.pipe .st b small{font-size:1.05rem;font-weight:500;margin-left:.1rem}
+.pipe .arr{color:#c4c8ce;font-size:1.5rem}
+.subrow{display:grid;grid-template-columns:repeat(4,1fr);background:var(--soft);border-radius:.35rem;padding:.55rem 0}
+.subrow div{display:flex;justify-content:space-between;padding:0 1rem;font-size:.88rem;color:var(--sub);border-right:1px solid var(--line)}
+.subrow div:last-child{border-right:0}
+.subrow b{color:var(--text)}
+.rows .r{display:flex;justify-content:space-between;align-items:center;padding:.42rem 0;font-size:.93rem;cursor:pointer;border-radius:.3rem}
+.rows .r:hover{background:var(--soft)}
+.rows .r b{font-size:1.3rem}
+.cred b{color:var(--red)} .cteal b{color:var(--teal)} .cgreen b{color:#14935a}
+.zero{opacity:1}
+.settle-r{display:flex;justify-content:space-between;align-items:center;padding:.9rem 0;cursor:pointer}
+.settle-r b{font-size:1.45rem}
+/* 할 일 */
+.todo{background:#fff;border:2px solid var(--green);border-radius:.6rem;padding:.9rem 1.1rem;margin-bottom:.9rem}
+.todo h3{margin:0 0 .45rem;font-size:1.05rem}
+.todo ul{margin:0;padding:0;list-style:none}
+.todo li{display:flex;align-items:center;gap:.6rem;padding:.35rem 0;border-top:1px dashed var(--line);flex-wrap:wrap}
+.todo li:first-child{border-top:0}
+.todo li .n{background:var(--red);color:#fff;border-radius:1rem;padding:0 .55rem;font-weight:700;font-size:.85rem}
+.todo .none{color:var(--sub)}
+/* 버튼 */
+.btn{border:1px solid #c9ced6;background:#fff;color:#333;border-radius:.35rem;padding:.38rem .75rem;font-size:.9rem;white-space:nowrap}
+.btn:hover{background:var(--soft)}
+.btn.p{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+.btn.p:hover{background:var(--green-d)}
+.btn.r{color:var(--red);border-color:#f0b3bb}
+.btn.r:hover{background:#fff1f3}
+.btn.b{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+.btn.s{padding:.22rem .5rem;font-size:.82rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.bar{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;margin:.6rem 0}
+.bar .sp{flex:1}
+/* 탭 */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--line);margin-bottom:.6rem;overflow-x:auto}
+.tabs button{border:0;background:none;padding:.6rem 1rem;color:var(--sub);font-weight:600;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+.tabs button.on{color:var(--text);border-bottom-color:var(--text)}
+.tabs .c{color:var(--red);margin-left:.25rem}
+/* 표 */
+.tw{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:.4rem}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th{background:#f7f8fa;color:#555;font-weight:600;text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:.55rem .6rem;border-bottom:1px solid var(--line2);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr.hl td{background:#fff8f8}
+td.num{text-align:right;white-space:nowrap}
+.mono{font-family:Consolas,monospace;font-size:.85rem}
+.small{font-size:.8rem;color:var(--sub)}
+.empty{padding:2.5rem 1rem;text-align:center;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:.4rem}
+.badge{display:inline-block;border-radius:.25rem;padding:.02rem .4rem;font-size:.76rem;font-weight:700;white-space:nowrap}
+.b-new{background:#e6f0ff;color:#2f6fed}.b-ready{background:#e9f9f0;color:#14935a}.b-ship{background:#fff3e0;color:#c76a00}
+.b-done{background:#eef0f3;color:#555}.b-red{background:#ffe9ec;color:var(--red)}.b-ylw{background:#fff4c7;color:#7a5b00}.b-teal{background:#dff5f7;color:#08808c}
+td select,td input{border:1px solid #c9ced6;border-radius:.3rem;padding:.25rem .35rem;font-size:.85rem}
+td input.inv{width:9.5rem}
+/* 기타 */
+.tip{background:var(--yellow);border:1px solid #f0de8a;border-radius:.45rem;padding:.65rem .9rem;font-size:.88rem;margin:.6rem 0;color:#4e3d00}
+.tip b{color:#3a2c00}
+.kv{display:grid;grid-template-columns:7.5rem 1fr;gap:.3rem .8rem;font-size:.9rem}
+.kv dt{color:var(--sub)} .kv dd{margin:0}
+.stars{color:#ffb400;letter-spacing:.05rem}
+.rv{background:#fff;border:1px solid var(--line);border-radius:.5rem;padding:.9rem 1rem;margin-bottom:.6rem}
+.rv.low{border-color:#f3b4bd;background:#fffafa}
+.rv .meta{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;font-size:.85rem;color:var(--sub)}
+.rv .txt{margin:.45rem 0;font-size:.95rem}
+.rv .photo{display:inline-grid;place-items:center;width:4rem;height:4rem;background:#f1f3f5;border-radius:.35rem;font-size:1.6rem;margin-right:.3rem}
+.rv .reply{background:var(--soft);border-left:3px solid var(--green);padding:.5rem .7rem;font-size:.9rem;margin-top:.4rem;white-space:pre-wrap}
+.mission{background:#fff;border:1px solid var(--line);border-radius:.55rem;padding:.9rem 1.1rem;margin-bottom:.6rem;display:flex;gap:.9rem}
+.mission.ok{border-color:#9fe0bc;background:#f5fdf8}
+.mission .no{flex:none;width:2.2rem;height:2.2rem;border-radius:50%;display:grid;place-items:center;background:#eef0f3;font-weight:700}
+.mission.ok .no{background:var(--green);color:#fff}
+.mission h4{margin:0 0 .2rem;font-size:1.02rem}
+.mission ol{margin:.35rem 0 .5rem;padding-left:1.2rem;font-size:.9rem}
+.mission .why{font-size:.86rem;color:var(--sub);margin:0}
+.prog{height:.6rem;background:#e3e6eb;border-radius:1rem;overflow:hidden;margin:.3rem 0 1rem}
+.prog i{display:block;height:100%;background:var(--green)}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:.9rem}
+.stat{background:#fff;border:1px solid var(--line);border-radius:.5rem;padding:.9rem 1rem}
+.stat span{color:var(--sub);font-size:.88rem}.stat b{display:block;font-size:1.45rem;margin-top:.15rem}
+.log li{padding:.35rem 0;border-bottom:1px solid var(--line2);font-size:.88rem;list-style:none}
+.log{padding:0;margin:0;background:#fff;border:1px solid var(--line);border-radius:.4rem;padding:.3rem .9rem}
+.log .d{color:var(--muted);margin-right:.5rem;font-size:.8rem}
+.gl dt{font-weight:700;margin-top:.8rem}
+.gl dd{margin:.15rem 0 0;color:#444;font-size:.93rem}
+.gl{background:#fff;border:1px solid var(--line);border-radius:.5rem;padding:.4rem 1.2rem 1rem;margin:0}
+/* 모달 */
+.mbg{position:fixed;inset:0;background:rgba(20,22,26,.5);z-index:60;display:grid;place-items:center;padding:1rem}
+.modal{background:#fff;border-radius:.6rem;width:min(36rem,100%);max-height:calc(100vh - 2rem);display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.modal.wide{width:min(48rem,100%)}
+.modal .mh{padding:.9rem 1.2rem;border-bottom:1px solid var(--line);font-weight:700;font-size:1.08rem;display:flex;align-items:center}
+.modal .mh button{margin-left:auto;border:0;background:none;font-size:1.3rem;color:var(--sub);line-height:1}
+.modal .mb{padding:1rem 1.2rem;overflow:auto}
+.modal .mf{padding:.75rem 1.2rem;border-top:1px solid var(--line);display:flex;gap:.45rem;justify-content:flex-end;flex-wrap:wrap}
+.fld{margin-bottom:.75rem}
+.fld label{display:block;font-weight:600;font-size:.9rem;margin-bottom:.25rem}
+.fld input,.fld select,.fld textarea{width:100%;border:1px solid #c9ced6;border-radius:.35rem;padding:.45rem .55rem}
+.fld textarea{min-height:6rem;resize:vertical}
+.pre{white-space:pre-line}
+.timeline{margin:.4rem 0 0;padding:0;list-style:none;border-left:2px solid var(--line);margin-left:.4rem}
+.timeline li{position:relative;padding:.15rem 0 .5rem 1rem;font-size:.88rem}
+.timeline li:before{content:"";position:absolute;left:-.4rem;top:.45rem;width:.6rem;height:.6rem;border-radius:50%;background:var(--green)}
+/* 토스트 */
+#toasts{position:fixed;top:3.6rem;right:1rem;z-index:80;display:flex;flex-direction:column;gap:.45rem;align-items:flex-end}
+.toast{cursor:pointer}
+.g-4 .ch h3{white-space:nowrap;font-size:1rem}
+@media (max-width:1500px){.g-4 .ch .tm{display:none}}
+.toast{background:#262a30;color:#fff;padding:.65rem 1rem;border-radius:.5rem;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:.92rem;max-width:24rem;animation:tin .25s ease-out}
+.toast.ok{background:#0f8a4a}.toast.warn{background:#c2410c}.toast.bell{background:#2f6fed}
+@keyframes tin{from{opacity:0;transform:translateY(-.5rem)}to{opacity:1;transform:none}}
+/* 손님 역할 패널 */
+#simBtn{position:fixed;right:1rem;bottom:1rem;z-index:40;border:0;border-radius:2rem;background:#ff8a00;color:#fff;font-weight:700;padding:.8rem 1.2rem;box-shadow:0 6px 18px rgba(255,138,0,.4);font-size:1rem}
+#sim{position:fixed;right:0;top:0;bottom:0;width:min(22rem,100%);background:#fff;z-index:50;box-shadow:-6px 0 24px rgba(0,0,0,.15);transform:translateX(105%);transition:transform .2s;display:flex;flex-direction:column}
+#sim.on{transform:none}
+#sim .sh{background:#ff8a00;color:#fff;padding:.9rem 1.1rem}
+#sim .sh b{font-size:1.08rem}
+#sim .sh p{margin:.25rem 0 0;font-size:.82rem;opacity:.95}
+#sim .sb{padding:.8rem 1rem;overflow:auto;flex:1}
+#sim .sb h5{margin:.9rem 0 .35rem;font-size:.85rem;color:var(--sub)}
+#sim .sb h5:first-child{margin-top:0}
+.simb{display:flex;width:100%;align-items:center;gap:.6rem;border:1px solid var(--line);background:#fff;border-radius:.45rem;padding:.55rem .7rem;margin-bottom:.4rem;text-align:left;font-size:.92rem}
+.simb:hover{border-color:#ff8a00;background:#fff8ef}
+.simb i{font-style:normal;font-size:1.2rem}
+.simb small{display:block;color:var(--sub);font-size:.76rem}
+.chk{display:flex;gap:.5rem;align-items:flex-start;font-size:.88rem;padding:.4rem 0}
+@media (max-width:1000px){.g-top{grid-template-columns:1fr}.g-4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:760px){
+  .wrap{flex-direction:column}
+  .side{width:auto;display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:0}
+  .side .grp{display:none}
+  .side button{width:auto;white-space:nowrap;padding:.6rem .8rem}
+  .side button.on{box-shadow:inset 0 -3px 0 var(--green)}
+  main{padding:.9rem 1rem 6rem}
+  .g-4{grid-template-columns:1fr}
+  .pipe{flex-wrap:wrap;gap:.4rem;padding:1rem .2rem}
+  .pipe .arr{display:none}
+  .subrow{grid-template-columns:repeat(2,1fr);row-gap:.4rem}
+  .statgrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo"><span class="mk">🧺</span>스토어 판매자센터 <span class="practice-tag">실습용</span></div>
+  <span class="store" id="storeName"></span>
+  <span class="sp"></span>
+  <div class="daybox" title="실습 속 날짜입니다. 실제 날짜와 상관없어요.">📅 <b id="dayLabel"></b>
+    <button class="tbtn g" onclick="nextDay()" title="하루를 보내면 배송이 진행되고 정산이 들어와요">다음날로 ⏭</button>
+  </div>
+  <button class="tbtn" onclick="toggleBig()" id="bigBtn">글자 크게</button>
+  <button class="tbtn" onclick="resetAll()">처음부터</button>
+</header>
+<div class="wrap">
+  <nav class="side" id="side"></nav>
+  <main id="main"></main>
+</div>
+<button id="simBtn" onclick="toggleSim()">🧑‍🌾 손님 역할 / 상황 만들기</button>
+<aside id="sim">
+  <div class="sh"><b>🧑‍🌾 손님 역할 / 상황 만들기</b>
+    <p>실제로는 손님이 하는 행동이에요. 버튼을 누르면 그 상황이 생기고, 여러분은 판매자로서 처리하면 됩니다.</p></div>
+  <div class="sb" id="simBody"></div>
+  <div style="padding:.7rem 1rem;border-top:1px solid var(--line)"><button class="btn" style="width:100%" onclick="toggleSim()">닫기</button></div>
+</aside>
+<div id="toasts"></div>
+<div id="modalRoot"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   스토어 주문처리 실습 프로그램
+   - 실제 주문·결제·배송은 일어나지 않습니다.
+   - 모든 데이터는 이 컴퓨터의 브라우저에만 저장됩니다.
+   ========================================================= */
+const KEY = 'storePractice.v1';
+const COURIERS = ['CJ대한통운','우체국택배','한진택배','롯데택배','로젠택배'];
+const FEE_RATE = 0.05;       // 실습용 가상 수수료 5%
+const RETURN_FEE = 6000;     // 실습용 왕복 반품배송비
+const SURN = ['김','이','박','최','정','강','조','윤','장','임','한','오','서','신','권','황','안','송','류','홍'];
+const GIVEN = ['민준','서연','지우','하은','도윤','수아','예준','지민','현우','미경','영희','정숙','순자','성호','은지','태희','동현','유진','혜원','상철','옥순','경민'];
+const ADDR = ['서울특별시 강남구 테헤란로 152, 1203호','서울특별시 마포구 월드컵북로 21, 302동 1101호','경기도 수원시 영통구 광교중앙로 140, 105동 802호','부산광역시 해운대구 센텀중앙로 79, 2504호','대구광역시 수성구 달구벌대로 2450, 103동 1504호','인천광역시 연수구 송도과학로 32, 801호','광주광역시 서구 상무중앙로 61, 1층','대전광역시 유성구 대학로 99, 202동 403호','경기도 고양시 일산동구 중앙로 1275, 701호','충청남도 천안시 서북구 불당대로 150, 1102호','전라북도 전주시 완산구 효자로 225, 304호','경상남도 창원시 성산구 중앙대로 151, 905호'];
+const MEMOS = ['','','부재 시 문 앞에 놓아주세요','경비실에 맡겨주세요','배송 전 연락 부탁드립니다','선물용이에요. 가격표 빼주세요','공동현관 비밀번호 #1234'];
+const SEED_PRODUCTS = [
+  {id:1,name:'꿀부사 사과 5kg',price:39000,ship:0,stock:30,options:['중과(18~20과)','대과(14~16과)']},
+  {id:2,name:'신고배 7.5kg 선물세트',price:45000,ship:0,stock:20,options:['9~11과','12~14과']},
+  {id:3,name:'해남 꿀고구마 5kg',price:18900,ship:3000,stock:40,options:['한입 크기','중간 크기','특상 크기']},
+  {id:4,name:'햇감자 10kg',price:22000,ship:3000,stock:25,options:['중','대']},
+  {id:5,name:'2026 햅쌀 10kg',price:32000,ship:0,stock:50,options:['백미','현미']},
+  {id:6,name:'국산 아카시아꿀 1.2kg',price:35000,ship:3000,stock:15,options:['1병','2병 세트']},
+  {id:7,name:'설향 딸기 1kg',price:19800,ship:3000,stock:12,options:['특','상']},
+  {id:8,name:'제주 노지감귤 5kg',price:16900,ship:3000,stock:35,options:['로얄과(S~M)','대과(L)']},
+];
+const CANCEL_REASONS = [
+  {r:'단순 변심 (마음이 바뀌었어요)',f:'BUYER'},
+  {r:'주문 실수 (옵션을 잘못 골랐어요)',f:'BUYER'},
+  {r:'배송이 너무 늦어요',f:'SELLER'},
+];
+const RETURN_REASONS = [
+  {r:'단순 변심 (생각했던 것과 달라요)',f:'BUYER'},
+  {r:'상품 일부가 물러지거나 상해서 왔어요',f:'SELLER'},
+  {r:'주문한 것과 다른 상품이 왔어요',f:'SELLER'},
+];
+const EXCHANGE_REASONS = [
+  {r:'상품이 눌리거나 깨져서 왔어요',f:'SELLER'},
+  {r:'옵션(크기)을 잘못 선택했어요',f:'BUYER'},
+];
+const REVIEW_TEXT = {
+  5:['정말 달고 맛있어요! 또 주문할게요.','포장이 꼼꼼해서 하나도 상한 게 없었어요. 감사합니다.','부모님 댁으로 보냈는데 너무 좋아하세요.','크기도 고르고 신선해요. 농장 직송이라 확실히 다르네요.'],
+  4:['맛있어요. 배송이 하루 늦은 것 빼고는 만족합니다.','가격 대비 괜찮아요. 재구매 의사 있어요.','신선한데 크기가 조금 들쭉날쭉해요.'],
+  3:['보통이에요. 나쁘지 않아요.','맛은 괜찮은데 양이 생각보다 적어요.'],
+  2:['몇 개는 물러서 왔어요. 포장에 좀 더 신경 써 주세요.','생각보다 당도가 낮아서 아쉬워요.'],
+  1:['절반이 상해서 왔어요. 너무 실망입니다.','상자가 찌그러져서 왔고 안에 내용물도 다 눌렸어요.'],
+};
+
+let S;              // 전체 상태
+let page = 'home';  // 현재 화면
+let tab = '';       // 화면 안의 탭
+let rvFilter = 'all';
+let q = '';         // 검색어
+
+/* ---------- 공통 도구 ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const won = n => (n||0).toLocaleString('ko-KR') + '원';
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const rint = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+function dateOf(d){ const b = new Date(S.base); b.setDate(b.getDate()+d); return b; }
+function fmtD(d){ const x = dateOf(d); return `${x.getMonth()+1}.${String(x.getDate()).padStart(2,'0')}(${'일월화수목금토'[x.getDay()]})`; }
+function ymd(d){ const x = dateOf(d); return `${x.getFullYear()}${String(x.getMonth()+1).padStart(2,'0')}${String(x.getDate()).padStart(2,'0')}`; }
+function nowHM(){ const n = new Date(); return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
+function total(o){ return o.unit*o.qty + o.ship; }
+function stars(n){ return '★'.repeat(n) + '<span style="color:#ddd">' + '★'.repeat(5-n) + '</span>'; }
+function findO(no){ return S.orders.find(o => o.no === no); }
+function activeClaim(o){ return o.claim && !['DONE','REJECT'].includes(o.claim.status) ? o.claim : null; }
+function hist(o, t){ o.hist.push({d:S.day, t}); }
+function log(t){ S.log.unshift({d:S.day, t:nowHM(), m:t}); if (S.log.length > 300) S.log.length = 300; }
+function done(k){ if (!S.done[k]) { S.done[k] = true; const m = MISSIONS.find(x => x.key === k); if (m) setTimeout(() => toast(`🎉 미션 완료: ${m.title}`, 'ok'), 400); } }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
+function load(){ try { const t = localStorage.getItem(KEY); if (t) return JSON.parse(t); } catch(e){} return null; }
+function practiceInvoice(){ let s = String(rint(5,6)); for (let i=0;i<11;i++) s += rint(0,9); return s; }
+function phone(){ return `010-${rint(2000,9999)}-${rint(1000,9999)}`; }
+
+function fresh(){
+  const t = new Date(); t.setHours(0,0,0,0);
+  return {
+    base: t.toISOString(), day:0, store:'행복농원', seq:1, rseq:1, eseq:1,
+    products: SEED_PRODUCTS.map(p => ({...p, status:'판매중'})),
+    orders:[], reviews:[], events:[], pointCost:0, penalty:0,
+    done:{}, log:[], auto:false, big:false, welcomed:false,
+  };
+}
+
+/* ---------- 상태 이름 ---------- */
+const ST = {NEW:['신규주문','b-new'],READY:['발송대기','b-ready'],SHIPPING:['배송중','b-ship'],DELIVERED:['배송완료','b-teal'],CONFIRMED:['구매확정','b-done'],CANCELED:['취소완료','b-done'],RETURNED:['반품완료','b-done']};
+const CT = {CANCEL:'취소',RETURN:'반품',EXCHANGE:'교환'};
+const CS = {REQ:'요청',PICKUP:'수거중',COLLECTED:'수거완료',RESHIP:'재배송중',DONE:'완료',REJECT:'거부'};
+function stBadge(o){
+  let h = `<span class="badge ${ST[o.status][1]}">${ST[o.status][0]}</span>`;
+  if (o.claim){
+    const a = activeClaim(o);
+    h += ` <span class="badge ${a ? 'b-red' : 'b-done'}">${CT[o.claim.type]}${CS[o.claim.status]}</span>`;
+  }
+  if (isOverdue(o)) h += ` <span class="badge b-red">발송기한 지남</span>`;
+  else if (o.delay && ['NEW','READY'].includes(o.status)) h += ` <span class="badge b-ylw">지연안내함</span>`;
+  return h;
+}
+function isOverdue(o){ return ['NEW','READY'].includes(o.status) && !activeClaim(o) && S.day > o.deadline; }
+
+/* ---------- 집계 ---------- */
+function counts(){
+  const O = S.orders, plain = o => !activeClaim(o);
+  const c = {
+    NEW: O.filter(o => o.status==='NEW' && plain(o)).length,
+    READY: O.filter(o => o.status==='READY' && plain(o)).length,
+    SHIPPING: O.filter(o => o.status==='SHIPPING').length,
+    DELIVERED: O.filter(o => o.status==='DELIVERED' && plain(o)).length,
+    CONFIRMED: O.filter(o => o.status==='CONFIRMED').length,
+    todayOut: O.filter(o => ['NEW','READY'].includes(o.status) && plain(o) && o.deadline === S.day).length,
+    cancel: O.filter(o => activeClaim(o)?.type==='CANCEL').length,
+    ret: O.filter(o => activeClaim(o)?.type==='RETURN').length,
+    exch: O.filter(o => activeClaim(o)?.type==='EXCHANGE').length,
+    dShip: O.filter(isOverdue).length,
+    dCancel: O.filter(o => { const a = activeClaim(o); return a && a.type==='CANCEL' && S.day - a.rday >= 1; }).length,
+    dRet: O.filter(o => { const a = activeClaim(o); return a && a.type==='RETURN' && S.day - a.rday >= 3; }).length,
+    dExch: O.filter(o => { const a = activeClaim(o); return a && a.type==='EXCHANGE' && S.day - a.rday >= 3; }).length,
+    onSale: S.products.filter(p => p.status==='판매중').length,
+    soldOut: S.products.filter(p => p.status==='품절').length,
+    rvNew: S.reviews.filter(r => !r.read).length,
+    rvLow: S.reviews.filter(r => r.rating <= 2 && !r.reply).length,
+    rvNoReply: S.reviews.filter(r => !r.reply).length,
+    events: S.events.filter(e => !e.announced).length,
+    settleToday: O.filter(o => o.settle?.state==='완료' && o.settle.doneDay===S.day).reduce((a,o)=>a+o.settle.amt,0),
+    settleExp: O.filter(o => o.settle?.state==='예정').reduce((a,o)=>a+o.settle.amt,0),
+  };
+  c.wallet = O.filter(o => o.settle?.state==='완료').reduce((a,o)=>a+o.settle.amt,0) - S.pointCost;
+  return c;
+}
+
+/* ---------- 주문 만들기 (손님 역할) ---------- */
+function makeOrder(opt={}){
+  const avail = S.products.filter(p => p.status==='판매중' && p.stock > 0);
+  if (!avail.length){ toast('판매중인 상품이 없어서 주문이 들어올 수 없어요. 상품관리에서 재고를 채워주세요.','warn'); return null; }
+  const p = opt.pid ? (avail.find(x => x.id===opt.pid) || pick(avail)) : pick(avail);
+  const qty = Math.min(p.stock, opt.qty || (Math.random() < .8 ? 1 : 2));
+  p.stock -= qty;
+  const oday = opt.oday ?? S.day;
+  const o = {
+    no: ymd(oday) + String(S.seq++).padStart(4,'0') + rint(1000,9999),
+    pid:p.id, pname:p.name, option:pick(p.options), qty, unit:p.price, ship:p.ship,
+    buyer: pick(SURN)+pick(GIVEN), phone: phone(), addr: pick(ADDR), memo: pick(MEMOS),
+    oday, otime: `${String(rint(7,23)).padStart(2,'0')}:${String(rint(0,59)).padStart(2,'0')}`,
+    deadline: oday + 3, status:'NEW', courier:'', invoice:'', sday:null, dday:null, cday:null,
+    claim:null, delay:null, settle:null, reviewed:false, penalized:false, hist:[],
+  };
+  o.hist.push({d:oday, t:'손님이 주문하고 결제를 마쳤어요 (신규주문)'});
+  if (p.stock <= 0){ p.stock = 0; p.status = '품절'; log(`⚠️ [${p.name}] 재고가 0개가 되어 자동으로 품절 처리됐어요`); }
+  S.orders.unshift(o);
+  log(`🛒 새 주문: ${o.buyer}님 · ${p.name} ${qty}개 (${won(total(o))})`);
+  return o;
+}
+/* 주문을 원하는 단계까지 미리 진행시키기 (상황 만들기용) */
+function fastForward(o, to){
+  const steps = ['NEW','READY','SHIPPING','DELIVERED','CONFIRMED'];
+  const ti = steps.indexOf(to);
+  o.oday = S.day - ti - 1; o.deadline = o.oday + 3; o.hist[0].d = o.oday;
+  if (ti >= 1){ o.status='READY'; hist(o,'판매자가 발주확인 했어요'); }
+  if (ti >= 2){ o.status='SHIPPING'; o.courier=pick(COURIERS); o.invoice=practiceInvoice(); o.sday=S.day-ti+1; hist(o,`발송처리 (${o.courier} ${o.invoice})`); }
+  if (ti >= 3){ o.status='DELIVERED'; o.dday=S.day; hist(o,'배송완료'); }
+  if (ti >= 4){ confirmPurchase(o, true); }
+}
+
+/* ---------- 판매자 행동 ---------- */
+function doConfirm(nos){
+  let n = 0;
+  nos.forEach(no => { const o = findO(no); if (o && o.status==='NEW' && !activeClaim(o)){ o.status='READY'; hist(o,'판매자가 발주확인 했어요 (발송대기)'); n++; } });
+  if (!n){ toast('발주확인할 주문을 먼저 체크(✔)해 주세요.','warn'); return; }
+  log(`✅ 발주확인 ${n}건`);
+  done('confirm');
+  toast(`발주확인 ${n}건 완료! 이제 '발송대기' 탭에서 송장번호를 넣고 발송처리 하세요.`,'ok');
+  tab = 'READY'; render();
+}
+function validInvoice(courier, inv){
+  if (courier === '직접전달') return true;
+  return /^\d{10,14}$/.test(inv);
+}
+function doShip(no, courier, inv, quiet){
+  const o = findO(no);
+  if (!o) return false;
+  inv = (inv||'').replace(/[-\s]/g,'');
+  if (!courier){ toast('택배사를 선택해 주세요.','warn'); return false; }
+  if (!validInvoice(courier, inv)){ toast('송장번호는 숫자 10~14자리로 넣어주세요. (연습용 번호는 [자동] 버튼)','warn'); return false; }
+  const a = activeClaim(o);
+  if (a && a.type !== 'CANCEL'){ toast('처리 중인 요청이 있는 주문이에요.','warn'); return false; }
+  if (o.status === 'NEW'){ hist(o,'발주확인 (발송처리하면서 자동 확인)'); }
+  o.status = 'SHIPPING'; o.courier = courier; o.invoice = courier==='직접전달' ? '' : inv; o.sday = S.day;
+  hist(o, courier==='직접전달' ? '발송처리 (직접 전달)' : `발송처리 (${courier} ${inv})`);
+  if (a && a.type === 'CANCEL'){ a.status = 'REJECT'; a.rejectReason = '이미 상품을 발송함'; hist(o,'취소요청 거부 – 이미 발송했어요'); done('cancel'); }
+  log(`🚚 발송처리: ${o.buyer}님 ${o.pname} (${courier} ${o.invoice})`);
+  done('ship');
+  if (!quiet) toast('발송처리 완료! 손님에게 배송 시작 알림이 갔어요. [다음날로]를 누르면 배송이 완료돼요.','ok');
+  return true;
+}
+function confirmPurchase(o, silent){
+  o.status = 'CONFIRMED'; o.cday = S.day;
+  const pay = total(o), fee = Math.round(pay*FEE_RATE);
+  o.settle = {state:'예정', pay, fee, amt: pay-fee, due: S.day+1, doneDay:null};
+  hist(o, `구매확정 → 정산예정 ${won(pay-fee)} (내일 정산)`);
+  if (!silent) log(`🤝 구매확정: ${o.buyer}님 ${o.pname} → 정산예정 ${won(pay-fee)}`);
+}
+function restock(o){ const p = S.products.find(x => x.id===o.pid); if (p) p.stock += o.qty; }
+
+/* ---------- 하루 보내기 ---------- */
+function nextDay(){
+  S.day++;
+  const msgs = [];
+  let deliv=0, conf=0, setl=0, coll=0, pen=0, newRv=0;
+  S.orders.forEach(o => {
+    const a = activeClaim(o);
+    // 배송
+    if (o.status==='SHIPPING' && o.sday < S.day){ o.status='DELIVERED'; o.dday=S.day; hist(o,'배송완료 (손님이 상품을 받았어요)'); deliv++; done('delivered'); }
+    // 수거
+    if (a && a.status==='PICKUP' && a.pday < S.day){ a.status='COLLECTED'; hist(o,`택배기사가 ${CT[a.type]} 상품을 수거해 판매자에게 도착했어요 (수거완료)`); coll++; }
+    // 교환 재배송
+    if (a && a.status==='RESHIP' && a.rsday < S.day){ a.status='DONE'; o.status='DELIVERED'; o.dday=S.day; hist(o,'교환 상품 배송완료 → 교환완료'); log(`🔄 교환완료: ${o.buyer}님 ${o.pname}`); }
+    // 구매확정 (배송완료 2일 뒤 손님이 확정)
+    if (o.status==='DELIVERED' && !activeClaim(o) && S.day - o.dday >= 2){ confirmPurchase(o); conf++;
+      if (!o.reviewed && Math.random() < .6){ writeReview(o); newRv++; } }
+    // 정산
+    if (o.settle && o.settle.state==='예정' && o.settle.due <= S.day){ o.settle.state='완료'; o.settle.doneDay=S.day; hist(o,`정산완료 ${won(o.settle.amt)} → 비즈월렛 입금`); setl += o.settle.amt; done('settled'); }
+    // 페널티
+    if (isOverdue(o) && !o.penalized){ o.penalized = true; S.penalty += 1; pen++; hist(o,'⚠️ 발송기한이 지나 판매관리 페널티가 생겼어요'); }
+  });
+  if (S.auto){
+    const n = rint(0,3);
+    for (let i=0;i<n;i++) makeOrder();
+    if (n) msgs.push(`새 주문 ${n}건`);
+    if (Math.random()<.2) simCancel(true);
+    if (Math.random()<.15) simClaim(Math.random()<.6?'RETURN':'EXCHANGE', true);
+  }
+  if (deliv) msgs.push(`배송완료 ${deliv}건`);
+  if (coll) msgs.push(`반품·교환 상품 수거완료 ${coll}건`);
+  if (conf) msgs.push(`구매확정 ${conf}건`);
+  if (newRv) msgs.push(`새 리뷰 ${newRv}건`);
+  if (setl) msgs.push(`정산 입금 ${won(setl)}`);
+  log(`📅 ${fmtD(S.day)} 아침이 되었어요. ${msgs.join(', ') || '특별한 변화 없음'}`);
+  render();
+  toast(`📅 ${fmtD(S.day)} 하루가 지났어요` + (msgs.length ? `<br>${msgs.join(' · ')}` : ''),'bell');
+  if (pen) setTimeout(() => toast(`⚠️ 발송기한을 넘긴 주문 ${pen}건 → 페널티 +${pen}점. '판매지연' 메뉴를 확인하세요.`,'warn'), 500);
+}
+
+/* ---------- 손님 역할 ---------- */
+function writeReview(o, kind){
+  let rating;
+  if (kind==='good') rating = pick([5,5,4]);
+  else if (kind==='bad') rating = pick([1,2]);
+  else rating = pick([5,5,5,4,4,3,2,1]);
+  const r = {id:S.rseq++, no:o.no, pid:o.pid, pname:o.pname, buyer:o.buyer, rating, text:pick(REVIEW_TEXT[rating]), photo: Math.random()<.45, day:S.day, read:false, reply:'', point:0, best:false};
+  S.reviews.unshift(r); o.reviewed = true;
+  hist(o, `손님이 리뷰를 남겼어요 (★${rating})`);
+  log(`⭐ 새 리뷰: ${o.buyer}님 ★${rating} "${r.text}"`);
+  return r;
+}
+function simOrder(){ const o = makeOrder(); if (o){ render(); toast(`🔔 새 주문이 들어왔어요!<br>${esc(o.buyer)}님 · ${esc(o.pname)} ${o.qty}개`,'bell'); } }
+function simCancel(silent){
+  let c = S.orders.filter(o => ['NEW','READY'].includes(o.status) && !o.claim);
+  let o = c.length ? pick(c) : makeOrder();
+  if (!o) return;
+  const R = pick(CANCEL_REASONS);
+  o.claim = {type:'CANCEL', status:'REQ', reason:R.r, fault:R.f, rday:S.day};
+  hist(o, `손님이 취소요청: ${R.r}`);
+  log(`❌ 취소요청: ${o.buyer}님 ${o.pname} – ${R.r}`);
+  if (!silent){ render(); toast(`🔔 취소요청이 들어왔어요!<br>${esc(o.buyer)}님 · ${esc(R.r)}`,'bell'); }
+}
+function simClaim(type, silent){
+  let c = S.orders.filter(o => o.status==='DELIVERED' && !o.claim);
+  let o = c.length ? pick(c) : null;
+  if (!o){ o = makeOrder(); if (!o) return; fastForward(o,'DELIVERED'); }
+  const R = pick(type==='RETURN' ? RETURN_REASONS : EXCHANGE_REASONS);
+  o.claim = {type, status:'REQ', reason:R.r, fault:R.f, rday:S.day};
+  hist(o, `손님이 ${CT[type]}요청: ${R.r}`);
+  log(`${type==='RETURN'?'↩️':'🔄'} ${CT[type]}요청: ${o.buyer}님 ${o.pname} – ${R.r}`);
+  if (!silent){ render(); toast(`🔔 ${CT[type]}요청이 들어왔어요!<br>${esc(o.buyer)}님 · ${esc(R.r)}`,'bell'); }
+}
+function simConfirm(){
+  const c = S.orders.filter(o => o.status==='DELIVERED' && !activeClaim(o));
+  if (!c.length){ toast('배송완료된 주문이 없어요. 먼저 발송처리 후 [다음날로]를 눌러 배송을 완료시켜 주세요.','warn'); return; }
+  const o = c[0]; confirmPurchase(o);
+  render(); toast(`🔔 ${esc(o.buyer)}님이 구매확정 했어요!<br>내일 ${won(o.settle.amt)}이 정산돼요.`,'bell');
+}
+function simReview(kind){
+  let c = S.orders.filter(o => o.status==='CONFIRMED' && !o.reviewed);
+  let o = c.length ? c[0] : null;
+  if (!o){ o = makeOrder(); if (!o) return; fastForward(o,'CONFIRMED'); }
+  const r = writeReview(o, kind);
+  render(); toast(`🔔 새 리뷰가 등록됐어요! ★${r.rating}<br>"${esc(r.text)}"`,'bell');
+}
+function simDelay(){
+  const o = makeOrder(); if (!o) return;
+  o.oday = S.day-4; o.deadline = S.day-1; o.hist[0].d = o.oday;
+  log(`⏰ 발송기한(${fmtD(o.deadline)})이 지난 주문이 있어요: ${o.buyer}님 ${o.pname}`);
+  render(); toast('⏰ 발송기한이 지난 주문이 생겼어요. 판매지연 메뉴를 확인하세요.','warn');
+}
+function simBusy(){
+  for (let i=0;i<4;i++) makeOrder();
+  const a = makeOrder(); if (a) fastForward(a,'READY');
+  simCancel(true); simClaim('RETURN', true); simClaim('EXCHANGE', true);
+  for (let i=0;i<2;i++){ const o = makeOrder(); if (o){ fastForward(o,'CONFIRMED'); writeReview(o); } }
+  const b = makeOrder(); if (b){ b.oday=S.day-4; b.deadline=S.day-1; }
+  page='home'; render(); toast('🔥 바쁜 하루가 시작됐어요! 홈 화면의 "오늘 할 일"을 하나씩 처리해 보세요.','bell'); toggleSim(false);
+}
+
+/* ---------- 미션 ---------- */
+const MISSIONS = [
+  {key:'viewNew', title:'새 주문 확인하기', why:'주문이 들어오면 휴대폰으로 알림이 와요. 판매자센터에서 어떤 주문인지 먼저 확인합니다.',
+   steps:['오른쪽 아래 [손님 역할] → [새 주문 들어오게 하기]를 누르세요','홈 화면 판매관리의 <b>신규주문</b> 숫자를 누르세요','상품명·수량·받는 분 주소·배송메모를 확인하세요'], prep:()=>{makeOrder();makeOrder();}},
+  {key:'confirm', title:'발주확인 하기', why:'"주문 확인했어요, 곧 보내드릴게요"라고 손님에게 알리는 단계예요. 발주확인을 하면 손님은 취소를 마음대로 못 하고 "취소요청"을 해야 해요.',
+   steps:['메뉴 [발주확인/발송관리] → [신규주문] 탭','주문 왼쪽 네모칸(✔)을 체크','[발주확인] 버튼 누르기'], prep:()=>makeOrder()},
+  {key:'ship', title:'송장번호 넣고 발송처리 하기', why:'택배를 보낸 뒤 송장번호를 입력해야 손님이 배송조회를 할 수 있어요. 발송기한(주문 후 3일) 안에 꼭 하세요!',
+   steps:['[발주확인/발송관리] → [발송대기] 탭','택배사를 고르고 송장번호 입력 (연습용은 [자동] 버튼)','[발송처리] 버튼 누르기'], prep:()=>{const o=makeOrder(); if(o) fastForward(o,'READY');}},
+  {key:'delivered', title:'배송완료 확인하기', why:'발송처리한 다음날 택배가 도착하면 자동으로 "배송완료"가 돼요.',
+   steps:['발송처리가 된 주문이 있는지 확인','맨 위 [다음날로 ⏭] 버튼 누르기','[배송현황 관리] → [배송완료] 탭에서 확인'], prep:()=>{const o=makeOrder(); if(o) fastForward(o,'SHIPPING');}},
+  {key:'settled', title:'구매확정과 정산 받기', why:'손님이 "구매확정"을 눌러야 판매대금이 정산돼요. 손님이 안 눌러도 배송완료 후 일정 기간이 지나면 자동으로 구매확정 돼요.',
+   steps:['[손님 역할] → [구매확정 하기] (실제로는 손님이 누르는 버튼)','[다음날로 ⏭] 누르기','[정산관리]에서 정산금이 비즈월렛에 들어온 것 확인'], prep:()=>{const o=makeOrder(); if(o) fastForward(o,'DELIVERED');}},
+  {key:'cancel', title:'취소요청 처리하기', why:'아직 안 보냈으면 취소승인, 이미 보냈으면 송장번호를 넣어 "취소거부(발송처리)" 해요.',
+   steps:['홈 화면 [취소요청] 숫자 누르기','취소 사유 확인','아직 안 보냈다면 [취소승인] → 손님에게 자동 환불'], prep:()=>simCancel(true)},
+  {key:'return', title:'반품 처리하기 (수거 → 환불)', why:'반품은 ① 수거요청 → ② 상품 도착(수거완료) → ③ 상품 상태 확인 후 반품완료(환불) 순서예요. 손님 단순변심이면 반품배송비는 손님이 내요.',
+   steps:['[반품관리]에서 반품 사유 확인','[수거요청] 누르기','[다음날로 ⏭] → 상품이 도착(수거완료)','상품 확인 후 [반품완료(환불)] 누르기'], prep:()=>simClaim('RETURN',true)},
+  {key:'exchange', title:'교환 처리하기 (수거 → 재발송)', why:'교환은 ① 수거요청 → ② 수거완료 → ③ 새 상품을 다시 보내기(교환 재배송) 순서예요.',
+   steps:['[교환관리]에서 교환 사유 확인','[수거요청] → [다음날로 ⏭]','수거완료되면 택배사·송장번호 넣고 [교환 재배송]'], prep:()=>simClaim('EXCHANGE',true)},
+  {key:'delay', title:'발송지연 안내하기', why:'날씨·수확 때문에 기한 안에 못 보낼 땐 반드시 "발송지연 안내"를 해야 해요. 안내 없이 기한을 넘기면 페널티를 받아요.',
+   steps:['[판매지연] 메뉴 열기','지연된 주문의 [발송지연 안내] 누르기','사유와 새 발송예정일 고르고 저장'], prep:()=>simDelay()},
+  {key:'reply', title:'리뷰에 답글 달기', why:'정성스러운 답글은 다음 손님에게도 믿음을 줘요. 재구매로 이어집니다.',
+   steps:['홈 화면 [새로 작성된 리뷰] 누르기','[답글 달기] → [답글 예시 넣기]로 시작해도 OK','내 말투로 고쳐서 등록'], prep:()=>simReview('good')},
+  {key:'point', title:'리뷰 포인트(혜택) 지급하기', why:'리뷰를 남긴 손님에게 감사 포인트를 주면 리뷰가 더 많이 쌓여요. 지급한 포인트는 정산금에서 빠져요.',
+   steps:['[리뷰관리]에서 리뷰 고르기','[포인트 지급] 누르기','금액 고르고 지급'], prep:()=>simReview('good')},
+  {key:'lowReply', title:'낮은 평점 리뷰 대응하기', why:'나쁜 리뷰일수록 빨리, 정중하게 답하세요. 변명보다 사과 + 해결방법(교환·환불 안내)이 좋아요.',
+   steps:['홈 화면 [낮은 평점 리뷰] 누르기','사과와 해결 방법을 담아 답글 등록','필요하면 교환·환불 안내'], prep:()=>simReview('bad')},
+  {key:'stock', title:'재고 수정 / 품절 처리하기', why:'수확이 끝났거나 물량이 없으면 바로 품절 처리해야 "주문 받고 못 보내는" 일이 없어요.',
+   steps:['[상품관리] 메뉴 열기','재고 숫자를 바꾸고 [저장]','또는 [품절로] 버튼으로 판매 중지'], prep:null},
+];
+
+/* ---------- 메뉴 ---------- */
+function menu(){
+  const c = counts();
+  const M = [
+    ['', [['home','🏠 홈 (대시보드)', 0]]],
+    ['판매관리', [
+      ['all','🔍 주문통합검색',0],
+      ['deliver','📦 발주확인/발송관리', c.NEW + c.READY],
+      ['shipping','🚚 배송현황 관리', 0],
+      ['confirmed','🤝 구매확정 내역', 0],
+      ['cancel','❌ 취소관리', c.cancel],
+      ['return','↩️ 반품관리', c.ret],
+      ['exchange','🔄 교환관리', c.exch],
+      ['delay','⏰ 판매지연', c.dShip + c.dCancel + c.dRet + c.dExch],
+    ]],
+    ['상품·정산·리뷰', [
+      ['products','🥬 상품관리',0],
+      ['settle','💰 정산관리',0],
+      ['reviews','⭐ 리뷰관리', c.rvNew],
+    ]],
+    ['실습 도우미', [
+      ['missions','🎯 실습 미션', -1],
+      ['glossary','📖 용어 풀이',0],
+      ['logs','📝 활동 기록',0],
+    ]],
+  ];
+  const doneN = MISSIONS.filter(m => S.done[m.key]).length;
+  $('#side').innerHTML = M.map(([g, items]) =>
+    (g ? `<div class="grp">${g}</div>` : '') + items.map(([k,t,n]) =>
+      `<button class="${page===k?'on':''}" onclick="go('${k}')">${t}${n===-1?`<span class="bd g">${doneN}/${MISSIONS.length}</span>`:(n?`<span class="bd">${n}</span>`:'')}</button>`).join('')
+  ).join('');
+}
+function go(p, t){ page = p; tab = t || ''; q = ''; if (p==='deliver' && (tab==='NEW'||!tab)) done('viewNew'); render(); window.scrollTo(0,0); }
+
+/* ---------- 렌더 ---------- */
+function render(){
+  document.documentElement.classList.toggle('big', !!S.big);
+  $('#bigBtn').textContent = S.big ? '글자 보통' : '글자 크게';
+  $('#storeName').textContent = `🏡 ${S.store}`;
+  $('#dayLabel').textContent = `실습일 ${fmtD(S.day)}`;
+  menu();
+  const P = {home, all:pAll, deliver:pDeliver, shipping:pShipping, confirmed:pConfirmed, cancel:pCancel, return:pReturn, exchange:pExchange, delay:pDelay, products:pProducts, settle:pSettle, reviews:pReviews, missions:pMissions, glossary:pGlossary, logs:pLogs};
+  $('#main').innerHTML = (P[page] || home)();
+  renderSim();
+  save();
+}
+
+function cardHead(icon, color, title, helpKey){
+  return `<div class="ch"><span class="ic" style="background:${color}">${icon}</span><h3>${title}</h3>
+    <button class="info" onclick="help('${helpKey}')" title="설명 보기">i</button>
+    <span class="rt"><span class="tm">최근 ${nowHM()}</span> <button onclick="render()" title="새로고침">⟳</button></span></div>`;
+}
+function home(){
+  const c = counts();
+  const todo = [];
+  if (c.NEW) todo.push([c.NEW,'신규주문이 있어요 → 확인 후 <b>발주확인</b> 해주세요',"go('deliver','NEW')"]);
+  if (c.READY) todo.push([c.READY,'발송대기 주문 → 택배 보내고 <b>송장번호 입력 후 발송처리</b>',"go('deliver','READY')"]);
+  if (c.dShip) todo.push([c.dShip,'<b style="color:var(--red)">발송기한이 지났어요!</b> 바로 보내거나 발송지연 안내를 하세요',"go('delay')"]);
+  if (c.todayOut) todo.push([c.todayOut,'오늘이 발송기한인 주문이 있어요',"go('deliver','READY')"]);
+  if (c.cancel) todo.push([c.cancel,'<b>취소요청</b>을 처리해 주세요',"go('cancel')"]);
+  if (c.ret) todo.push([c.ret,'<b>반품요청</b>을 처리해 주세요',"go('return')"]);
+  if (c.exch) todo.push([c.exch,'<b>교환요청</b>을 처리해 주세요',"go('exchange')"]);
+  if (c.rvLow) todo.push([c.rvLow,'<b>낮은 평점 리뷰</b>에 답글을 달아주세요',"rvFilter='low';go('reviews')"]);
+  else if (c.rvNoReply) todo.push([c.rvNoReply,'답글을 안 단 리뷰가 있어요',"rvFilter='noreply';go('reviews')"]);
+  if (c.soldOut) todo.push([c.soldOut,'품절된 상품이 있어요 (재고 확인)',"go('products')"]);
+  return `
+  <div class="todo"><h3>✅ 오늘 할 일 <span class="small">— 위에서부터 차례대로 처리하면 됩니다</span></h3>
+    ${todo.length ? `<ul>${todo.map(([n,t,f]) => `<li><span class="n">${n}건</span><span style="flex:1">${t}</span><button class="btn p s" onclick="${f}">처리하러 가기 ›</button></li>`).join('')}</ul>`
+    : `<div class="none">지금은 처리할 일이 없어요. 오른쪽 아래 <b>🧑‍🌾 손님 역할</b> 버튼으로 주문을 만들거나, <a href="#" onclick="go('missions');return false">🎯 실습 미션</a>을 따라해 보세요.</div>`}
+  </div>
+  <div class="grid g-top">
+    <section class="card">${cardHead('🏪','#03c75a','판매 관리','sales')}
+      <div class="cb">
+        <div class="pipe">
+          ${[['신규주문',c.NEW,"go('deliver','NEW')"],['배송준비',c.READY,"go('deliver','READY')"],['배송중',c.SHIPPING,"go('shipping','SHIPPING')"],['배송완료',c.DELIVERED,"go('shipping','DELIVERED')"],['구매확정',c.CONFIRMED,"go('confirmed')"]]
+            .map(([t,n,f],i) => (i?'<span class="arr">›</span>':'') + `<div class="st" onclick="${f}"><span>${t}</span><b>${n}<small>건</small></b></div>`).join('')}
+        </div>
+        <div class="subrow">
+          <div>오늘출발 <b>${c.todayOut}</b></div><div>예약구매 <b>0</b></div><div>정기구독 <b>0</b></div><div>N배송 <b>0</b></div>
+        </div>
+      </div>
+    </section>
+    <section class="card">${cardHead('₩','#03c75a','정산 관리','settle')}
+      <div class="cb">
+        <div class="settle-r" onclick="go('settle')"><span>오늘정산</span><b>${c.settleToday.toLocaleString()}<small style="font-size:1rem;font-weight:500">원</small></b></div>
+        <div class="settle-r" onclick="go('settle')"><span>정산예정</span><b>${c.settleExp.toLocaleString()}<small style="font-size:1rem;font-weight:500">원</small></b></div>
+        <div style="border-top:1px solid var(--line);margin-top:.4rem;padding-top:.7rem;display:flex;justify-content:space-between;font-size:.9rem;color:var(--sub);cursor:pointer" onclick="go('settle')"><span>비즈월렛</span><span style="color:var(--text)">${won(c.wallet)}</span></div>
+      </div>
+    </section>
+  </div>
+  <div class="grid g-4" style="margin-top:.75rem">
+    <section class="card">${cardHead('✕','#e8636f','취소 · 반품 · 교환','claim')}
+      <div class="cb rows cred">
+        <div class="r" onclick="go('cancel')"><span>취소요청</span><b>${c.cancel}</b></div>
+        <div class="r" onclick="go('return')"><span>반품요청</span><b>${c.ret}</b></div>
+        <div class="r" onclick="go('exchange')"><span>교환요청</span><b>${c.exch}</b></div>
+      </div></section>
+    <section class="card">${cardHead('!','#e8636f','판매 지연','delay')}
+      <div class="cb rows cred">
+        <div class="r" onclick="go('delay')"><span>발송지연</span><b>${c.dShip}</b></div>
+        <div class="r" onclick="go('cancel')"><span>취소지연</span><b>${c.dCancel}</b></div>
+        <div class="r" onclick="go('return')"><span>반품지연</span><b>${c.dRet}</b></div>
+        <div class="r" onclick="go('exchange')"><span>교환지연</span><b>${c.dExch}</b></div>
+      </div></section>
+    <section class="card">${cardHead('▦','#0b9aa8','상품 관리','product')}
+      <div class="cb rows cteal">
+        <div class="r" onclick="go('products')"><span>판매중 상품</span><b>${c.onSale}</b></div>
+        <div class="r" onclick="go('products')"><span>품절 상품</span><b>${c.soldOut}</b></div>
+        <div class="r" onclick="go('products')"><span>수정요청 상품</span><b>0</b></div>
+        <div class="r" onclick="go('products')"><span>그룹상품 전환 가능 상품</span><b>${c.onSale}</b></div>
+      </div></section>
+    <section class="card">${cardHead('💬','#3cbf8f','리뷰 현황','review')}
+      <div class="cb rows cgreen">
+        <div class="r" onclick="rvFilter='new';go('reviews')"><span>새로 작성된 리뷰</span><b>${c.rvNew}</b></div>
+        <div class="r" onclick="rvFilter='low';go('reviews')"><span>낮은 평점 리뷰</span><b>${c.rvLow}</b></div>
+        <div class="r" onclick="rvFilter='all';go('reviews')"><span>발표 예정 리뷰 이벤트</span><b>${c.events}</b></div>
+      </div></section>
+  </div>
+  <p class="small" style="margin-top:1rem">※ 이 프로그램은 스마트스토어 판매자센터 화면 구성을 참고해 만든 <b>교육용 연습 프로그램</b>입니다. 실제 주문·결제·배송·정산은 일어나지 않으며, 수수료·반품배송비 등 금액은 실습을 위해 정한 가상 값입니다.</p>`;
+}
+
+/* ---------- 주문 표 ---------- */
+function orderRows(list, cols, opts={}){
+  if (!list.length) return `<div class="empty">${opts.empty || '해당하는 주문이 없어요.'}</div>`;
+  return `<div class="tw"><table><thead><tr>${opts.check?'<th><input type="checkbox" onclick="checkAll(this)"></th>':''}${cols.map(c=>`<th>${c[0]}</th>`).join('')}</tr></thead><tbody>
+    ${list.map(o => `<tr class="${isOverdue(o)||activeClaim(o)?'hl':''}">${opts.check?`<td><input type="checkbox" class="ck" value="${o.no}"></td>`:''}${cols.map(c=>`<td class="${c[2]||''}">${c[1](o)}</td>`).join('')}</tr>`).join('')}
+  </tbody></table></div>`;
+}
+const COL = {
+  no:['상품주문번호', o => `<a href="#" class="mono" onclick="detail('${o.no}');return false">${o.no}</a>`],
+  status:['상태', o => stBadge(o)],
+  oday:['주문일시', o => `${fmtD(o.oday)} <span class="small">${o.otime}</span>`],
+  deadline:['발송기한', o => `<span style="${isOverdue(o)?'color:var(--red);font-weight:700':''}">${fmtD(o.deadline)}${o.deadline===S.day?' <span class="badge b-ylw">오늘</span>':''}</span>`],
+  buyer:['구매자 / 연락처', o => `${esc(o.buyer)}<div class="small">${o.phone}</div>`],
+  prod:['상품명 / 옵션', o => `${esc(o.pname)}<div class="small">옵션: ${esc(o.option)}</div>`],
+  qty:['수량', o => `${o.qty}개`, 'num'],
+  pay:['결제금액', o => `${won(total(o))}${o.ship?`<div class="small">배송비 ${won(o.ship)} 포함</div>`:'<div class="small">무료배송</div>'}`, 'num'],
+  addr:['배송지 / 배송메모', o => `<span class="small" style="color:var(--text)">${esc(o.addr)}</span>${o.memo?`<div class="small">💬 ${esc(o.memo)}</div>`:''}`],
+  inv:['택배사 / 송장번호', o => o.courier ? `${o.courier}<div class="mono small">${o.invoice||'-'}</div>` : '-'],
+};
+function checked(){ return [...document.querySelectorAll('.ck:checked')].map(x => x.value); }
+function checkAll(el){ document.querySelectorAll('.ck').forEach(x => x.checked = el.checked); }
+function tabs(list){ return `<div class="tabs">${list.map(([k,t,n]) => `<button class="${tab===k?'on':''}" onclick="tab='${k}';render()">${t}${n!=null?` <span class="c">${n}</span>`:''}</button>`).join('')}</div>`; }
+
+function pAll(){
+  let list = S.orders;
+  if (q){ const k = q.trim(); list = list.filter(o => o.no.includes(k) || o.buyer.includes(k) || o.phone.includes(k) || o.pname.includes(k)); }
+  return `<h1 class="pt">🔍 주문통합검색</h1><p class="pdesc">들어온 모든 주문을 한곳에서 봐요. 손님이 전화로 문의하면 이름이나 전화번호로 찾으세요.</p>
+  <div class="bar"><input id="qbox" placeholder="구매자 이름, 전화번호, 주문번호, 상품명" value="${esc(q)}" style="flex:1;max-width:24rem;border:1px solid #c9ced6;border-radius:.35rem;padding:.42rem .6rem" onkeydown="if(event.key==='Enter'){q=this.value;render()}">
+    <button class="btn p" onclick="q=$('#qbox').value;render()">검색</button>${q?`<button class="btn" onclick="q='';render()">전체보기</button>`:''}<span class="sp"></span><span class="small">총 ${list.length}건</span></div>
+  ${orderRows(list,[COL.no,COL.status,COL.oday,COL.buyer,COL.prod,COL.qty,COL.pay,COL.inv],{empty:'아직 들어온 주문이 없어요. 오른쪽 아래 🧑‍🌾 손님 역할 버튼으로 주문을 만들어 보세요.'})}`;
+}
+
+function pDeliver(){
+  if (!tab) tab = 'NEW';
+  const nw = S.orders.filter(o => o.status==='NEW');
+  const rd = S.orders.filter(o => o.status==='READY');
+  let h = `<h1 class="pt">📦 발주확인 / 발송관리</h1><p class="pdesc">① 신규주문을 <b>발주확인</b> → ② 택배를 보내고 <b>송장번호 입력 후 발송처리</b>. 주문일로부터 <b>3일 안에</b> 발송해야 해요.</p>`;
+  h += tabs([['NEW','신규주문 (발주 전)',nw.length],['READY','발송대기 (발주확인 완료)',rd.length]]);
+  if (tab === 'NEW'){
+    h += `<div class="tip">💡 <b>발주확인</b> = "주문 확인했어요, 준비해서 보내드릴게요" 라는 뜻이에요. 주문 내용(옵션·수량·배송메모)을 꼭 확인한 뒤 체크(✔)하고 [발주확인]을 누르세요.</div>
+    <div class="bar"><button class="btn p" onclick="doConfirm(checked())">✔ 선택건 발주확인</button><button class="btn" onclick="delayModal(checked())">발송지연 처리</button><button class="btn r" onclick="sellerCancel(checked())">판매취소</button></div>`;
+    h += orderRows(nw,[COL.no,COL.status,COL.oday,COL.deadline,COL.buyer,COL.prod,COL.qty,COL.pay,COL.addr],{check:true,empty:'새로 들어온 주문이 없어요.'});
+  } else {
+    h += `<div class="tip">💡 택배를 보낸 뒤 받은 <b>송장번호</b>를 넣고 [발송처리]를 누르세요. 송장번호가 있어야 손님이 배송조회를 할 수 있어요. 실습에서는 <b>[자동]</b> 버튼으로 연습용 번호를 만들 수 있어요. 직접 배달하면 택배사에서 '직접전달'을 고르세요.</div>
+    <div class="bar"><button class="btn p" onclick="shipChecked()">🚚 선택건 발송처리</button><button class="btn" onclick="fillAll()">선택건 송장 자동입력(연습)</button><button class="btn" onclick="delayModal(checked())">발송지연 처리</button></div>`;
+    h += orderRows(rd,[COL.no,COL.status,COL.deadline,COL.buyer,COL.prod,COL.qty,COL.addr,
+      ['택배사', o => `<select id="cr_${o.no}"><option value="">선택</option>${[...COURIERS,'직접전달'].map(c=>`<option>${c}</option>`).join('')}</select>`],
+      ['송장번호', o => `<input class="inv" id="iv_${o.no}" placeholder="숫자만 입력" inputmode="numeric"> <button class="btn s" onclick="autoInv('${o.no}')">자동</button>`],
+      ['처리', o => `<button class="btn b s" onclick="shipOne('${o.no}')" ${activeClaim(o)&&activeClaim(o).type!=='CANCEL'?'disabled':''}>발송처리</button>`]],
+      {check:true,empty:'발송을 기다리는 주문이 없어요. 먼저 신규주문 탭에서 발주확인을 해주세요.'});
+  }
+  return h;
+}
+function autoInv(no){ const s = $('#cr_'+no); if (s && !s.value) s.value = pick(COURIERS); const i = $('#iv_'+no); if (i) i.value = practiceInvoice(); }
+function fillAll(){ const c = checked(); if (!c.length) return toast('먼저 주문을 체크(✔)해 주세요.','warn'); c.forEach(autoInv); }
+function shipOne(no){ if (doShip(no, $('#cr_'+no).value, $('#iv_'+no).value)) render(); }
+function shipChecked(){
+  const c = checked(); if (!c.length) return toast('발송처리할 주문을 체크(✔)해 주세요.','warn');
+  let n = 0; for (const no of c){ if (doShip(no, $('#cr_'+no)?.value, $('#iv_'+no)?.value, true)) n++; else break; }
+  if (n){ toast(`발송처리 ${n}건 완료! [다음날로]를 누르면 배송이 완료돼요.`,'ok'); render(); }
+}
+function sellerCancel(nos){
+  if (!nos.length) return toast('판매취소할 주문을 체크(✔)해 주세요.','warn');
+  modal('판매취소 (판매자가 직접 취소)', `<div class="tip">⚠️ 재고가 없거나 상품에 문제가 있어 <b>판매자가 먼저 취소</b>하는 것이에요. 판매자 사정으로 취소하면 <b>페널티</b>를 받을 수 있으니 꼭 필요할 때만 하세요. 손님에게 먼저 전화나 톡톡으로 사정을 설명드리는 것이 좋아요.</div>
+    <div class="fld"><label>취소 사유</label><select id="scr"><option>재고 부족(품절)</option><option>상품 상태 불량(수확 문제)</option><option>배송 불가 지역</option></select></div>`,
+    [{t:'닫기'},{t:'판매취소 하기',cls:'r',fn:()=>{
+      nos.forEach(no => { const o = findO(no); if (!o || o.status!=='NEW' && o.status!=='READY') return;
+        o.status='CANCELED'; o.claim={type:'CANCEL',status:'DONE',reason:'판매자 취소: '+$('#scr').value,fault:'SELLER',rday:S.day};
+        restock(o); S.penalty += 1; hist(o,`판매자가 판매취소 (${$('#scr').value}) → 손님에게 전액 환불`); log(`🚫 판매취소: ${o.buyer}님 ${o.pname}`); });
+      toast('판매취소 완료. 손님에게 전액 환불됐어요. (페널티 +1)','warn'); render(); }}]);
+}
+
+function pShipping(){
+  if (!tab) tab = 'SHIPPING';
+  const sh = S.orders.filter(o => o.status==='SHIPPING'), dv = S.orders.filter(o => o.status==='DELIVERED');
+  let h = `<h1 class="pt">🚚 배송현황 관리</h1><p class="pdesc">발송처리한 주문이 지금 어디쯤 가고 있는지 확인해요. 실습에서는 <b>[다음날로]</b>를 누르면 배송이 완료돼요.</p>`;
+  h += tabs([['SHIPPING','배송중',sh.length],['DELIVERED','배송완료',dv.length]]);
+  const list = tab==='SHIPPING' ? sh : dv;
+  if (tab==='DELIVERED') h += `<div class="tip">💡 배송완료 후 손님이 <b>구매확정</b>을 누르면 정산이 시작돼요. 손님이 누르지 않아도 실습에서는 배송완료 2일 뒤 자동으로 구매확정 돼요. (실제 스마트스토어는 더 긴 기간 후 자동확정)</div>`;
+  h += orderRows(list,[COL.no,COL.status,COL.buyer,COL.prod,COL.qty,COL.inv,
+    ['발송일', o => fmtD(o.sday)], ['배송조회', o => `<button class="btn s" onclick="track('${o.no}')">배송조회</button>`]],{empty: tab==='SHIPPING'?'배송중인 주문이 없어요.':'배송완료된 주문이 없어요.'});
+  return h;
+}
+function track(no){
+  const o = findO(no);
+  const steps = [[o.sday,'집화처리','판매자에게서 상품을 받았어요'],[o.sday,'간선상차','배송 터미널로 이동 중'],[o.sday,'배송출발','배송기사님이 배달을 시작했어요']];
+  if (o.dday!=null && o.status!=='SHIPPING') steps.push([o.dday,'배달완료', o.memo ? `요청사항: ${o.memo}` : '고객님께 전달 완료']);
+  modal('배송조회', `<dl class="kv"><dt>택배사</dt><dd>${o.courier}</dd><dt>송장번호</dt><dd class="mono">${o.invoice||'(직접전달)'}</dd><dt>받는 분</dt><dd>${esc(o.buyer)} · ${esc(o.addr)}</dd></dl>
+    <ul class="timeline" style="margin-top:1rem">${steps.map(s=>`<li><b>${s[1]}</b> <span class="small">${fmtD(s[0])}</span><div class="small">${esc(s[2])}</div></li>`).join('')}</ul>
+    <p class="small">※ 연습용 배송조회 화면이에요. 실제 택배 조회는 되지 않습니다.</p>`);
+}
+function pConfirmed(){
+  const list = S.orders.filter(o => o.status==='CONFIRMED');
+  return `<h1 class="pt">🤝 구매확정 내역</h1><p class="pdesc">손님이 "잘 받았어요" 하고 확정한 주문이에요. 구매확정 다음날 정산금이 들어와요.</p>
+  ${orderRows(list,[COL.no,COL.buyer,COL.prod,COL.qty,COL.pay,['구매확정일',o=>fmtD(o.cday)],['정산',o=>o.settle?`<span class="badge ${o.settle.state==='완료'?'b-ready':'b-ylw'}">${o.settle.state}</span> ${won(o.settle.amt)}`:'-','num'],['리뷰',o=>o.reviewed?'작성함':'<span class="small">아직</span>']],{empty:'아직 구매확정된 주문이 없어요.'})}`;
+}
+
+/* ---------- 취소 ---------- */
+function claimList(type){ return S.orders.filter(o => o.claim && o.claim.type===type && !(type==='CANCEL' && o.claim.reason.startsWith('판매자 취소'))); }
+function faultTxt(f){ return f==='BUYER' ? '<span class="badge b-new">구매자 사정</span>' : '<span class="badge b-red">판매자 책임</span>'; }
+function pCancel(){
+  if (!tab) tab = 'ING';
+  const all = claimList('CANCEL'), ing = all.filter(activeClaim), fin = all.filter(o => !activeClaim(o));
+  let h = `<h1 class="pt">❌ 취소관리</h1><p class="pdesc">발주확인 뒤에 손님이 취소를 원하면 "취소요청"이 들어와요. <b>1일 안에</b> 처리하세요.</p>`;
+  h += `<div class="tip">💡 <b>아직 안 보냈다면</b> → [취소승인] (손님에게 자동 환불, 재고 복구)<br>💡 <b>이미 택배를 보냈다면</b> → [취소거부·발송처리]로 송장번호를 넣어요. 손님은 받은 뒤 반품할 수 있어요.</div>`;
+  h += tabs([['ING','처리할 취소요청',ing.length],['FIN','처리 완료',fin.length]]);
+  const list = tab==='ING' ? ing : fin;
+  h += orderRows(list,[COL.no,COL.status,COL.buyer,COL.prod,COL.pay,
+    ['요청일', o => fmtD(o.claim.rday) + (S.day-o.claim.rday>=1 && activeClaim(o)?' <span class="badge b-red">지연</span>':'')],
+    ['취소 사유', o => `${esc(o.claim.reason)}<div>${faultTxt(o.claim.fault)}</div>`],
+    ['처리', o => activeClaim(o) ? `<button class="btn p s" onclick="cancelOk('${o.no}')">취소승인</button> <button class="btn s" onclick="cancelReject('${o.no}')">취소거부·발송처리</button>` : `<span class="small">${o.claim.status==='DONE'?'취소완료 (환불됨)':'거부: '+esc(o.claim.rejectReason||'')}</span>`]],
+    {empty: tab==='ING'?'처리할 취소요청이 없어요.':'처리한 취소 내역이 없어요.'});
+  return h;
+}
+function cancelOk(no){
+  const o = findO(no);
+  ask('취소승인', `<b>${esc(o.buyer)}</b>님의 <b>${esc(o.pname)}</b> 주문을 취소할까요?<br><br>· 손님에게 <b>${won(total(o))}</b>이 자동 환불돼요.<br>· 재고 ${o.qty}개가 다시 늘어나요.<br>· 혹시 이미 택배를 보냈다면 [닫기]를 누르고 '취소거부·발송처리'를 하세요.`, '취소승인', () => {
+    o.status='CANCELED'; o.claim.status='DONE'; o.claim.doneDay=S.day; restock(o);
+    hist(o, `취소승인 → 손님에게 ${won(total(o))} 환불`); log(`❌ 취소승인: ${o.buyer}님 ${o.pname} (환불 ${won(total(o))})`);
+    done('cancel'); toast('취소승인 완료! 손님에게 환불됐어요.','ok'); render();
+  });
+}
+function cancelReject(no){
+  const o = findO(no);
+  modal('취소거부 · 발송처리', `<div class="tip">이미 택배를 보낸 경우에만 하세요. 송장번호를 넣으면 취소요청은 거부되고 주문은 <b>배송중</b>이 돼요. 손님께 "이미 출발했으니 받으신 후 반품해 주세요"라고 안내해 드리세요.</div>
+    ${shipFields()}`, [{t:'닫기'},{t:'발송처리',cls:'p',fn:()=>{ if (!doShip(no,$('#mcr').value,$('#miv').value)) return false; render(); }}]);
+}
+function shipFields(){
+  return `<div class="fld"><label>택배사</label><select id="mcr"><option value="">선택</option>${COURIERS.map(c=>`<option>${c}</option>`).join('')}<option>직접전달</option></select></div>
+  <div class="fld"><label>송장번호</label><div style="display:flex;gap:.4rem"><input id="miv" placeholder="숫자만 10~14자리" inputmode="numeric"><button class="btn" onclick="$('#miv').value=practiceInvoice();if(!$('#mcr').value)$('#mcr').value='${COURIERS[0]}'">자동(연습)</button></div></div>`;
+}
+
+/* ---------- 반품 / 교환 ---------- */
+function claimPage(type){
+  if (!tab) tab = 'ING';
+  const all = claimList(type), ing = all.filter(activeClaim), fin = all.filter(o => !activeClaim(o));
+  const isR = type==='RETURN';
+  let h = `<h1 class="pt">${isR?'↩️ 반품관리':'🔄 교환관리'}</h1>
+  <p class="pdesc">${isR?'① 수거요청 → ② 상품 도착(수거완료) → ③ 상품 확인 후 <b>반품완료(환불)</b>':'① 수거요청 → ② 상품 도착(수거완료) → ③ 새 상품을 <b>교환 재배송</b>'} 순서로 처리해요. 요청 후 <b>3일 안에</b> 처리하세요.</p>`;
+  h += `<div class="tip">💡 <b>누구 책임인지</b>가 중요해요. <b>구매자 사정</b>(단순변심·옵션 잘못 고름)이면 반품배송비(실습: 왕복 ${won(RETURN_FEE)})는 손님이 내고, <b>판매자 책임</b>(상함·파손·오배송)이면 판매자가 내요.<br>🍎 농산물 같은 신선식품은 단순변심 반품이 제한될 수 있어요. 상세페이지에 "단순변심 반품 불가" 안내를 미리 적어 두면 반품거부 사유가 돼요.</div>`;
+  h += tabs([['ING',`처리할 ${CT[type]}요청`,ing.length],['FIN','처리 완료',fin.length]]);
+  const list = tab==='ING' ? ing : fin;
+  h += orderRows(list,[COL.no,COL.status,COL.buyer,COL.prod,COL.pay,
+    ['요청일', o => fmtD(o.claim.rday) + (S.day-o.claim.rday>=3 && activeClaim(o)?' <span class="badge b-red">지연</span>':'')],
+    ['사유', o => `${esc(o.claim.reason)}<div>${faultTxt(o.claim.fault)}</div>`],
+    ['진행', o => `<span class="badge ${activeClaim(o)?'b-ylw':'b-done'}">${CS[o.claim.status]}</span>`],
+    ['처리', o => claimBtns(o)]],
+    {empty: tab==='ING'?`처리할 ${CT[type]}요청이 없어요.`:'처리한 내역이 없어요.'});
+  return h;
+}
+function claimBtns(o){
+  const a = activeClaim(o);
+  if (!a) return `<span class="small">${o.claim.status==='REJECT'?'거부: '+esc(o.claim.rejectReason||''):(o.claim.type==='RETURN'?'환불 '+won(o.claim.refund):'교환완료')}</span>`;
+  if (a.status==='REQ') return `<button class="btn p s" onclick="pickup('${o.no}')">수거요청</button> <button class="btn r s" onclick="claimReject('${o.no}')">${CT[a.type]}거부</button>`;
+  if (a.status==='PICKUP') return `<span class="small">택배기사 수거 중…<br>[다음날로]를 누르면 도착해요</span>`;
+  if (a.status==='COLLECTED') return a.type==='RETURN'
+    ? `<button class="btn p s" onclick="returnDone('${o.no}')">반품완료(환불)</button> <button class="btn r s" onclick="claimReject('${o.no}')">반품거부</button>`
+    : `<button class="btn p s" onclick="reship('${o.no}')">교환 재배송</button> <button class="btn r s" onclick="claimReject('${o.no}')">교환거부</button>`;
+  if (a.status==='RESHIP') return `<span class="small">새 상품 배송중 (${a.courier})<br>[다음날로]를 누르면 교환완료</span>`;
+  return '';
+}
+function pickup(no){
+  const o = findO(no), a = o.claim;
+  ask('수거요청', `택배사에 <b>${esc(o.buyer)}</b>님 댁으로 상품을 가지러 가달라고 요청할까요?<br><br>· 수거지: ${esc(o.addr)}<br>· 반품배송비: ${a.fault==='BUYER'?`<b>손님 부담</b> (${won(RETURN_FEE)}, 환불금에서 빠져요)`:'<b>판매자 부담</b> (판매자 책임이라서요)'}`, '수거요청', () => {
+    a.status='PICKUP'; a.pday=S.day; hist(o, `${CT[a.type]} 수거요청 (택배사 수거 접수)`); log(`📮 ${CT[a.type]} 수거요청: ${o.buyer}님 ${o.pname}`);
+    toast('수거요청 완료! [다음날로]를 누르면 상품이 도착(수거완료)해요.','ok'); render();
+  });
+}
+function returnDone(no){
+  const o = findO(no), a = o.claim, pay = total(o), fee = a.fault==='BUYER' ? RETURN_FEE : 0, refund = Math.max(0, pay-fee);
+  modal('반품완료 (환불)', `<p>돌아온 상품의 상태를 확인했나요? 반품완료를 누르면 손님에게 바로 환불돼요.</p>
+    <dl class="kv"><dt>결제금액</dt><dd>${won(pay)}</dd><dt>반품배송비</dt><dd>${fee?`- ${won(fee)} (구매자 사정 → 손님 부담)`:'0원 (판매자 책임 → 판매자 부담)'}</dd><dt><b>환불금액</b></dt><dd><b style="color:var(--red)">${won(refund)}</b></dd></dl>
+    <div class="chk"><input type="checkbox" id="rsk" checked><label for="rsk">상품 상태가 괜찮아서 다시 팔 수 있어요 (재고 ${o.qty}개 복구)</label></div>`,
+    [{t:'닫기'},{t:'반품완료(환불)',cls:'p',fn:()=>{
+      if ($('#rsk').checked) restock(o);
+      a.status='DONE'; a.refund=refund; a.doneDay=S.day; o.status='RETURNED';
+      hist(o, `반품완료 → 손님에게 ${won(refund)} 환불`); log(`↩️ 반품완료: ${o.buyer}님 ${o.pname} (환불 ${won(refund)})`);
+      done('return'); toast(`반품완료! 손님에게 ${won(refund)} 환불됐어요.`,'ok'); render(); }}]);
+}
+function reship(no){
+  const o = findO(no);
+  modal('교환 재배송', `<p>새 상품(<b>${esc(o.pname)} · ${esc(o.option)}</b>)을 포장해서 다시 보내고, 송장번호를 입력하세요.</p>${shipFields()}`,
+    [{t:'닫기'},{t:'교환 재배송',cls:'p',fn:()=>{
+      const cr = $('#mcr').value, iv = ($('#miv').value||'').replace(/[-\s]/g,'');
+      if (!cr){ toast('택배사를 선택해 주세요.','warn'); return false; }
+      if (!validInvoice(cr,iv)){ toast('송장번호는 숫자 10~14자리로 넣어주세요.','warn'); return false; }
+      const a = o.claim; a.status='RESHIP'; a.rsday=S.day; a.courier=cr; a.invoice=iv;
+      hist(o, `교환 상품 재배송 (${cr} ${iv})`); log(`🔄 교환 재배송: ${o.buyer}님 ${o.pname}`);
+      done('exchange'); toast('교환 재배송 완료! [다음날로]를 누르면 손님이 받고 교환이 끝나요.','ok'); render(); }}]);
+}
+function claimReject(no){
+  const o = findO(no), a = o.claim;
+  const R = a.type==='RETURN'
+    ? ['신선식품 단순변심 반품 불가 (상세페이지에 안내함)','반품 가능 기간(7일)이 지남','손님이 상품을 사용·섭취해서 다시 팔 수 없음']
+    : ['교환할 재고가 없음 (품절)','손님이 상품을 사용·섭취해서 교환 불가','신선식품 단순변심 교환 불가 (상세페이지에 안내함)'];
+  modal(`${CT[a.type]}거부`, `<div class="tip">거부는 <b>정당한 사유</b>가 있을 때만 해야 해요. 상세페이지에 미리 안내하지 않은 사유로 거부하면 분쟁이 생길 수 있어요. 판매자 책임(상함·파손)인데 거부하면 안 돼요!</div>
+    ${a.fault==='SELLER'?`<div class="tip" style="background:#ffe9ec;border-color:#f3b4bd;color:#8a1020">⚠️ 이 요청은 <b>판매자 책임</b> 사유예요. 거부하지 말고 처리해 주는 것이 맞아요.</div>`:''}
+    <div class="fld"><label>거부 사유</label><select id="rjr">${R.map(r=>`<option>${r}</option>`).join('')}</select></div>`,
+    [{t:'닫기'},{t:`${CT[a.type]}거부`,cls:'r',fn:()=>{
+      a.status='REJECT'; a.rejectReason=$('#rjr').value; a.doneDay=S.day;
+      hist(o, `${CT[a.type]}거부: ${a.rejectReason}`); log(`🙅 ${CT[a.type]}거부: ${o.buyer}님 – ${a.rejectReason}`);
+      done(a.type==='RETURN'?'return':'exchange');
+      toast(`${CT[a.type]}거부 처리했어요. 손님에게 사유가 안내돼요.`,'ok'); render(); }}]);
+}
+const pReturn = () => claimPage('RETURN');
+const pExchange = () => claimPage('EXCHANGE');
+
+/* ---------- 판매지연 ---------- */
+function pDelay(){
+  const c = counts();
+  const od = S.orders.filter(isOverdue);
+  const notified = S.orders.filter(o => o.delay && ['NEW','READY'].includes(o.status) && !isOverdue(o));
+  return `<h1 class="pt">⏰ 판매지연</h1><p class="pdesc">발송기한을 넘기거나, 취소·반품·교환 요청을 제때 처리하지 않으면 <b>판매관리 페널티</b>가 쌓여요. 페널티가 많으면 판매 제한을 받을 수 있어요.</p>
+  <div class="statgrid">
+    <div class="stat"><span>판매관리 페널티 점수 (실습)</span><b style="color:${S.penalty?'var(--red)':'inherit'}">${S.penalty}점</b></div>
+    <div class="stat"><span>발송지연 (기한 지남)</span><b>${c.dShip}건</b></div>
+    <div class="stat"><span>취소 / 반품 / 교환 지연</span><b>${c.dCancel} / ${c.dRet} / ${c.dExch}건</b></div>
+  </div>
+  <div class="tip">💡 비·태풍, 수확 지연 등으로 기한 안에 못 보낼 것 같으면 <b>기한이 지나기 전에</b> [발송지연 안내]를 하세요. 손님에게 사유와 새 발송예정일이 안내되고 페널티를 피할 수 있어요.</div>
+  <h3>발송기한이 지난 주문</h3>
+  ${orderRows(od,[COL.no,COL.status,COL.oday,COL.deadline,COL.buyer,COL.prod,['처리',o=>`<button class="btn p s" onclick="delayModal(['${o.no}'])">발송지연 안내</button> <button class="btn s" onclick="go('deliver','${o.status}')">바로 발송하기</button>`]],{empty:'발송기한이 지난 주문이 없어요. 잘하고 있어요! 👍'})}
+  <h3 style="margin-top:1.3rem">발송지연 안내한 주문</h3>
+  ${orderRows(notified,[COL.no,COL.buyer,COL.prod,['지연 사유',o=>esc(o.delay.reason)],['새 발송예정일',o=>fmtD(o.delay.until)]],{empty:'발송지연 안내한 주문이 없어요.'})}`;
+}
+function delayModal(nos){
+  if (!nos.length) return toast('발송지연 처리할 주문을 체크(✔)해 주세요.','warn');
+  const opts = [1,2,3,4,5,6,7].map(n => `<option value="${S.day+n}">${fmtD(S.day+n)}</option>`).join('');
+  modal('발송지연 안내', `<p>손님에게 늦어지는 이유와 새로운 발송 예정일을 알려줘요. (${nos.length}건)</p>
+    <div class="fld"><label>지연 사유</label><select id="dlr"><option>날씨로 인한 수확 지연 (비·태풍 등)</option><option>상품 숙성/수확 시기 조정</option><option>주문 폭주로 인한 포장 지연</option><option>구매자 요청 (원하는 날짜에 받기)</option><option>택배사 사정</option></select></div>
+    <div class="fld"><label>새 발송 예정일 (최대 7일 뒤까지)</label><select id="dlu">${opts}</select></div>
+    <div class="fld"><label>손님께 남길 말 (선택)</label><textarea id="dlm" placeholder="예) 비 때문에 수확이 늦어지고 있어요. 가장 맛있을 때 따서 보내드릴게요. 죄송합니다."></textarea></div>`,
+    [{t:'닫기'},{t:'안내하기',cls:'p',fn:()=>{
+      const until = +$('#dlu').value, reason = $('#dlr').value;
+      nos.forEach(no => { const o = findO(no); if (!o || !['NEW','READY'].includes(o.status)) return; o.delay = {reason, until, msg:$('#dlm').value}; o.deadline = until; hist(o, `발송지연 안내: ${reason} (새 발송예정일 ${fmtD(until)})`); });
+      log(`⏰ 발송지연 안내 ${nos.length}건 – ${reason}`); done('delay');
+      toast('발송지연 안내 완료! 새 발송예정일까지 꼭 보내주세요.','ok'); render(); }}]);
+}
+
+/* ---------- 상품 ---------- */
+function pProducts(){
+  return `<h1 class="pt">🥬 상품관리</h1><p class="pdesc">재고와 판매 상태를 관리해요. 재고가 0이 되면 자동으로 품절돼요. 수확이 끝나면 미리 품절 처리하세요.</p>
+  <div class="bar"><span class="small">스토어 이름:</span><input id="stn" value="${esc(S.store)}" style="border:1px solid #c9ced6;border-radius:.35rem;padding:.35rem .55rem;width:12rem"><button class="btn" onclick="S.store=$('#stn').value.trim()||'행복농원';render();toast('스토어 이름을 바꿨어요.','ok')">이름 저장</button></div>
+  <div class="tw"><table><thead><tr><th>상품번호</th><th>상품명</th><th>옵션</th><th>판매가</th><th>배송비</th><th>재고수량</th><th>판매상태</th><th>처리</th></tr></thead><tbody>
+  ${S.products.map(p => `<tr><td class="mono">${1000000000+p.id*7919}</td><td><b>${esc(p.name)}</b></td><td class="small">${p.options.map(esc).join(' / ')}</td>
+    <td><input type="number" id="pp_${p.id}" value="${p.price}" step="100" style="width:6.5rem"> 원</td><td>${p.ship?won(p.ship):'무료'}</td>
+    <td><input type="number" id="ps_${p.id}" value="${p.stock}" min="0" style="width:4.5rem"> 개</td>
+    <td><span class="badge ${p.status==='판매중'?'b-ready':'b-red'}">${p.status}</span></td>
+    <td><button class="btn p s" onclick="saveProd(${p.id})">저장</button> ${p.status==='판매중'?`<button class="btn r s" onclick="setSt(${p.id},'품절')">품절로</button>`:`<button class="btn s" onclick="setSt(${p.id},'판매중')">판매 다시 시작</button>`}</td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="tip">💡 상세페이지 작성·상품 등록은 수업에서 배운 대로 실제 판매자센터에서 해요. 이 실습 프로그램은 <b>주문이 들어온 뒤의 일</b>을 연습하는 곳이라 상품 등록 기능은 없어요.</div>`;
+}
+function saveProd(id){
+  const p = S.products.find(x => x.id===id), st = Math.max(0, parseInt($('#ps_'+id).value)||0), pr = Math.max(100, parseInt($('#pp_'+id).value)||p.price);
+  p.stock = st; p.price = pr;
+  if (st===0 && p.status==='판매중'){ p.status='품절'; toast('재고가 0개라 품절로 바뀌었어요.','warn'); }
+  else if (st>0 && p.status==='품절'){ p.status='판매중'; toast('재고가 생겨서 다시 판매중이 됐어요.','ok'); }
+  else toast('저장했어요.','ok');
+  log(`🥬 상품 수정: ${p.name} – 재고 ${st}개, 가격 ${won(pr)}`); done('stock'); render();
+}
+function setSt(id, st){
+  const p = S.products.find(x => x.id===id);
+  if (st==='판매중' && p.stock<=0) return toast('재고가 0개라 판매를 시작할 수 없어요. 먼저 재고 수량을 넣고 [저장]하세요.','warn');
+  p.status = st; log(`🥬 ${p.name} → ${st}`); done('stock'); toast(`${p.name}: ${st}`,'ok'); render();
+}
+
+/* ---------- 정산 ---------- */
+function pSettle(){
+  const c = counts();
+  const list = S.orders.filter(o => o.settle).sort((a,b) => (b.cday||0)-(a.cday||0));
+  return `<h1 class="pt">💰 정산관리</h1><p class="pdesc">손님이 <b>구매확정</b>하면 → 다음날 수수료를 뺀 금액이 <b>비즈월렛</b>으로 들어와요(정산). 비즈월렛에 쌓인 돈은 등록한 통장으로 받을 수 있어요.</p>
+  <div class="statgrid">
+    <div class="stat"><span>오늘정산</span><b>${won(c.settleToday)}</b></div>
+    <div class="stat"><span>정산예정 (내일 들어올 돈)</span><b>${won(c.settleExp)}</b></div>
+    <div class="stat"><span>비즈월렛 잔액</span><b>${won(c.wallet)}</b>${S.pointCost?`<span class="small">리뷰 포인트 지급 ${won(S.pointCost)} 차감</span>`:''}</div>
+  </div>
+  <div class="tip">💡 실습용 계산: <b>정산금액 = 결제금액 − 수수료(가상 ${FEE_RATE*100}%)</b>. 실제 수수료는 결제수단·유입경로에 따라 달라요. 판매자센터 [정산관리]에서 건별로 확인할 수 있어요.</div>
+  ${list.length ? `<div class="tw"><table><thead><tr><th>상품주문번호</th><th>구매자</th><th>상품</th><th>구매확정일</th><th class="num">결제금액</th><th class="num">수수료</th><th class="num">정산금액</th><th>정산상태</th></tr></thead><tbody>
+  ${list.map(o => `<tr><td class="mono"><a href="#" onclick="detail('${o.no}');return false">${o.no}</a></td><td>${esc(o.buyer)}</td><td>${esc(o.pname)}</td><td>${fmtD(o.cday)}</td><td class="num">${won(o.settle.pay)}</td><td class="num">-${won(o.settle.fee)}</td><td class="num"><b>${won(o.settle.amt)}</b></td><td>${o.settle.state==='완료'?`<span class="badge b-ready">정산완료 ${fmtD(o.settle.doneDay)}</span>`:`<span class="badge b-ylw">정산예정 ${fmtD(o.settle.due)}</span>`}</td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="empty">아직 정산 내역이 없어요. 주문 → 발송 → 배송완료 → 구매확정까지 진행해 보세요.</div>'}`;
+}
+
+/* ---------- 리뷰 ---------- */
+function pReviews(){
+  const F = {all:['전체',()=>true], new:['새 리뷰',r=>!r.read], noreply:['답글 없음',r=>!r.reply], low:['낮은 평점(1~2점)',r=>r.rating<=2], photo:['포토 리뷰',r=>r.photo], best:['베스트 리뷰',r=>r.best]};
+  const list = S.reviews.filter(F[rvFilter][1]);
+  const avg = S.reviews.length ? (S.reviews.reduce((a,r)=>a+r.rating,0)/S.reviews.length).toFixed(1) : '-';
+  let h = `<h1 class="pt">⭐ 리뷰관리</h1><p class="pdesc">손님 리뷰에 답글을 달고, 감사 포인트를 드리고, 좋은 리뷰는 베스트로 뽑아요.</p>
+  <div class="statgrid"><div class="stat"><span>전체 리뷰 / 평균 평점</span><b>${S.reviews.length}개 · ★ ${avg}</b></div>
+    <div class="stat"><span>답글 안 단 리뷰</span><b>${S.reviews.filter(r=>!r.reply).length}개</b></div>
+    <div class="stat"><span>지급한 리뷰 포인트</span><b>${won(S.pointCost)}</b></div></div>
+  <div class="tabs">${Object.entries(F).map(([k,[t,f]])=>`<button class="${rvFilter===k?'on':''}" onclick="rvFilter='${k}';render()">${t} <span class="c">${S.reviews.filter(f).length}</span></button>`).join('')}</div>`;
+  h += list.length ? list.map(r => `<div class="rv ${r.rating<=2?'low':''}">
+    <div class="meta"><span class="stars">${stars(r.rating)}</span><b style="color:var(--text)">${esc(r.buyer)}</b><span>${esc(r.pname)}</span><span>${fmtD(r.day)}</span>
+      ${!r.read?'<span class="badge b-new">NEW</span>':''}${r.photo?'<span class="badge b-teal">포토</span>':''}${r.best?'<span class="badge b-ylw">🏆 베스트</span>':''}${r.point?`<span class="badge b-ready">${won(r.point)} 포인트 지급함</span>`:''}</div>
+    <div class="txt">${r.photo?'<span class="photo">📷</span>':''}${esc(r.text)}</div>
+    ${r.reply?`<div class="reply"><b>판매자 답글</b>\n${esc(r.reply)}</div>`:''}
+    <div class="bar" style="margin-bottom:0"><button class="btn ${r.reply?'':'p'} s" onclick="replyModal(${r.id})">${r.reply?'답글 수정':'💬 답글 달기'}</button>
+      <button class="btn s" onclick="pointModal(${r.id})" ${r.point?'disabled':''}>🎁 포인트 지급</button>
+      <button class="btn s" onclick="toggleBest(${r.id})">${r.best?'베스트 해제':'🏆 베스트 리뷰 선정'}</button>
+      ${!r.read?`<button class="btn s" onclick="markRead(${r.id})">확인함</button>`:''}</div></div>`).join('')
+    : `<div class="empty">해당하는 리뷰가 없어요. 오른쪽 아래 🧑‍🌾 손님 역할 → [리뷰 남기기]로 리뷰를 만들어 보세요.</div>`;
+  const pend = S.events.filter(e=>!e.announced);
+  h += `<h3 style="margin-top:1.5rem">🎉 리뷰 이벤트</h3>
+  <div class="tip">💡 "포토리뷰 남기면 추첨해서 1만 포인트!" 같은 이벤트를 열 수 있어요. 발표일에 <b>🏆 베스트 리뷰</b>로 뽑은 손님들에게 포인트가 지급돼요.</div>
+  <div class="bar"><button class="btn p" onclick="eventModal()">+ 리뷰 이벤트 만들기</button></div>
+  ${S.events.length ? `<div class="tw"><table><thead><tr><th>이벤트</th><th>발표일</th><th>베스트 1명당 포인트</th><th>상태</th><th>처리</th></tr></thead><tbody>
+  ${S.events.map(e=>`<tr><td>${esc(e.name)}</td><td>${fmtD(e.day)}</td><td>${won(e.point)}</td><td>${e.announced?`<span class="badge b-done">발표완료 (${e.winners}명)</span>`:'<span class="badge b-ylw">발표 예정</span>'}</td><td>${e.announced?'':`<button class="btn p s" onclick="announce(${e.id})">당첨자 발표</button>`}</td></tr>`).join('')}
+  </tbody></table></div>`:''}`;
+  return h;
+}
+function markRead(id){ const r = S.reviews.find(x=>x.id===id); r.read = true; render(); }
+function replyTemplate(r){
+  if (r.rating >= 4) return `${r.buyer}님, 소중한 후기 정말 감사합니다! 😊\n정성껏 키운 ${r.pname} 맛있게 드셔 주셔서 저희도 기쁩니다.\n다음에도 신선하고 맛있는 상품으로 보답하겠습니다.\n- ${S.store} 드림`;
+  if (r.rating === 3) return `${r.buyer}님, 후기 남겨 주셔서 감사합니다.\n말씀해 주신 부분은 꼼꼼히 살펴서 더 좋은 상품으로 준비하겠습니다.\n불편하신 점은 언제든 톡톡으로 말씀해 주세요.\n- ${S.store} 드림`;
+  return `${r.buyer}님, 불편을 드려 정말 죄송합니다. 🙏\n받으신 상품 사진을 톡톡으로 보내 주시면 바로 교환 또는 환불 도와드리겠습니다.\n앞으로 포장과 선별에 더 신경 쓰겠습니다.\n- ${S.store} 드림`;
+}
+function replyModal(id){
+  const r = S.reviews.find(x=>x.id===id); r.read = true;
+  modal('리뷰 답글', `<div class="rv ${r.rating<=2?'low':''}" style="margin-bottom:.8rem"><div class="meta"><span class="stars">${stars(r.rating)}</span><b>${esc(r.buyer)}</b><span>${esc(r.pname)}</span></div><div class="txt">${esc(r.text)}</div></div>
+    ${r.rating<=2?'<div class="tip">💡 낮은 평점일수록 <b>빠르게, 정중하게</b>. ① 사과 ② 해결 방법(교환·환불) ③ 앞으로의 약속 순서로 쓰면 좋아요. 손님 탓을 하거나 따지는 답글은 다른 손님도 다 봐요!</div>':'<div class="tip">💡 손님 이름, 상품 이름을 넣어 진심을 담으면 좋아요. 농장 이야기를 한 줄 넣어도 좋아요.</div>'}
+    <div class="fld"><label>답글 내용</label><textarea id="rpt" style="min-height:8rem">${esc(r.reply)}</textarea></div>
+    <button class="btn" onclick="$('#rpt').value=replyTemplate(S.reviews.find(x=>x.id===${id}))">✍️ 답글 예시 넣기</button>`,
+    [{t:'닫기'},{t:'답글 등록',cls:'p',fn:()=>{
+      const t = $('#rpt').value.trim(); if (t.length < 5){ toast('답글을 5글자 이상 써 주세요.','warn'); return false; }
+      r.reply = t; log(`💬 리뷰 답글: ${r.buyer}님(★${r.rating})`); done('reply'); if (r.rating<=2) done('lowReply');
+      toast('답글을 등록했어요!','ok'); render(); }}]);
+}
+function pointModal(id){
+  const r = S.reviews.find(x=>x.id===id);
+  modal('리뷰 혜택(포인트) 지급', `<p><b>${esc(r.buyer)}</b>님에게 리뷰 감사 포인트를 드려요. 손님은 이 포인트로 다음에 물건을 살 수 있어요.</p>
+    <div class="fld"><label>지급 포인트</label><select id="ptv"><option value="100">100원 (텍스트 리뷰)</option><option value="500" ${r.photo?'':'selected'}>500원</option><option value="1000" ${r.photo?'selected':''}>1,000원 (포토 리뷰)</option><option value="3000">3,000원</option><option value="5000">5,000원 (베스트 리뷰)</option></select></div>
+    <div class="tip">💡 지급한 포인트 비용은 판매자가 부담해서 <b>정산금(비즈월렛)에서 빠져요</b>. 한 리뷰에 한 번만 줄 수 있어요.</div>`,
+    [{t:'닫기'},{t:'지급하기',cls:'p',fn:()=>{
+      const v = +$('#ptv').value; r.point = v; r.read = true; S.pointCost += v;
+      log(`🎁 리뷰 포인트 ${won(v)} 지급: ${r.buyer}님`); done('point'); toast(`${r.buyer}님에게 ${won(v)} 포인트를 지급했어요.`,'ok'); render(); }}]);
+}
+function toggleBest(id){ const r = S.reviews.find(x=>x.id===id); r.best = !r.best; r.read = true; toast(r.best?'베스트 리뷰로 뽑았어요. 리뷰 이벤트 발표 때 포인트가 지급돼요.':'베스트 리뷰를 해제했어요.','ok'); render(); }
+function eventModal(){
+  modal('리뷰 이벤트 만들기', `<div class="fld"><label>이벤트 이름</label><input id="evn" value="포토리뷰 이벤트 – 베스트 리뷰 선정!"></div>
+    <div class="fld"><label>발표일</label><select id="evd">${[1,3,5,7].map(n=>`<option value="${S.day+n}">${fmtD(S.day+n)} (${n}일 뒤)</option>`).join('')}</select></div>
+    <div class="fld"><label>베스트 1명당 포인트</label><select id="evp"><option value="3000">3,000원</option><option value="5000" selected>5,000원</option><option value="10000">10,000원</option></select></div>`,
+    [{t:'닫기'},{t:'만들기',cls:'p',fn:()=>{ S.events.unshift({id:S.eseq++, name:$('#evn').value||'리뷰 이벤트', day:+$('#evd').value, point:+$('#evp').value, announced:false}); log('🎉 리뷰 이벤트를 만들었어요'); toast('리뷰 이벤트를 만들었어요. 홈 화면 "발표 예정 리뷰 이벤트"에 표시돼요.','ok'); render(); }}]);
+}
+function announce(id){
+  const e = S.events.find(x=>x.id===id);
+  const win = S.reviews.filter(r => r.best && !r.eventPaid);
+  if (!win.length) return toast('🏆 베스트 리뷰로 뽑은 리뷰가 없어요. 리뷰 목록에서 먼저 베스트를 선정하세요.','warn');
+  ask('당첨자 발표', `베스트 리뷰 <b>${win.length}명</b>에게 각각 <b>${won(e.point)}</b>, 총 <b>${won(e.point*win.length)}</b> 포인트를 지급하고 발표할까요?`, '발표하기', () => {
+    win.forEach(r => { r.eventPaid = true; r.point += e.point; }); S.pointCost += e.point*win.length;
+    e.announced = true; e.winners = win.length; log(`🎉 리뷰 이벤트 발표: ${win.length}명 당첨`); done('point'); toast('당첨자 발표 완료! 포인트가 지급됐어요.','ok'); render();
+  });
+}
+
+/* ---------- 미션 / 용어 / 기록 ---------- */
+function pMissions(){
+  const n = MISSIONS.filter(m => S.done[m.key]).length;
+  return `<h1 class="pt">🎯 실습 미션</h1><p class="pdesc">위에서부터 하나씩 따라 해 보세요. <b>[연습 상황 만들기]</b>를 누르면 그 미션에 필요한 주문이나 요청이 생겨요. 완료하면 자동으로 체크돼요.</p>
+  <div><b>${n} / ${MISSIONS.length}</b> 완료</div><div class="prog"><i style="width:${n/MISSIONS.length*100}%"></i></div>
+  ${n===MISSIONS.length?'<div class="tip" style="font-size:1rem">🏆 <b>모든 미션 완료!</b> 이제 오른쪽 아래 🧑‍🌾 손님 역할 → <b>[바쁜 하루 시작하기]</b>로 종합 실습을 해 보세요.</div>':''}
+  ${MISSIONS.map((m,i) => `<div class="mission ${S.done[m.key]?'ok':''}"><div class="no">${S.done[m.key]?'✔':i+1}</div><div style="flex:1">
+    <h4>${m.title}</h4><p class="why">${m.why}</p><ol>${m.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+    ${m.prep?`<button class="btn p s" onclick="prepMission(${i})">연습 상황 만들기</button>`:''}</div></div>`).join('')}`;
+}
+function prepMission(i){ const m = MISSIONS[i]; m.prep(); render(); toast(`"${m.title}" 연습 상황이 준비됐어요! 순서대로 따라해 보세요.`,'bell'); }
+const GLOSS = [
+  ['신규주문','손님이 결제를 마친 주문. 아직 판매자가 확인하지 않은 상태예요.'],
+  ['발주확인','"주문을 확인했고 곧 보내드릴게요"라고 알리는 것. 발주확인 후에는 손님이 바로 취소하지 못하고 "취소요청"을 해야 해요.'],
+  ['발송대기 (배송준비)','발주확인은 했지만 아직 택배를 보내지 않은 상태.'],
+  ['발송처리','택배를 보낸 뒤 택배사와 송장번호를 입력하는 것. 이걸 해야 "배송중"이 돼요.'],
+  ['송장번호 (운송장번호)','택배 상자에 붙는 번호. 택배를 접수하면 받을 수 있어요. 손님은 이 번호로 배송조회를 해요.'],
+  ['발송기한','주문 후 상품을 보내야 하는 기한. (실습: 주문일 + 3일)'],
+  ['발송지연 안내','기한 안에 못 보낼 때 사유와 새 발송예정일을 손님에게 알리는 것. 기한 지나기 전에 해야 페널티를 피해요.'],
+  ['배송완료','손님이 상품을 받은 상태.'],
+  ['구매확정','손님이 "잘 받았어요"라고 확정하는 것. 이걸 해야 판매자에게 돈이 정산돼요. 손님이 안 눌러도 일정 기간 후 자동 확정돼요.'],
+  ['정산 / 비즈월렛','구매확정된 주문의 판매대금에서 수수료를 뺀 금액을 판매자에게 주는 것. 비즈월렛은 정산금이 들어오는 판매자 지갑이에요.'],
+  ['취소요청','발주확인 후 손님이 취소를 원할 때. 아직 안 보냈으면 승인, 이미 보냈으면 송장 입력(취소거부).'],
+  ['반품요청','상품을 받은 손님이 돌려보내고 환불을 원할 때. 수거 → 확인 → 환불 순서.'],
+  ['교환요청','상품을 받은 손님이 다른 상품(같은 상품 새것, 다른 옵션)으로 바꾸길 원할 때. 수거 → 확인 → 재발송 순서.'],
+  ['수거','택배기사가 손님 집에서 반품·교환 상품을 가져오는 것.'],
+  ['귀책 사유','누구 잘못인지. 구매자 귀책(단순변심 등)이면 반품배송비를 손님이, 판매자 귀책(상함·파손·오배송)이면 판매자가 내요.'],
+  ['판매취소','판매자가 재고 부족 등으로 먼저 주문을 취소하는 것. 페널티를 받을 수 있어요.'],
+  ['페널티','발송지연, 판매자 취소, 클레임 처리 지연 등이 쌓이면 받는 점수. 많아지면 판매 제한을 받을 수 있어요.'],
+  ['리뷰 혜택 (포인트)','리뷰를 남긴 손님에게 감사 표시로 주는 포인트. 비용은 판매자가 부담해요.'],
+  ['베스트 리뷰','좋은 리뷰를 골라 추가 혜택을 주고 상품 페이지에서 돋보이게 하는 것.'],
+  ['톡톡','손님과 판매자가 대화하는 메신저. 반품·교환 문의가 여기로도 와요.'],
+];
+function pGlossary(){ return `<h1 class="pt">📖 용어 풀이</h1><p class="pdesc">판매자센터에서 자주 보는 낯선 말들을 쉽게 풀었어요.</p><dl class="gl">${GLOSS.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>
+  <h3 style="margin-top:1.4rem">📌 주문 처리 전체 흐름</h3><div class="card cb" style="font-size:.95rem">🛒 신규주문 → ✅ 발주확인 → 📦 포장·택배 접수 → 🚚 송장 입력(발송처리) → 🏠 배송완료 → 🤝 구매확정 → 💰 정산(비즈월렛)<br><br>
+  중간에 손님이 원하면: <b>❌ 취소</b>(보내기 전) · <b>↩️ 반품</b>(받은 후, 환불) · <b>🔄 교환</b>(받은 후, 다시 보냄)</div>`; }
+function pLogs(){ return `<h1 class="pt">📝 활동 기록</h1><p class="pdesc">실습하면서 일어난 일을 시간 순서로 보여줘요.</p>${S.log.length?`<ul class="log">${S.log.map(l=>`<li><span class="d">${fmtD(l.d)} ${l.t}</span>${esc(l.m)}</li>`).join('')}</ul>`:'<div class="empty">아직 기록이 없어요.</div>'}`; }
+
+/* ---------- 주문 상세 ---------- */
+function detail(no){
+  const o = findO(no);
+  modal('주문 상세', `<div style="margin-bottom:.6rem">${stBadge(o)}</div>
+  <dl class="kv"><dt>상품주문번호</dt><dd class="mono">${o.no}</dd><dt>주문일시</dt><dd>${fmtD(o.oday)} ${o.otime}</dd><dt>발송기한</dt><dd>${fmtD(o.deadline)}</dd>
+  <dt>상품</dt><dd>${esc(o.pname)} / ${esc(o.option)} / ${o.qty}개</dd><dt>결제금액</dt><dd>${won(total(o))} (상품 ${won(o.unit*o.qty)} + 배송비 ${won(o.ship)})</dd>
+  <dt>구매자</dt><dd>${esc(o.buyer)} · ${o.phone}</dd><dt>배송지</dt><dd>${esc(o.addr)}</dd><dt>배송메모</dt><dd>${esc(o.memo)||'-'}</dd>
+  <dt>택배</dt><dd>${o.courier?`${o.courier} ${o.invoice}`:'-'}</dd>
+  ${o.claim?`<dt>${CT[o.claim.type]}</dt><dd>${CS[o.claim.status]} · ${esc(o.claim.reason)}</dd>`:''}</dl>
+  <h4 style="margin:1rem 0 .3rem">진행 기록</h4><ul class="timeline">${o.hist.map(h=>`<li><span class="small">${fmtD(h.d)}</span> ${esc(h.t)}</li>`).join('')}</ul>`, [{t:'닫기'}], 'wide');
+}
+
+/* ---------- 손님 패널 ---------- */
+function renderSim(){
+  $('#simBody').innerHTML = `
+  <h5>주문</h5>
+  <button class="simb" onclick="simOrder()"><i>🛒</i><span>새 주문 들어오게 하기<small>손님이 상품을 사고 결제해요</small></span></button>
+  <button class="simb" onclick="simCancel()"><i>❌</i><span>취소 요청하기<small>보내기 전에 손님이 취소를 원해요</small></span></button>
+  <h5>상품을 받은 손님</h5>
+  <button class="simb" onclick="simClaim('RETURN')"><i>↩️</i><span>반품 요청하기<small>돌려보내고 환불받고 싶어요</small></span></button>
+  <button class="simb" onclick="simClaim('EXCHANGE')"><i>🔄</i><span>교환 요청하기<small>새 상품으로 바꿔 주세요</small></span></button>
+  <button class="simb" onclick="simConfirm()"><i>🤝</i><span>구매확정 하기<small>잘 받았어요! (정산이 시작돼요)</small></span></button>
+  <h5>리뷰</h5>
+  <button class="simb" onclick="simReview('good')"><i>😍</i><span>좋은 리뷰 남기기</span></button>
+  <button class="simb" onclick="simReview('bad')"><i>😠</i><span>나쁜 리뷰 남기기<small>낮은 평점 대응 연습</small></span></button>
+  <h5>특별 상황</h5>
+  <button class="simb" onclick="simDelay()"><i>⏰</i><span>발송기한 지난 주문 만들기</span></button>
+  <button class="simb" onclick="simBusy()"><i>🔥</i><span>바쁜 하루 시작하기 (종합 실습)<small>주문·취소·반품·교환·리뷰가 한꺼번에!</small></span></button>
+  <h5>설정</h5>
+  <label class="chk"><input type="checkbox" ${S.auto?'checked':''} onchange="S.auto=this.checked;save()"><span>[다음날로] 누를 때마다 손님 주문·요청이 <b>자동으로</b> 들어오게 하기</span></label>`;
+}
+function toggleSim(v){ $('#sim').classList.toggle('on', v); }
+
+/* ---------- 모달 / 알림 ---------- */
+let modalBtns = [];
+function modal(title, body, buttons=[{t:'닫기'}], cls=''){
+  modalBtns = buttons;
+  $('#modalRoot').innerHTML = `<div class="mbg" onclick="if(event.target===this)closeModal()"><div class="modal ${cls}"><div class="mh">${title}<button onclick="closeModal()">×</button></div>
+  <div class="mb">${body}</div><div class="mf">${buttons.map((b,i)=>`<button class="btn ${b.cls||''}" onclick="mClick(${i})">${b.t}</button>`).join('')}</div></div></div>`;
+  const f = $('#modalRoot input:not([type=checkbox]), #modalRoot textarea'); if (f) f.focus();
+}
+function mClick(i){ const b = modalBtns[i]; if (b.fn && b.fn() === false) return; if (!b.fn || $('#modalRoot .mbg')) closeModal(); }
+function closeModal(){ $('#modalRoot').innerHTML = ''; }
+function ask(title, msg, okText, fn){ modal(title, `<div>${msg}</div>`, [{t:'닫기'},{t:okText,cls:'p',fn:()=>{ closeModal(); fn(); }}]); }
+function toast(m, kind=''){
+  const d = document.createElement('div'); d.className = 'toast ' + kind; d.innerHTML = m;
+  d.title = '누르면 닫혀요'; d.onclick = () => d.remove();
+  const box = $('#toasts'); box.appendChild(d);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => d.remove(), kind==='warn'?5000:3800);
+}
+const HELP = {
+  sales:'<b>판매관리</b>는 주문이 지금 어느 단계에 있는지 보여줘요. 숫자를 누르면 그 주문 목록으로 가요.<br><br>🛒 <b>신규주문</b> → ✅ 발주확인 → 📦 <b>배송준비</b>(발송대기) → 송장 입력 → 🚚 <b>배송중</b> → 🏠 <b>배송완료</b> → 🤝 <b>구매확정</b><br><br>· 오늘출발: 오늘이 발송기한인 주문<br>· 예약구매/정기구독/N배송: 실습에서는 사용하지 않아요.',
+  settle:'<b>정산관리</b><br>· 오늘정산: 오늘 비즈월렛으로 들어온 돈<br>· 정산예정: 구매확정되어 곧 들어올 돈<br>· 비즈월렛: 정산금이 쌓이는 판매자 지갑 (통장으로 출금 가능)',
+  claim:'<b>취소·반품·교환</b><br>손님이 요청한 건수예요. 빨간 숫자가 있으면 빨리 처리해야 해요!<br>· 취소: 보내기 전 · 반품: 받은 후 환불 · 교환: 받은 후 다시 보내기',
+  delay:'<b>판매지연</b><br>기한 안에 처리하지 못한 건수예요. 0이 아니면 페널티가 쌓일 수 있어요.<br>· 발송지연: 발송기한 지남<br>· 취소지연: 취소요청 1일 넘게 미처리<br>· 반품/교환지연: 요청 3일 넘게 미처리',
+  product:'<b>상품관리</b><br>판매중인 상품과 품절 상품 수예요. 재고가 0이면 자동 품절돼요.',
+  review:'<b>리뷰현황</b><br>· 새로 작성된 리뷰: 아직 확인 안 한 리뷰<br>· 낮은 평점 리뷰: 1~2점인데 답글이 없는 리뷰 (가장 먼저 답하세요!)<br>· 발표 예정 리뷰 이벤트: 당첨자 발표를 기다리는 이벤트',
+};
+function help(k){ modal('도움말', `<div style="font-size:.97rem">${HELP[k]}</div>`); }
+
+/* ---------- 기타 ---------- */
+function toggleBig(){ S.big = !S.big; render(); }
+function resetAll(){
+  ask('처음부터 다시 하기', '지금까지의 주문·리뷰·미션 기록이 <b>모두 지워지고</b> 처음 상태로 돌아가요. 계속할까요?', '모두 지우고 처음부터', () => {
+    const big = S.big; S = fresh(); S.big = big; S.welcomed = true; page='home'; tab=''; render(); toast('처음 상태로 돌아왔어요.','ok');
+  });
+}
+function welcome(){
+  modal('👋 스토어 주문처리 실습에 오신 것을 환영해요', `<div style="font-size:.98rem">
+  <p>상세페이지를 올린 다음, <b>손님 주문이 들어오면 무엇을 해야 하는지</b> 연습하는 프로그램이에요. 마음껏 눌러 보세요. <b>실제 주문·결제·배송은 절대 일어나지 않아요.</b></p>
+  <ol style="padding-left:1.2rem"><li>오른쪽 아래 <b style="color:#ff8a00">🧑‍🌾 손님 역할</b> 버튼 → 주문이나 반품을 만들어요.</li>
+  <li>여러분은 <b>판매자</b>가 되어 홈 화면의 숫자를 눌러 처리해요.</li>
+  <li>맨 위 <b style="color:var(--green-d)">다음날로 ⏭</b> 버튼을 누르면 하루가 지나 배송·정산이 진행돼요.</li>
+  <li>무엇부터 할지 모르겠으면 왼쪽 메뉴의 <b>🎯 실습 미션</b>을 차례대로 따라하세요.</li></ol>
+  <div class="fld"><label>내 스토어(농장) 이름</label><input id="wsn" value="${esc(S.store)}"></div></div>`,
+  [{t:'둘러보기',fn:()=>{ S.store=$('#wsn').value.trim()||S.store; closeModal(); render(); }},{t:'🎯 실습 미션 시작',cls:'p',fn:()=>{ S.store=$('#wsn').value.trim()||S.store; closeModal(); go('missions'); }}]);
+  S.welcomed = true; save();
+}
+
+S = load() || fresh();
+render();
+if (!S.welcomed) welcome();
+</script>
+</body>
+</html>
